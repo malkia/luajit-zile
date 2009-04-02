@@ -28,3 +28,5 @@ Makefile.in
 *~
 .deps
 release-notes
+/GNUmakefile
+/maint.mk
