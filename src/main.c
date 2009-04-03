@@ -251,6 +251,10 @@ main (int argc, char **argv)
   assert(L);
   lua_atpanic (L, at_lua_panic);
 
+  /* Load Lua files. */
+  /* FIXME: Generate this list, and sort out the path. */
+  luaL_dofile (L, "lisp.lua");
+
   /* Set up Lisp environment now so it's available to files and
      expressions specified on the command-line. */
   init_search ();

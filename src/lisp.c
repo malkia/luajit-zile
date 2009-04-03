@@ -26,6 +26,7 @@
 
 #include "main.h"
 #include "extern.h"
+#include "clue.h"
 
 void
 init_lisp (void)
@@ -52,108 +53,6 @@ enum tokenname
   T_WORD
 };
 
-static int
-read_char (astr as, size_t * pos)
-{
-  if ((size_t) *pos < astr_len (as))
-    return astr_get (as, (*pos)++);
-  return EOF;
-}
-
-static astr
-read_token (enum tokenname *tokenid, astr as, size_t * pos)
-{
-  int c;
-  int doublequotes = 0;
-  astr tok = astr_new ();
-
-  *tokenid = T_EOF;
-
-  /* Chew space to next token */
-  do
-    {
-      c = read_char (as, pos);
-
-      /* Munch comments */
-      if (c == ';')
-        do
-          c = read_char (as, pos);
-        while (c != EOF && c != '\n');
-    }
-  while (c != EOF && (c == ' ' || c == '\t'));
-
-  /* Snag token */
-  if (c == '(')
-    {
-      *tokenid = T_OPENPAREN;
-      return tok;
-    }
-  else if (c == ')')
-    {
-      *tokenid = T_CLOSEPAREN;
-      return tok;
-    }
-  else if (c == '\'')
-    {
-      *tokenid = T_QUOTE;
-      return tok;
-    }
-  else if (c == '\n')
-    {
-      *tokenid = T_NEWLINE;
-      return tok;
-    }
-  else if (c == EOF)
-    {
-      *tokenid = T_EOF;
-      return tok;
-    }
-
-  /* It looks like a string. Snag to the next whitespace. */
-  if (c == '\"')
-    {
-      doublequotes = 1;
-      c = read_char (as, pos);
-    }
-
-  for (;;)
-    {
-      astr_cat_char (tok, (char) c);
-
-      if (!doublequotes)
-        {
-          if (c == ')' || c == '(' || c == ';' || c == ' ' || c == '\n'
-              || c == '\r' || c == EOF)
-            {
-              (*pos)--;
-              astr_truncate (tok, astr_len (tok) - 1);
-              *tokenid = T_WORD;
-              return tok;
-            }
-        }
-      else
-        {
-          switch (c)
-            {
-            case '\n':
-            case '\r':
-            case EOF:
-              (*pos)--;
-              /* Fall through */
-
-            case '\"':
-              astr_truncate (tok, astr_len (tok) -1);
-              *tokenid = T_WORD;
-              return tok;
-            }
-        }
-
-      c = read_char (as, pos);
-    }
-
-  return tok;
-}
-
 static le *
 lisp_read (le * list, astr as, size_t * pos)
 {
@@ -163,7 +62,16 @@ lisp_read (le * list, astr as, size_t * pos)
 
   for (;;)
     {
-      tok = read_token (&tokenid, as, pos);
+      const char *tok_lua;
+
+      CLUE_SET (L, as, string, astr_cstr (as));
+      CLUE_SET (L, pos, integer, *pos + 1);
+      CLUE_DO (L, "tok, tokenid, pos = read_token (as, pos)");
+      CLUE_GET (L, tok, string, tok_lua);
+      tok = astr_new_cstr (tok_lua);
+      CLUE_GET (L, tokenid, integer, tokenid);
+      CLUE_GET (L, pos, integer, *pos);
+      (*pos)--;
 
       switch (tokenid)
         {
