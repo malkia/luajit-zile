@@ -72,6 +72,8 @@ zile_base_SOURCES =					\
 	term_redisplay.c				\
 	term_curses.c
 
+eval.o lua.o: tbl_funcs.h
+
 zile_SOURCES =						\
 	$(zile_base_SOURCES)				\
 	tbl_funcs.h					\
