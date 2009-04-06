@@ -252,7 +252,9 @@ main (int argc, char **argv)
   lua_atpanic (L, at_lua_panic);
 
   /* Load Lua files. */
-  /* FIXME: Generate this list, and sort out the path. */
+  /* FIXME: Generate this list */
+  /* FIXME: Load Lua into Zile via LUA_PATH prefixed with appropriate
+     directory, should work at compile and install time. */
   luaL_dofile (L, "lisp.lua");
 
   /* Set up Lisp environment now so it's available to files and
