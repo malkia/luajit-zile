@@ -1,5 +1,5 @@
 # ===========================================================================
-#               http://autoconf-archive.cryp.to/lua.html
+#                  http://autoconf-archive.cryp.to/lua.html
 # ===========================================================================
 #
 # SYNOPSIS
@@ -12,23 +12,27 @@
 #
 # DESCRIPTION
 #
-#   Detect Lua interpreter, headers and libraries, optionally enforcing
-#   a particular range of versions.
+#   Detect Lua interpreter, headers and libraries, optionally enforcing a
+#   particular range of versions.
 #
 #   AX_WITH_LUA searches for Lua interpreter and defines LUA if found.
-#   AX_LUA_VERSION checks that the version of Lua is at least
-#     MIN-VERSION and less than TOO-BIG-VERSION, if given.
-#   AX_LUA_HEADERS searches for Lua headers and defines HAVE_LUA_H
-#     and HAVE_LUALIB_H if found, and defines LUA_INCLUDE to the
-#     preprocessor flags needed, if any.
-#   AX_LUA_LIBS searches for Lua libraries and defines LUA_LIB if found.
-#   AX_LUA_LIB_VERSION checks that the Lua libraries' version is at
-#     least MIN-VERSION, and less than TOO-BIG-VERSION, if given.
 #
-#   Versions are specified as three-digit integers whose first digit
-#   is the major version and last two are the minor version (the same
-#   format as LUA_VERSION_NUM in lua.h); e.g. 501 for Lua 5.1. The
-#   revision (e.g. the "3" in "5.1.3") is ignored.
+#   AX_LUA_VERSION checks that the version of Lua is at least
+#   MIN-VERSION and less than TOO-BIG-VERSION, if given.
+#
+#   AX_LUA_HEADERS searches for Lua headers and defines HAVE_LUA_H and
+#   HAVE_LUALIB_H if found, and defines LUA_INCLUDE to the preprocessor
+#   flags needed, if any.
+#
+#   AX_LUA_LIBS searches for Lua libraries and defines LUA_LIB if found.
+#
+#   AX_LUA_LIB_VERSION checks that the Lua libraries' version is at least
+#   MIN-VERSION, and less than TOO-BIG-VERSION, if given.
+#
+#   Versions are specified as three-digit integers whose first digit is the
+#   major version and last two are the minor version (the same format as
+#   LUA_VERSION_NUM in lua.h); e.g. 501 for Lua 5.1. The revision (e.g. the
+#   "3" in "5.1.3") is ignored.
 #
 #   The following options are added by these macros:
 #
@@ -44,9 +48,9 @@
 #
 # COPYLEFT
 #
-#   Copyright (c) 2008, 2009 Reuben Thomas <rrt@sc3d.org>
-#   Copyright (c) 2005, 2006 Matthieu Moy <Matthieu.Moy@imag.fr>
-#   Copyright (c) 2003 Tom Payne <twpayne@gmail.com>
+#   Copyright (c) 2009 Reuben Thomas <rrt@sc3d.org>
+#   Copyright (c) 2009 Matthieu Moy <Matthieu.Moy@imag.fr>
+#   Copyright (c) 2009 Tom Payne <twpayne@gmail.com>
 #
 #   This program is free software: you can redistribute it and/or modify it
 #   under the terms of the GNU General Public License as published by the
