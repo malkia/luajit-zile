@@ -288,7 +288,6 @@ main (int argc, char **argv)
       else if (c == 'l')
         longindex = 1;
 
-
       switch (longindex)
         {
         case 0:
