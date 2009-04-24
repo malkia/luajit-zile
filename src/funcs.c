@@ -309,7 +309,6 @@ Just C-u as argument means to use the current column.
     {
       le *branch = leAddDataElement (leAddDataElement (leAddDataElement (NULL, "", 0), "fill-column", 0), buf, 0);
       F_set_variable (0, branch);
-      leWipe (branch);
     }
 
   if (arglist == NULL)

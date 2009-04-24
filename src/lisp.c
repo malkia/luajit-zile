@@ -104,7 +104,6 @@ lisp_loadstring (astr as)
   le * list = lisp_read (NULL, as, &pos);
 
   leEval (list);
-  leWipe (list);
 }
 
 bool

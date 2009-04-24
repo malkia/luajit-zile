@@ -114,13 +114,9 @@ evaluateBranch (le * trybranch)
     keyword = leNew (get_lists_data (trybranch));
 
   if (get_lists_data (keyword) == NULL)
-    {
-      leWipe (keyword);
-      return leNIL;
-    }
+    return leNIL;
 
   func = get_fentry (get_lists_data (keyword));
-  leWipe (keyword);
   if (func)
     return (func->func) (1, trybranch);
 
@@ -168,8 +164,6 @@ The values val are expressions; they are evaluated.
       for (current = get_lists_next (arglist); current;
            current = get_lists_next (get_lists_next (current)))
         {
-          if (newvalue != leNIL)
-            leWipe (newvalue);
           newvalue = evaluateNode (get_lists_next (current));
           set_variable (get_lists_data (current), get_lists_data (newvalue));
           if (get_lists_next (current) == NULL)
@@ -185,7 +179,7 @@ void
 leEval (le * list)
 {
   for (; list; list = get_lists_next (list))
-    leWipe (evaluateBranch (get_lists_branch (list)));
+    evaluateBranch (get_lists_branch (list));
 }
 
 le *
