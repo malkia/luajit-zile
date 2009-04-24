@@ -134,7 +134,7 @@ evaluateNode (le * node)
   if (get_lists_branch (node) != NULL)
     {
       if (get_lists_quoted (node))
-        value = leDup (get_lists_branch (node));
+        value = get_lists_branch (node);
       else
         value = evaluateBranch (get_lists_branch (node));
     }

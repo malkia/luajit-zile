@@ -33,6 +33,5 @@ le *leNew (const char *text);
 
 le *leAddBranchElement (le * list, le * branch, int quoted);
 le *leAddDataElement (le * list, const char *data, int quoted);
-le *leDup (le * list);
 
 #endif

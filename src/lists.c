@@ -92,18 +92,3 @@ leAddDataElement (le * list, const char *data, int quoted)
   newdata->quoted = quoted;
   return leAddTail (list, newdata);
 }
-
-le *
-leDup (le * list)
-{
-  le *temp;
-
-  if (!list)
-    return NULL;
-
-  temp = leNew (list->data);
-  temp->branch = leDup (list->branch);
-  temp->next = leDup (list->next);
-
-  return temp;
-}
