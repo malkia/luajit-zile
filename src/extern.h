@@ -176,7 +176,6 @@ void free_kill_ring (void);
 #define FIELD(ty, field)                                \
   ty get_line_ ## field (const Line *wp);               \
   void set_line_ ## field (Line *wp, ty field);
-  FIELD(const char *, field)
 #include "line.h"
 #undef FIELD
 Line *line_new (void);

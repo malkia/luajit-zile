@@ -27,6 +27,23 @@
 #include "main.h"
 #include "extern.h"
 
+/*
+ * Structure
+ */
+struct le
+{
+#define FIELD(ty, name) ty name;
+#include "list_fields.h"
+#undef FIELD
+};
+
+#define FIELD(ty, field)                       \
+  GETTER (le, lists, ty, field)                \
+  SETTER (le, lists, ty, field)
+
+#include "list_fields.h"
+#undef FIELD
+
 le *
 leNew (const char *text)
 {

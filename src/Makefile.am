@@ -35,6 +35,7 @@ zile_base_SOURCES =					\
 	main.h						\
 	tbl_vars.h					\
 	eval.c						\
+	list_fields.h					\
 	lists.c						\
 	lists.h						\
 	lisp.c						\
@@ -72,7 +73,8 @@ zile_base_SOURCES =					\
 	term_redisplay.c				\
 	term_curses.c
 
-extern.h: tbl_funcs.h
+# FIXME: This is a circular dependency
+#extern.h: tbl_funcs.h
 
 zile_SOURCES =						\
 	$(zile_base_SOURCES)				\

@@ -148,10 +148,10 @@ typedef le * (*Function) (long uniarg, le * list);
         const char *name = NULL; \
         bool free_ ## name = true;
 #define STR_INIT(name) \
-        if (arglist && arglist->next) \
+        if (arglist && get_lists_next (arglist))    \
           { \
-            name = arglist->next->data; \
-            arglist = arglist->next; \
+            name = get_lists_data (get_lists_next (arglist));   \
+            arglist = get_lists_next (arglist);           \
             free_ ## name = false; \
           }
 #define STR_FREE(name) \
@@ -162,10 +162,10 @@ typedef le * (*Function) (long uniarg, le * list);
 #define INT_ARG(name) \
         long name = 1;
 #define INT_INIT(name) \
-        if (arglist && arglist->next) \
+        if (arglist && get_lists_next (arglist))    \
           { \
-            const char *s = arglist->next->data; \
-            arglist = arglist->next; \
+            const char *s = get_lists_data (get_lists_next (arglist));  \
+            arglist = get_lists_next (arglist);                   \
             name = strtol (s, NULL, 10); \
             if (name == LONG_MAX) \
               ok = leNIL; \
@@ -175,10 +175,10 @@ typedef le * (*Function) (long uniarg, le * list);
 #define BOOL_ARG(name) \
         bool name = true;
 #define BOOL_INIT(name) \
-        if (arglist && arglist->next) \
+        if (arglist && get_lists_next (arglist))        \
           { \
-            const char *s = arglist->next->data; \
-            arglist = arglist->next; \
+            const char *s = get_lists_data (get_lists_next (arglist)); \
+            arglist = get_lists_next (arglist);                  \
             if (strcmp (s, "nil") == 0) \
               name = false; \
           }

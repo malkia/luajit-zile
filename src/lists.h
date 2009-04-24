@@ -22,17 +22,13 @@
 #ifndef LISTS_H
 #define LISTS_H
 
-struct le
-{
-  /* either data or a branch */
-  struct le *branch;
-  char *data;
-  int quoted;
-
-  /* for the next in the list in the current parenlevel */
-  struct le *next;
-};
 typedef struct le le;
+
+#define FIELD(ty, field)                               \
+  ty get_lists_ ## field (const le *lp);               \
+  void set_lists_ ## field (le *lp, ty field);
+#include "list_fields.h"
+#undef FIELD
 
 le *leNew (const char *text);
 void leReallyWipe (le * list);

@@ -95,7 +95,7 @@ countNodes (le * branch)
 {
   int count;
 
-  for (count = 0; branch; branch = branch->next, count++);
+  for (count = 0; branch; branch = get_lists_next (branch), count++);
   return count;
 }
 
@@ -108,21 +108,21 @@ evaluateBranch (le * trybranch)
   if (trybranch == NULL)
     return NULL;
 
-  if (trybranch->branch)
-    keyword = evaluateBranch (trybranch->branch);
+  if (get_lists_branch (trybranch))
+    keyword = evaluateBranch (get_lists_branch (trybranch));
   else
-    keyword = leNew (trybranch->data);
+    keyword = leNew (get_lists_data (trybranch));
 
-  if (keyword->data == NULL)
+  if (get_lists_data (keyword) == NULL)
     {
       leWipe (keyword);
       return leNIL;
     }
 
-  func = get_fentry (keyword->data);
+  func = get_fentry (get_lists_data (keyword));
   leWipe (keyword);
   if (func)
-    return func->func (1, trybranch);
+    return (func->func) (1, trybranch);
 
   return NULL;
 }
@@ -135,17 +135,17 @@ evaluateNode (le * node)
   if (node == NULL)
     return leNIL;
 
-  if (node->branch != NULL)
+  if (get_lists_branch (node) != NULL)
     {
-      if (node->quoted)
-        value = leDup (node->branch);
+      if (get_lists_quoted (node))
+        value = leDup (get_lists_branch (node));
       else
-        value = evaluateBranch (node->branch);
+        value = evaluateBranch (get_lists_branch (node));
     }
   else
     {
-      const char *s = get_variable (node->data);
-      value = leNew (s ? s : node->data);
+      const char *s = get_variable (get_lists_data (node));
+      value = leNew (s ? s : get_lists_data (node));
     }
 
   return value;
@@ -165,14 +165,14 @@ The values val are expressions; they are evaluated.
 
   if (arglist != NULL && argc >= 2)
     {
-      for (current = arglist->next; current;
-           current = current->next->next)
+      for (current = get_lists_next (arglist); current;
+           current = get_lists_next (get_lists_next (current)))
         {
           if (newvalue != leNIL)
             leWipe (newvalue);
-          newvalue = evaluateNode (current->next);
-          set_variable (current->data, newvalue->data);
-          if (current->next == NULL)
+          newvalue = evaluateNode (get_lists_next (current));
+          set_variable (get_lists_data (current), get_lists_data (newvalue));
+          if (get_lists_next (current) == NULL)
             break; /* Cope with odd-length argument lists. */
         }
     }
@@ -184,8 +184,8 @@ END_DEFUN
 void
 leEval (le * list)
 {
-  for (; list; list = list->next)
-    leWipe (evaluateBranch (list->branch));
+  for (; list; list = get_lists_next (list))
+    leWipe (evaluateBranch (get_lists_branch (list)));
 }
 
 le *

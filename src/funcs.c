@@ -289,8 +289,8 @@ Just C-u as argument means to use the current column.
 
   if (arglist)
     {
-      if (arglist->next)
-        buf = arglist->next->data;
+      if (get_lists_next (arglist))
+        buf = get_lists_data (get_lists_next (arglist));
       else
         {
           minibuf_error ("set-fill-column requires an explicit argument");
