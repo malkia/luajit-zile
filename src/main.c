@@ -85,7 +85,7 @@ loop (void)
     }
 }
 
-static char about_splash_str[] = "\
+static const char about_splash_str[] = "\
 " ZILE_VERSION_STRING "\n\
 \n\
 " ZILE_COPYRIGHT_STRING "\n\
@@ -101,7 +101,7 @@ the ESC key and then type `x'.\n\
 Combinations like `C-x u' mean first press `C-x', then `u'.\n\
 ";
 
-static char about_minibuf_str[] = "Welcome to " PACKAGE_NAME "!";
+static const char about_minibuf_str[] = "Welcome to " PACKAGE_NAME "!";
 
 static void
 about_screen (void)
@@ -434,9 +434,6 @@ main (int argc, char **argv)
 
   free_bindings (root_bindings);
   free_eval ();
-
-  /* Free Lisp state. */
-  free_lisp ();
 
   /* Free all the memory allocated. */
   free_search ();

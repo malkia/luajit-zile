@@ -197,7 +197,6 @@ void free_registers (void);
 
 /* lisp.c ----------------------------------------------------------------- */
 void init_lisp (void);
-void free_lisp (void);
 void lisp_loadstring (astr as);
 bool lisp_loadfile (const char *file);
 

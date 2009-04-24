@@ -35,13 +35,6 @@ init_lisp (void)
   leT = leNew ("t");
 }
 
-void
-free_lisp (void)
-{
-  leReallyWipe (leNIL);
-  leReallyWipe (leT);
-}
-
 
 enum tokenname
 {
