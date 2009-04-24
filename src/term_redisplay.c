@@ -74,7 +74,7 @@ outch (int c, size_t font, size_t * x)
   if (*x >= term_width ())
     return;
 
-  term_attrset (1, font);
+  term_attrset (font);
 
   if (c == '\t')
     for (w = cur_tab_width - *x % cur_tab_width; w > 0 && *x < term_width ();
@@ -90,7 +90,7 @@ outch (int c, size_t font, size_t * x)
       free (buf);
     }
 
-  term_attrset (1, FONT_NORMAL);
+  term_attrset (FONT_NORMAL);
 }
 
 static void
@@ -116,20 +116,20 @@ draw_end_of_line (size_t line, Window * wp, size_t lineno, Region * rp,
 
 static void
 draw_line (size_t line, size_t startcol, Window * wp, Line * lp,
-           size_t lineno, Region * r, int highlight)
+           size_t lineno, Region * rp, int highlight)
 {
   size_t x, i;
 
   term_move (line, 0);
   for (x = 0, i = startcol; i < astr_len (get_line_text (lp)) && x < get_window_ewidth (wp); i++)
     {
-      if (highlight && in_region (lineno, i, r))
+      if (highlight && in_region (lineno, i, rp))
         outch (astr_get (get_line_text (lp), i), FONT_REVERSE, &x);
       else
         outch (astr_get (get_line_text (lp), i), FONT_NORMAL, &x);
     }
 
-  draw_end_of_line (line, wp, lineno, r, highlight, x, i);
+  draw_end_of_line (line, wp, lineno, rp, highlight, x, i);
 }
 
 static void
@@ -152,7 +152,6 @@ calculate_highlight_region (Window * wp, Region * rp, int *highlight)
     {
       Point pt1 = get_region_start (rp);
       Point pt2 = get_region_end (rp);
-      swap_point (&pt1, &pt2);
       set_region_start (rp, pt2);
       set_region_end (rp, pt1);
     }
@@ -296,7 +295,7 @@ draw_status_line (size_t line, Window * wp)
   Point pt = window_pt (wp);
   astr as, bs;
 
-  term_attrset (1, FONT_REVERSE);
+  term_attrset (FONT_REVERSE);
 
   term_move (line, 0);
   for (i = 0; i < get_window_ewidth (wp); ++i)
@@ -331,7 +330,7 @@ draw_status_line (size_t line, Window * wp)
   term_addnstr (astr_cstr (as), MIN (term_width (), astr_len (as)));
   astr_delete (as);
 
-  term_attrset (1, FONT_NORMAL);
+  term_attrset (FONT_NORMAL);
 }
 
 void
@@ -398,7 +397,7 @@ term_tidy (void)
 {
   term_move (term_height () - 1, 0);
   term_clrtoeol ();
-  term_attrset (1, FONT_NORMAL);
+  term_attrset (FONT_NORMAL);
   term_refresh ();
 }
 

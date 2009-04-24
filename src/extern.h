@@ -183,7 +183,7 @@ Line *line_new (void);
 void line_delete (Line *l);
 Line *line_insert (Line *l, astr i);
 void line_remove (Line *l);
-void line_replace_text (Line ** lp, size_t offset, size_t oldlen,
+void line_replace_text (Line * lp, size_t offset, size_t oldlen,
                         char *newtext, int replace_case);
 int insert_char (int c);
 int insert_char_in_insert_mode (int c);
@@ -257,7 +257,6 @@ Point make_point (size_t lineno, size_t offset);
 int cmp_point (Point pt1, Point pt2);
 int point_dist (Point pt1, Point pt2);
 int count_lines (Point pt1, Point pt2);
-void swap_point (Point * pt1, Point * pt2);
 Point point_min (void);
 Point point_max (void);
 Point line_beginning_position (int count);
@@ -299,7 +298,7 @@ void term_clrtoeol (void);
 void term_refresh (void);
 void term_clear (void);
 void term_addch (int c);
-void term_attrset (size_t attrs, ...);
+void term_attrset (size_t attr);
 void term_beep (void);
 size_t term_xgetkey (int mode, size_t timeout);
 void term_ungetkey (size_t key);
