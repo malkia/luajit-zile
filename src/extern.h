@@ -116,12 +116,12 @@ int eolp (void);
 void ding (void);
 
 /* eval.c ----------------------------------------------------------------- */
-extern le *leNIL, *leT;
-size_t countNodes (le * branch);
-void leEval (le * list);
-le *execute_with_uniarg (bool undo, int uniarg, int (*forward) (void),
-                         int (*backward) (void));
-le *execute_function (const char *name, int uniarg);
+extern le leNIL, leT;
+size_t countNodes (le branch);
+void leEval (le list);
+le execute_with_uniarg (bool undo, int uniarg, int (*forward) (void),
+                        int (*backward) (void));
+le execute_function (const char *name, int uniarg);
 Function get_function (const char *name);
 const char *get_function_doc (const char *name);
 const char *get_function_name (Function p);
@@ -144,7 +144,7 @@ void zile_exit (int doabort);
 
 /* funcs.c ---------------------------------------------------------------- */
 void set_mark_interactive (void);
-le *universal_argument (int keytype, int xarg);
+le universal_argument (int keytype, int xarg);
 void write_temp_buffer (const char *name, bool show, void (*func) (va_list ap), ...);
 
 /* getkey.c --------------------------------------------------------------- */
@@ -341,6 +341,6 @@ Point window_pt (Window * wp);
  * Declare external Zile functions.
  */
 #define X(zile_name, c_name, interactive, doc)   \
-  le *F_ ## c_name (long uniarg, le * l);
+  le F_ ## c_name (long uniarg, le l);
 #include "tbl_funcs.h"
 #undef X

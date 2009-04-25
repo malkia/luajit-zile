@@ -282,10 +282,10 @@ static char *last_search = NULL;
 
 typedef int (*Searcher) (Line * startp, size_t starto, const char *s, int regexp);
 
-static le *
+static le
 search (Searcher searcher, bool regexp, const char *pattern, const char *search_msg)
 {
-  le * ok = leT;
+  le ok = leT;
   const char *ms = NULL;
 
   if (pattern == NULL)
@@ -364,7 +364,7 @@ END_DEFUN
 /*
  * Incremental search engine.
  */
-static le *
+static le
 isearch (int dir, int regexp)
 {
   int c;

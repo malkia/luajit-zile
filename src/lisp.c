@@ -46,8 +46,8 @@ enum tokenname
   T_WORD
 };
 
-static le *
-lisp_read (le * list, astr as, size_t * pos)
+static le
+lisp_read (le list, astr as, size_t * pos)
 {
   astr tok;
   enum tokenname tokenid;
@@ -101,7 +101,7 @@ void
 lisp_loadstring (astr as)
 {
   size_t pos = 0;
-  le * list = lisp_read (NULL, as, &pos);
+  le list = lisp_read (NULL, as, &pos);
 
   leEval (list);
 }

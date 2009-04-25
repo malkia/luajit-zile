@@ -131,7 +131,7 @@ Kill the rest of the current line; if no nonblanks there, kill thru newline.
 With prefix argument, kill that many lines from point.
 +*/
 {
-  le * ret = leT;
+  le ret = leT;
 
   if (!(lastflag & FLAG_DONE_KILL))
     free_kill_ring ();
@@ -184,7 +184,7 @@ Save the region as if killed, but don't kill it.
 }
 END_DEFUN
 
-static le *
+static le
 kill (int uniarg, Function mark_func)
 {
   if (!(lastflag & FLAG_DONE_KILL))

@@ -843,13 +843,13 @@ write_to_disk (Buffer * bp, const char *filename)
   return true;
 }
 
-static le *
+static le
 write_buffer (Buffer *bp, bool needname, bool confirm,
               const char *name, const char *prompt)
 {
   bool ans = true;
   bool name_from_minibuffer = false;
-  le * ok = leT;
+  le ok = leT;
 
   if (needname)
     {

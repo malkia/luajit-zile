@@ -41,7 +41,7 @@ Show the version of Zile that is running.
 }
 END_DEFUN
 
-static le *
+static le
 show_file (char *filename)
 {
   if (!exist_file (filename))

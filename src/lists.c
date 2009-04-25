@@ -26,6 +26,20 @@
 #include "main.h"
 #include "extern.h"
 
+#define LIST_GETTER(ty, field)                  \
+  ty                                            \
+  get_lists_ ## field (const le p)              \
+  {                                             \
+    return p->field;                            \
+  }                                             \
+
+#define LIST_SETTER(ty, field)                  \
+  void                                          \
+  set_lists_ ## field (le p, ty field)          \
+  {                                             \
+    p->field = field;                           \
+  }
+
 /*
  * Structure
  */
@@ -36,27 +50,28 @@ struct le
 #undef FIELD
 };
 
-#define FIELD(ty, field)                       \
-  GETTER (le, lists, ty, field)
+#define FIELD(ty, field)            \
+  LIST_GETTER (ty, field)           \
+  static LIST_SETTER (ty, field)
 
 #include "list_fields.h"
 #undef FIELD
 
-le *
+le
 leNew (const char *text)
 {
-  le *new = (le *) XZALLOC (le);
+  le new = (le) XZALLOC (struct le);
 
   if (text)
-    new->data = xstrdup (text);
+    set_lists_data (new, xstrdup (text));
 
   return new;
 }
 
-static le *
-leAddTail (le * list, le * element)
+static le
+leAddTail (le list, le element)
 {
-  le *temp = list;
+  le temp = list;
 
   /* if either element or list doesn't exist, return the `new' list */
   if (!element)
@@ -65,29 +80,29 @@ leAddTail (le * list, le * element)
     return element;
 
   /* find the end element of the list */
-  while (temp->next)
-    temp = temp->next;
+  while (get_lists_next (temp))
+    temp = get_lists_next (temp);
 
   /* tack ourselves on */
-  temp->next = element;
+  set_lists_next (temp, element);
 
   /* return the list */
   return list;
 }
 
-le *
-leAddBranchElement (le * list, le * branch, int quoted)
+le
+leAddBranchElement (le list, le branch, int quoted)
 {
-  le *temp = leNew (NULL);
-  temp->branch = branch;
-  temp->quoted = quoted;
+  le temp = leNew (NULL);
+  set_lists_branch (temp, branch);
+  set_lists_quoted (temp, quoted);
   return leAddTail (list, temp);
 }
 
-le *
-leAddDataElement (le * list, const char *data, int quoted)
+le
+leAddDataElement (le list, const char *data, int quoted)
 {
-  le *newdata = leNew (data);
-  newdata->quoted = quoted;
+  le newdata = leNew (data);
+  set_lists_quoted (newdata, quoted);
   return leAddTail (list, newdata);
 }

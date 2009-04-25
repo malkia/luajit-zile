@@ -307,7 +307,7 @@ Just C-u as argument means to use the current column.
 
   if (ok == leT)
     {
-      le *branch = leAddDataElement (leAddDataElement (leAddDataElement (NULL, "", 0), "fill-column", 0), buf, 0);
+      le branch = leAddDataElement (leAddDataElement (leAddDataElement (NULL, "", 0), "fill-column", 0), buf, 0);
       F_set_variable (0, branch);
     }
 
@@ -419,7 +419,7 @@ You may also type up to 3 octal digits, to insert a character with that code.
 }
 END_DEFUN
 
-le *
+le
 universal_argument (int keytype, int xarg)
 {
   int i = 0, arg = 4, sgn = 1, digit;
@@ -621,7 +621,7 @@ edit_tab_line (Line * lp, size_t lineno, size_t offset, size_t size,
   free (dest);
 }
 
-static le *
+static le
 edit_tab_region (int action)
 {
   Region * rp = region_new ();
@@ -1052,7 +1052,7 @@ transpose_subr (int (*forward_func) (void), int (*backward_func) (void))
   return true;
 }
 
-static le *
+static le
 transpose (int uniarg, int (*forward_func) (void), int (*backward_func) (void))
 {
   int uni, ret = true;
@@ -1121,10 +1121,10 @@ With argument 0, interchanges line point is in with line mark is in.
 END_DEFUN
 
 
-static le *
+static le
 mark (int uniarg, Function func)
 {
-  le * ret;
+  le ret;
   FUNCALL (set_mark_command);
   ret = func (uniarg, NULL);
   if (ret)
@@ -1170,7 +1170,7 @@ Precisely, if point is on line I, move to the start of line I + N.
 }
 END_DEFUN
 
-static le *
+static le
 move_paragraph (int uniarg, int (*forward) (void), int (*backward) (void),
                      Function line_extremum)
 {
@@ -1362,7 +1362,7 @@ END_DEFUN
 /*
  * Set the region case.
  */
-static le *
+static le
 setcase_region (enum casing rcase)
 {
   Region * rp = region_new ();

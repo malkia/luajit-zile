@@ -120,7 +120,7 @@ enum
  * The type of a Zile exported function.
  * `uniarg' is the number of times to repeat the function.
  */
-typedef le * (*Function) (long uniarg, le * list);
+typedef le (*Function) (long uniarg, le list);
 
 /* Turn a bool into a Lisp boolean */
 #define bool_to_lisp(b) ((b) ? leT : leNIL)
@@ -129,9 +129,9 @@ typedef le * (*Function) (long uniarg, le * list);
 #define DEFUN(zile_func, c_func) \
         DEFUN_ARGS(zile_func, c_func, )
 #define DEFUN_ARGS(zile_func, c_func, args) \
-        le * F_ ## c_func (long uniarg GCC_UNUSED, le *arglist GCC_UNUSED) \
+        le F_ ## c_func (long uniarg GCC_UNUSED, le arglist GCC_UNUSED) \
         { \
-          le * ok = leT; \
+          le ok = leT; \
           args
 #define END_DEFUN \
           return ok; \

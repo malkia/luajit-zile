@@ -22,16 +22,16 @@
 #ifndef LISTS_H
 #define LISTS_H
 
-typedef struct le le;
+typedef struct le * le;
 
 #define FIELD(ty, field)                               \
-  ty get_lists_ ## field (const le *lp);
+  ty get_lists_ ## field (const le lp);
 #include "list_fields.h"
 #undef FIELD
 
-le *leNew (const char *text);
+le leNew (const char *text);
 
-le *leAddBranchElement (le * list, le * branch, int quoted);
-le *leAddDataElement (le * list, const char *data, int quoted);
+le leAddBranchElement (le list, le branch, int quoted);
+le leAddDataElement (le list, const char *data, int quoted);
 
 #endif

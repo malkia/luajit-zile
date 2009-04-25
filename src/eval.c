@@ -88,10 +88,10 @@ get_function_name (Function p)
 }
 
 
-le *leNIL, *leT;
+le leNIL, leT;
 
 size_t
-countNodes (le * branch)
+countNodes (le branch)
 {
   int count;
 
@@ -99,10 +99,10 @@ countNodes (le * branch)
   return count;
 }
 
-static le *
-evaluateBranch (le * trybranch)
+static le
+evaluateBranch (le trybranch)
 {
-  le *keyword;
+  le keyword;
   fentry * func;
 
   if (trybranch == NULL)
@@ -123,10 +123,10 @@ evaluateBranch (le * trybranch)
   return NULL;
 }
 
-static le *
-evaluateNode (le * node)
+static le
+evaluateNode (le node)
 {
-  le *value;
+  le value;
 
   if (node == NULL)
     return leNIL;
@@ -156,7 +156,7 @@ The symbols sym are variables; they are literal (not evaluated).
 The values val are expressions; they are evaluated.
 +*/
 {
-  le *newvalue = leNIL, *current;
+  le newvalue = leNIL, current;
   size_t argc = countNodes (arglist);
 
   if (arglist != NULL && argc >= 2)
@@ -176,13 +176,13 @@ The values val are expressions; they are evaluated.
 END_DEFUN
 
 void
-leEval (le * list)
+leEval (le list)
 {
   for (; list; list = get_lists_next (list))
     evaluateBranch (get_lists_branch (list));
 }
 
-le *
+le
 execute_with_uniarg (bool undo, int uniarg, int (*forward) (void), int (*backward) (void))
 {
   int uni, ret = true;
@@ -203,7 +203,7 @@ execute_with_uniarg (bool undo, int uniarg, int (*forward) (void), int (*backwar
   return bool_to_lisp (ret);
 }
 
-le *
+le
 execute_function (const char *name, int uniarg)
 {
   Function func = get_function (name);
