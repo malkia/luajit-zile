@@ -88,6 +88,16 @@ set_variable (const char *var, const char *val)
   lua_pop (L, 1);
 }
 
+static int
+zlua_get_variable (lua_State *L)
+{
+    const char *var = lua_tostring (L, -1);
+    const char *val = get_variable (var);
+    lua_pop (L, 1);
+    lua_pushstring (L, val);
+    return 1;
+}
+
 void
 init_variables (void)
 {
@@ -97,6 +107,7 @@ init_variables (void)
 #include "tbl_vars.h"
 #undef X
   lua_setglobal (L, "main_vars");
+  lua_register (L, "get_variable", zlua_get_variable);
 }
 
 void

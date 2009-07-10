@@ -115,20 +115,6 @@ int bolp (void);
 int eolp (void);
 void ding (void);
 
-/* eval.c ----------------------------------------------------------------- */
-extern le leNIL, leT;
-size_t countNodes (le branch);
-void leEval (le list);
-le execute_with_uniarg (bool undo, int uniarg, int (*forward) (void),
-                        int (*backward) (void));
-le execute_function (const char *name, int uniarg);
-Function get_function (const char *name);
-const char *get_function_doc (const char *name);
-const char *get_function_name (Function p);
-const char *minibuf_read_function_name (const char *fmt, ...);
-void init_eval (void);
-void free_eval (void);
-
 /* file.c ----------------------------------------------------------------- */
 extern char coding_eol_lf[3];
 extern char coding_eol_crlf[3];
@@ -195,6 +181,16 @@ int delete_char (void);
 void free_registers (void);
 
 /* lisp.c ----------------------------------------------------------------- */
+extern le leNIL, leT;
+le execute_with_uniarg (bool undo, int uniarg, int (*forward) (void),
+                        int (*backward) (void));
+le execute_function (const char *name, int uniarg);
+Function get_function (const char *name);
+const char *get_function_doc (const char *name);
+const char *get_function_name (Function p);
+const char *minibuf_read_function_name (const char *fmt, ...);
+void init_eval (void);
+void free_eval (void);
 void init_lisp (void);
 void lisp_loadstring (astr as);
 bool lisp_loadfile (const char *file);

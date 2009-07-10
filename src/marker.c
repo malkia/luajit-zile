@@ -1,6 +1,6 @@
 /* Marker facility functions
 
-   Copyright (c) 2004, 2008, 2009 Free Software Foundation, Inc.
+   Copyright (c) 2004, 2008 Free Software Foundation, Inc.
 
    This file is part of GNU Zile.
 

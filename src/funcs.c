@@ -278,7 +278,7 @@ Just C-u as argument means to use the current column.
     get_buffer_pt (cur_bp).o : (unsigned long) uniarg;
   char *buf;
 
-  if (!(lastflag & FLAG_SET_UNIARG) && arglist == NULL)
+  if (!(lastflag & FLAG_SET_UNIARG) && arglist == 0)
     {
       fill_col = minibuf_read_number ("Set fill-column to (default %d): ", get_buffer_pt (cur_bp).o);
       if (fill_col == LONG_MAX)
@@ -289,8 +289,8 @@ Just C-u as argument means to use the current column.
 
   if (arglist)
     {
-      if (get_lists_next (arglist))
-        buf = get_lists_data (get_lists_next (arglist));
+      if (!LUA_NIL (get_lists_next (arglist)))
+        buf = (char *) get_lists_data (get_lists_next (arglist));
       else
         {
           minibuf_error ("set-fill-column requires an explicit argument");
@@ -307,11 +307,13 @@ Just C-u as argument means to use the current column.
 
   if (ok == leT)
     {
-      le branch = leAddDataElement (leAddDataElement (leAddDataElement (NULL, "", 0), "fill-column", 0), buf, 0);
-      F_set_variable (0, branch);
+      astr as = astr_new ();
+      astr_afmt (as, "(set-variable \"fill-column\" \"%s\")", buf);
+      lisp_loadstring (as);
+      astr_delete (as);
     }
 
-  if (arglist == NULL)
+  if (arglist == 0)
     free (buf);
 }
 END_DEFUN
@@ -1126,7 +1128,7 @@ mark (int uniarg, Function func)
 {
   le ret;
   FUNCALL (set_mark_command);
-  ret = func (uniarg, NULL);
+  ret = func (uniarg, 0);
   if (ret)
     FUNCALL (exchange_point_and_mark);
   return ret;
@@ -1191,7 +1193,7 @@ move_paragraph (int uniarg, int (*forward) (void), int (*backward) (void),
   if (is_empty_line ())
     FUNCALL (beginning_of_line);
   else
-    line_extremum (1, NULL);
+    line_extremum (1, 0);
 
   return leT;
 }

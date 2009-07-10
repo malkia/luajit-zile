@@ -90,3 +90,71 @@ function read_token (s, pos)
     c, pos = read_char (s, pos)
   until false
 end
+
+function lisp_read (s)
+  local pos = 1
+  local function append (l, e)
+    if l == nil then
+      l = e
+    else
+      local l2 = l
+      while l2.next ~= nil do
+        l2 = l2.next
+      end
+      l2.next = e
+    end
+    return l
+  end
+  local function read ()
+    local l = nil
+    local quoted = false
+    repeat
+      local tok, tokenid
+      tok, tokenid, pos = read_token (s, pos)
+      if tokenid == T_QUOTE then
+        quoted = true
+      else
+        if tokenid == T_OPENPAREN then
+          l = append (l, {branch = read (), quoted = quoted})
+        elseif tokenid == T_WORD then
+          l = append (l, {data = tok, quoted = quoted})
+        end
+        quoted = false
+      end
+    until tokenid == T_CLOSEPAREN or tokenid == T_EOF
+    return l
+  end
+
+  return read ()
+end
+
+function evaluateBranch (trybranch)
+  if trybranch == nil or trybranch.data == nil then
+    return nil
+  end
+  return call_zile_command (trybranch.data, trybranch)
+end
+
+function leEval (list)
+  while list do
+    evaluateBranch (list.branch)
+    list = list.next
+  end
+end
+
+function evaluateNode (node)
+  if node == nil then
+    return {data = "nil"}
+  end
+  local value
+  if node.branch ~= nil then
+    if node.quoted then
+      value = node.branch
+    else
+      value = evaluateBranch (node.branch)
+    end
+  else
+    value = {data = get_variable (node.data) or node.data}
+  end
+  return value
+end

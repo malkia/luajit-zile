@@ -34,7 +34,6 @@ zile_base_SOURCES =					\
 	extern.h					\
 	main.h						\
 	tbl_vars.h					\
-	eval.c						\
 	list_fields.h					\
 	lists.c						\
 	lists.h						\

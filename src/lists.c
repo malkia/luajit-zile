@@ -1,6 +1,6 @@
 /* Lisp lists
 
-   Copyright (c) 2008 Free Software Foundation, Inc.
+   Copyright (c) 2008, 2009 Free Software Foundation, Inc.
 
    This file is part of GNU Zile.
 
@@ -26,83 +26,35 @@
 #include "main.h"
 #include "extern.h"
 
-#define LIST_GETTER(ty, field)                  \
-  ty                                            \
+#define LIST_GETTER(cty, lty, field)            \
+  cty                                           \
   get_lists_ ## field (const le p)              \
   {                                             \
-    return p->field;                            \
+    cty ret;                                    \
+    lua_rawgeti (L, LUA_REGISTRYINDEX, p);      \
+    lua_getfield (L, -1, #field);               \
+    ret = lua_to ## lty (L, -1);                \
+    lua_pop (L, 2);                             \
+    return ret;                                 \
   }                                             \
 
-#define LIST_SETTER(ty, field)                  \
-  void                                          \
-  set_lists_ ## field (le p, ty field)          \
+#define LIST_TABLE_GETTER(field)                \
+  int                                           \
+  get_lists_ ## field (const le p)              \
   {                                             \
-    p->field = field;                           \
-  }
+    int ret = LUA_REFNIL;                        \
+    lua_rawgeti (L, LUA_REGISTRYINDEX, p);      \
+    lua_getfield (L, -1, #field);               \
+    if (lua_istable (L, -1))                    \
+      ret = luaL_ref (L, LUA_REGISTRYINDEX);    \
+    lua_pop (L, 1);                             \
+    return ret;                                 \
+  }                                             \
 
-/*
- * Structure
- */
-struct le
-{
-#define FIELD(ty, name) ty name;
-#include "list_fields.h"
-#undef FIELD
-};
-
-#define FIELD(ty, field)            \
-  LIST_GETTER (ty, field)           \
-  static LIST_SETTER (ty, field)
+#define FIELD(cty, lty, field)         \
+  LIST_GETTER (cty, lty, field)
+#define TABLE_FIELD(field)                      \
+  LIST_TABLE_GETTER (field)
 
 #include "list_fields.h"
 #undef FIELD
-
-le
-leNew (const char *text)
-{
-  le new = (le) XZALLOC (struct le);
-
-  if (text)
-    set_lists_data (new, xstrdup (text));
-
-  return new;
-}
-
-static le
-leAddTail (le list, le element)
-{
-  le temp = list;
-
-  /* if either element or list doesn't exist, return the `new' list */
-  if (!element)
-    return list;
-  if (!list)
-    return element;
-
-  /* find the end element of the list */
-  while (get_lists_next (temp))
-    temp = get_lists_next (temp);
-
-  /* tack ourselves on */
-  set_lists_next (temp, element);
-
-  /* return the list */
-  return list;
-}
-
-le
-leAddBranchElement (le list, le branch, int quoted)
-{
-  le temp = leNew (NULL);
-  set_lists_branch (temp, branch);
-  set_lists_quoted (temp, quoted);
-  return leAddTail (list, temp);
-}
-
-le
-leAddDataElement (le list, const char *data, int quoted)
-{
-  le newdata = leNew (data);
-  set_lists_quoted (newdata, quoted);
-  return leAddTail (list, newdata);
-}

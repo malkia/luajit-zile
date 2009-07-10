@@ -1,6 +1,6 @@
 /* Lisp variables
 
-   Copyright (c) 2001, 2005, 2008 Free Software Foundation, Inc.
+   Copyright (c) 2001, 2005, 2008, 2009 Free Software Foundation, Inc.
 
    This file is part of GNU Zile.
 
@@ -22,16 +22,14 @@
 #ifndef LISTS_H
 #define LISTS_H
 
-typedef struct le * le;
+typedef int le;
 
-#define FIELD(ty, field)                               \
-  ty get_lists_ ## field (const le lp);
+#define FIELD(cty, lty, field)                  \
+  cty get_lists_ ## field (const le lp);
+#define TABLE_FIELD(field)                      \
+  int get_lists_ ## field (const le lp);
 #include "list_fields.h"
 #undef FIELD
-
-le leNew (const char *text);
-
-le leAddBranchElement (le list, le branch, int quoted);
-le leAddDataElement (le list, const char *data, int quoted);
+#undef TABLE_FIELD
 
 #endif

@@ -269,7 +269,7 @@ process_key (Binding bindings, size_t key)
       Function f = completion_scan (bindings, key, &keys);
       if (f != NULL)
         {
-          f (last_uniarg, NULL);
+          f (last_uniarg, 0);
           _last_command = f;
         }
       else

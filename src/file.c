@@ -451,7 +451,7 @@ If the current buffer now contains an empty file that you just visited
   if (as)
     astr_delete (as);
   else
-    free (buf);
+    free ((char *) buf);
 }
 END_DEFUN
 

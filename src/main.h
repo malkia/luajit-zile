@@ -116,6 +116,9 @@ enum
  * Zile commands to C bindings.
  *--------------------------------------------------------------------------*/
 
+#define LUA_NIL(e) \
+  ((e) == LUA_NOREF || (e) == LUA_REFNIL)       \
+
 /*
  * The type of a Zile exported function.
  * `uniarg' is the number of times to repeat the function.
@@ -147,8 +150,8 @@ typedef le (*Function) (long uniarg, le list);
 #define STR_ARG(name) \
         const char *name = NULL; \
         bool free_ ## name = true;
-#define STR_INIT(name) \
-        if (arglist && get_lists_next (arglist))    \
+#define STR_INIT(name)                          \
+        if (!LUA_NIL (arglist) && !LUA_NIL (get_lists_next (arglist))) \
           { \
             name = get_lists_data (get_lists_next (arglist));   \
             arglist = get_lists_next (arglist);           \
@@ -162,7 +165,7 @@ typedef le (*Function) (long uniarg, le list);
 #define INT_ARG(name) \
         long name = 1;
 #define INT_INIT(name) \
-        if (arglist && get_lists_next (arglist))    \
+        if (!LUA_NIL (arglist) && !LUA_NIL (get_lists_next (arglist))) \
           { \
             const char *s = get_lists_data (get_lists_next (arglist));  \
             arglist = get_lists_next (arglist);                   \
@@ -175,7 +178,7 @@ typedef le (*Function) (long uniarg, le list);
 #define BOOL_ARG(name) \
         bool name = true;
 #define BOOL_INIT(name) \
-        if (arglist && get_lists_next (arglist))        \
+        if (!LUA_NIL (arglist) && !LUA_NIL (get_lists_next (arglist))) \
           { \
             const char *s = get_lists_data (get_lists_next (arglist)); \
             arglist = get_lists_next (arglist);                  \
@@ -185,11 +188,11 @@ typedef le (*Function) (long uniarg, le list);
 
 /* Call an interactive function. */
 #define FUNCALL(c_func)                         \
-        F_ ## c_func (1, NULL)
+        F_ ## c_func (1, LUA_REFNIL)
 
 /* Call an interactive function with a universal argument. */
 #define FUNCALL_ARG(c_func, uniarg)             \
-        F_ ## c_func (uniarg, NULL)
+        F_ ## c_func (uniarg, LUA_REFNIL)
 
 /*--------------------------------------------------------------------------
  * Keyboard handling.
