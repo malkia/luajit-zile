@@ -312,13 +312,17 @@ minibuf_vread_completion (const char *fmt, char *value, Completion * cp,
       else
         {
           astr as = astr_new ();
+          int comp;
           astr_cpy_cstr (as, ms);
           /* Complete partial words if possible. */
-          if (completion_try (cp, as, false) == COMPLETION_MATCHED)
+          comp = completion_try (cp, as);
+          if (comp == COMPLETION_MATCHED)
             {
               free ((char *) ms);
               ms = xstrdup (get_completion_match (cp));
             }
+          else if (comp == COMPLETION_NONUNIQUE)
+            popup_completion (cp);
           astr_delete (as);
 
           if (test (ms, get_completion_completions (cp)))

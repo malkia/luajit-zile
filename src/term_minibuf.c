@@ -251,13 +251,14 @@ do_minibuf_read (const char *prompt, const char *value, size_t pos,
             {
               astr bs = astr_new ();
               astr_cpy (bs, as);
-              thistab = completion_try (cp, bs, true);
+              thistab = completion_try (cp, bs);
               astr_delete (bs);
               switch (thistab)
                 {
-                case COMPLETION_MATCHED:
-                case COMPLETION_MATCHEDNONUNIQUE:
                 case COMPLETION_NONUNIQUE:
+                case COMPLETION_MATCHEDNONUNIQUE:
+                  popup_completion (cp);
+                case COMPLETION_MATCHED:
                   {
                     bs = astr_new ();
                     if (get_completion_flags (cp) & CFLAG_FILENAME)
