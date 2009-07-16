@@ -81,7 +81,9 @@ zile_SOURCES =						\
 	tbl_opts.h.in
 
 LUA_RUNTIME =						\
+	completion.lua					\
 	lib.lua						\
+	lisp.lua					\
 	texinfo.lua
 
 LUA_BUILDTIME = 					\

@@ -272,6 +272,7 @@ main (int argc, char **argv)
   /* FIXME: Generate this list */
   /* FIXME: Load Lua into Zile via LUA_PATH prefixed with appropriate
      directory, should work at compile and install time. */
+  (void) luaL_dofile (L, "completion.lua");
   (void) luaL_dofile (L, "lisp.lua");
 
   /* Set up Lisp environment now so it's available to files and
