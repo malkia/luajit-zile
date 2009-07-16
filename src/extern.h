@@ -99,7 +99,8 @@ Completion *completion_new (int fileflag);
 void free_completion (Completion * cp);
 void completion_scroll_up (void);
 void completion_scroll_down (void);
-int completion_try (Completion * cp, astr search, int popup_when_complete);
+void popup_completion (Completion * cp);
+int completion_try (Completion * cp, astr search);
 
 /* editfns.c -------------------------------------------------------------- */
 void push_mark (void);
@@ -182,8 +183,8 @@ void free_registers (void);
 
 /* lisp.c ----------------------------------------------------------------- */
 extern le leNIL, leT;
-le execute_with_uniarg (bool undo, int uniarg, int (*forward) (void),
-                        int (*backward) (void));
+le execute_with_uniarg (bool undo, int uniarg, bool (*forward) (void),
+                        bool (*backward) (void));
 le execute_function (const char *name, int uniarg);
 Function get_function (const char *name);
 const char *get_function_doc (const char *name);
