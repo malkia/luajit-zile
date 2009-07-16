@@ -155,3 +155,7 @@ unistd.h
 /filenamecat.h
 /close-hook.c
 /close-hook.h
+/bitrotate.h
+/getpagesize.c
+/memchr.c
+/memchr.valgrind

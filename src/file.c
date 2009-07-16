@@ -424,13 +424,13 @@ If the current buffer now contains an empty file that you just visited
 +*/
 {
   const char *buf = get_buffer_filename (cur_bp);
-  char *base = xstrdup ("");
+  char *base = NULL;
   char *ms;
   astr as = NULL;
 
   if (buf == NULL)
     {
-      as = agetcwd ();
+      as = get_buffer_dir ();
       buf = astr_cstr (as);
     }
   else
