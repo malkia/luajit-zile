@@ -141,6 +141,8 @@ size_t lastkey (void);
 size_t xgetkey (int mode, size_t timeout);
 size_t getkey (void);
 void waitkey (size_t delay);
+void init_getkey (void);
+void free_getkey (void);
 
 /* history.c -------------------------------------------------------------- */
 History *history_new (void);
@@ -296,7 +298,6 @@ void term_addch (int c);
 void term_attrset (size_t attr);
 void term_beep (void);
 size_t term_xgetkey (int mode, size_t timeout);
-void term_ungetkey (size_t key);
 
 /* undo.c ----------------------------------------------------------------- */
 extern int undo_nosave;
