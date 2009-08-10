@@ -277,7 +277,6 @@ main (int argc, char **argv)
 
   /* Set up Lisp environment now so it's available to files and
      expressions specified on the command-line. */
-  init_getkey ();
   init_search ();
   init_lisp ();
   init_variables ();
@@ -391,8 +390,13 @@ main (int argc, char **argv)
         line = strtoul (*argv + 1, NULL, 10);
       else
         {
+          astr as = astr_afmt (astr_new (), "%d", line);
+          le *branch;
+          branch = leAddDataElement (leAddDataElement (NULL, "", 0), astr_cstr (as), 0);
           find_file (*argv);
-          ngotodown (line - 1);
+          F_goto_line (0, branch);
+          leWipe (branch);
+          astr_delete (as);
           line = 1;
           lastflag |= FLAG_NEED_RESYNC;
         }
@@ -441,7 +445,6 @@ main (int argc, char **argv)
   free_search ();
   free_kill_ring ();
   free_registers ();
-  free_getkey ();
   free_macros ();
   free_windows ();
   free_buffers ();

@@ -61,7 +61,7 @@ copy_or_kill_region (bool kill, Region * rp)
 {
   char *p = copy_text_block (get_region_start (rp).n, get_region_start (rp).o, get_region_size (rp));
 
-  if (!(lastflag & FLAG_DONE_KILL))
+  if (last_command () != F_kill_region)
     free_kill_ring ();
   kill_ring_push_nstring (p, get_region_size (rp));
   free (p);
@@ -74,7 +74,7 @@ copy_or_kill_region (bool kill, Region * rp)
         assert (delete_region (rp));
     }
 
-  thisflag |= FLAG_DONE_KILL;
+  set_this_command (F_kill_region);
   deactivate_mark ();
 
   return true;
@@ -83,7 +83,7 @@ copy_or_kill_region (bool kill, Region * rp)
 static bool
 kill_to_bol (void)
 {
-  bool ok;
+  bool ok = true;
 
   if (!bolp ())
     {
@@ -134,7 +134,7 @@ kill_line (bool literally)
         return false;
 
       kill_ring_push ('\n');
-      thisflag |= FLAG_DONE_KILL;
+      set_this_command (F_kill_region);
     }
 
   undo_save (UNDO_END_SEQUENCE, get_buffer_pt (cur_bp), 0, 0);
@@ -154,7 +154,8 @@ kill_line_backward (void)
   return previous_line () && kill_line_literally ();
 }
 
-DEFUN ("kill-line", kill_line)
+DEFUN_ARGS ("kill-line", kill_line,
+            INT_ARG (arg))
 /*+
 Kill the rest of the current line; if no nonblanks there, kill thru newline.
 With prefix argument @i{arg}, kill that many lines from point.
@@ -167,18 +168,29 @@ with no argument.
 +*/
 {
   le ret = leT;
+  bool noarg = false;
 
-  if (!(lastflag & FLAG_DONE_KILL))
+  if (last_command () != F_kill_region)
     free_kill_ring ();
 
-  if (!(lastflag & FLAG_SET_UNIARG))
-    kill_line (get_variable_bool ("kill-whole-line"));
+  INT_INIT (arg)
   else
     {
-      if (uniarg == 0)
-        kill_to_bol ();
-      else
-        ret = execute_with_uniarg (true, uniarg, kill_line_literally, kill_line_backward);
+      if (!(lastflag & FLAG_SET_UNIARG))
+        noarg = true;
+      arg = uniarg;
+    }
+
+  if (noarg)
+    ret = bool_to_lisp (kill_line (get_variable_bool ("kill-whole-line")));
+  else
+    {
+      undo_save (UNDO_START_SEQUENCE, get_buffer_pt (cur_bp), 0, 0);
+      if (arg <= 0)
+        ret = bool_to_lisp (kill_to_bol ());
+      if (arg != 0 && ret == leT)
+        ret = execute_with_uniarg (true, arg, kill_line_literally, kill_line_backward);
+      undo_save (UNDO_END_SEQUENCE, get_buffer_pt (cur_bp), 0, 0);
     }
 
   deactivate_mark ();
@@ -227,7 +239,7 @@ END_DEFUN
 static le
 kill_text (int uniarg, Function mark_func)
 {
-  if (!(lastflag & FLAG_DONE_KILL))
+  if (last_command () != F_kill_region)
     free_kill_ring ();
 
   if (warn_if_readonly_buffer ())
@@ -240,7 +252,7 @@ kill_text (int uniarg, Function mark_func)
   undo_save (UNDO_END_SEQUENCE, get_buffer_pt (cur_bp), 0, 0);
   pop_mark ();
 
-  thisflag |= FLAG_DONE_KILL;
+  set_this_command (F_kill_region);
   minibuf_write ("");		/* Erase "Set mark" message.  */
   return leT;
 }

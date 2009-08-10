@@ -253,6 +253,19 @@ Whichever character you type to run this command is inserted.
 END_DEFUN
 
 static Function _last_command;
+static Function _this_command;
+
+Function
+last_command (void)
+{
+  return _last_command;
+}
+
+void
+set_this_command (Function cmd)
+{
+  _this_command = cmd;
+}
 
 void
 process_key (Binding bindings, size_t key)
@@ -269,8 +282,9 @@ process_key (Binding bindings, size_t key)
       Function f = completion_scan (bindings, key, &keys);
       if (f != NULL)
         {
+          set_this_command (f);
           f (last_uniarg, 0);
-          _last_command = f;
+          _last_command = _this_command;
         }
       else
         {
@@ -285,12 +299,6 @@ process_key (Binding bindings, size_t key)
      before the function call, to cope with start-kbd-macro. */
   if (lastflag & FLAG_DEFINING_MACRO && thisflag & FLAG_DEFINING_MACRO)
     add_cmd_to_macro ();
-}
-
-Function
-last_command (void)
-{
-  return _last_command;
 }
 
 Binding
@@ -321,6 +329,8 @@ init_default_bindings (void)
     }
   gl_list_free (keys);
 
+  /* FIXME: Rename -zile commands to -emacs commands to be able to run
+     tests in Emacs. */
   as = astr_new_cstr ("\
 (global-set-key \"\\M-m\" 'back-to-indentation)\
 (global-set-key \"\\C-b\" 'backward-char)\

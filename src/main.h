@@ -241,22 +241,19 @@ typedef le (*Function) (long uniarg, le list);
  *--------------------------------------------------------------------------*/
 
 /* Global flags, stored in thisflag and lastflag. */
-#define FLAG_DONE_CPCN		0001	/* Last command was C-p or C-n. */
-#define FLAG_DONE_KILL		0002	/* The last command was a kill. */
-#define FLAG_NEED_RESYNC	0004	/* A resync is required. */
-#define FLAG_QUIT		0010	/* The user has asked to quit. */
-#define FLAG_SET_UNIARG		0020	/* The last command modified the
+#define FLAG_NEED_RESYNC	0001	/* A resync is required. */
+#define FLAG_QUIT		0002	/* The user has asked to quit. */
+#define FLAG_SET_UNIARG		0004	/* The last command modified the
                                            universal arg variable `uniarg'. */
-#define FLAG_UNIARG_EMPTY	0040	/* Current universal arg is just C-u's
+#define FLAG_UNIARG_EMPTY	0010	/* Current universal arg is just C-u's
                                            with no number. */
-#define FLAG_DEFINING_MACRO	0100	/* We are defining a macro. */
+#define FLAG_DEFINING_MACRO	0020	/* We are defining a macro. */
 
 /*
  * Zile font codes
- * Designed to fit in an int, leaving room for a char underneath.
  */
-#define FONT_NORMAL		0x000
-#define FONT_REVERSE		0x100
+#define FONT_NORMAL		0000
+#define FONT_REVERSE		0001
 
 /* Default waitkey pause in ds */
 #define WAITKEY_DEFAULT 20

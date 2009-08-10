@@ -33,8 +33,6 @@ bool backward_char (void);
 bool forward_char (void);
 void gotobob (void);
 void gotoeob (void);
-bool ngotodown (size_t n);
-bool ngotoup (size_t n);
 
 /* bind.c ----------------------------------------------------------------- */
 extern Binding root_bindings;
@@ -44,6 +42,7 @@ void process_key (Binding bindings, size_t key);
 Binding init_bindings (void);
 void init_default_bindings (void);
 Function last_command (void);
+void set_this_command (Function cmd);
 void free_bindings (Binding p);
 
 /* buffer.c --------------------------------------------------------------- */
@@ -269,6 +268,21 @@ void recenter (Window * wp);
 void init_search (void);
 void free_search (void);
 
+/* term_curses.c ---------------------------------------------------------- */
+void term_init (void);
+void term_close (void);
+void term_suspend (void);
+void term_resume (void);
+void term_move (size_t y, size_t x);
+void term_clrtoeol (void);
+void term_refresh (void);
+void term_clear (void);
+void term_addch (int c);
+void term_attrset (size_t attr);
+void term_beep (void);
+size_t term_xgetkey (int mode, size_t timeout);
+void term_ungetkey (size_t key);
+
 /* term_minibuf.c --------------------------------------------------------- */
 void term_minibuf_write (const char *fmt);
 char *term_minibuf_read (const char *prompt, const char *value, size_t pos,
@@ -284,20 +298,6 @@ void show_splash_screen (const char *splash);
 void term_tidy (void);
 void term_finish (void);
 void term_addnstr (const char *s, size_t len);
-
-/* term_curses.c ---------------------------------------------------------- */
-void term_init (void);
-void term_close (void);
-void term_suspend (void);
-void term_resume (void);
-void term_move (size_t y, size_t x);
-void term_clrtoeol (void);
-void term_refresh (void);
-void term_clear (void);
-void term_addch (int c);
-void term_attrset (size_t attr);
-void term_beep (void);
-size_t term_xgetkey (int mode, size_t timeout);
 
 /* undo.c ----------------------------------------------------------------- */
 extern int undo_nosave;
