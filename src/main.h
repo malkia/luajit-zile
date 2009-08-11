@@ -178,13 +178,13 @@ typedef le (*Function) (long uniarg, le list);
 #define INT_OR_UNIARG(name) \
   long name = 1;            \
   bool noarg = false;
-#define INT_OR_UNIARG_INIT(name)                \
-  INT_INIT (name)                               \
-  else                                          \
-    {                                           \
-      if (!(lastflag & FLAG_SET_UNIARG))        \
-        noarg = true;                           \
-      name = uniarg;                            \
+#define INT_OR_UNIARG_INIT(name)                                        \
+  INT_INIT (name)                                                       \
+  else                                                                  \
+    {                                                                   \
+      if (!(lastflag & FLAG_SET_UNIARG) && arglist != LUA_NOREF)        \
+        noarg = true;                                                   \
+      name = uniarg;                                                    \
     }
 
 /* Boolean argument. */
@@ -201,11 +201,11 @@ typedef le (*Function) (long uniarg, le list);
 
 /* Call an interactive function. */
 #define FUNCALL(c_func)                         \
-  F_ ## c_func (1, LUA_REFNIL)
+  F_ ## c_func (1, LUA_NOREF)
 
 /* Call an interactive function with a universal argument. */
 #define FUNCALL_ARG(c_func, uniarg)             \
-  F_ ## c_func (uniarg, LUA_REFNIL)
+  F_ ## c_func (uniarg, LUA_NOREF)
 
 /*--------------------------------------------------------------------------
  * Keyboard handling.
