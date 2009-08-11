@@ -25,6 +25,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "main.h"
 #include "extern.h"
@@ -41,21 +42,17 @@ register_free (size_t n)
 }
 
 DEFUN_ARGS ("copy-to-register", copy_to_register,
-            STR_ARG (regchar))
+            INT_ARG (reg))
 /*+
-Copy region into the user specified register.
+Copy region into register @i{register}.
 +*/
 {
-  int reg = 0;
-
-  STR_INIT (regchar)
+  INT_INIT (reg)
   else
     {
       minibuf_write ("Copy to register: ");
       reg = getkey ();
     }
-  if (regchar != NULL)
-    reg = *regchar;
 
   if (reg == KBD_CANCEL)
     ok = FUNCALL (keyboard_quit);
@@ -66,7 +63,8 @@ Copy region into the user specified register.
       minibuf_clear ();
       if (reg < 0)
         reg = 0;
-      reg %= NUM_REGISTERS;
+      reg %= NUM_REGISTERS; /* Nice numbering relies on NUM_REGISTERS
+                               being a power of 2. */
 
       if (!calculate_the_region (rp))
         ok = leNIL;
@@ -80,25 +78,23 @@ Copy region into the user specified register.
 
       free (rp);
     }
-
-  STR_FREE (regchar);
 }
 END_DEFUN
 
-static int reg;
+static int regnum;
 
 static bool
 insert_register (void)
 {
-  undo_save (UNDO_REPLACE_BLOCK, get_buffer_pt (cur_bp), 0, astr_len (regs[reg]));
+  undo_save (UNDO_REPLACE_BLOCK, get_buffer_pt (cur_bp), 0, astr_len (regs[regnum]));
   undo_nosave = true;
-  insert_astr (regs[reg]);
+  insert_astr (regs[regnum]);
   undo_nosave = false;
   return true;
 }
 
 DEFUN_ARGS ("insert-register", insert_register,
-            STR_ARG (regchar))
+            INT_ARG (reg))
 /*+
 Insert contents of the user specified register.
 Puts point before and mark after the inserted text.
@@ -107,14 +103,12 @@ Puts point before and mark after the inserted text.
   if (warn_if_readonly_buffer ())
     return leNIL;
 
-  STR_INIT (regchar)
+  INT_INIT (reg)
   else
     {
       minibuf_write ("Insert register: ");
       reg = getkey ();
     }
-  if (regchar != NULL)
-    reg = *regchar;
 
   if (reg == KBD_CANCEL)
     ok = FUNCALL (keyboard_quit);
@@ -131,37 +125,46 @@ Puts point before and mark after the inserted text.
       else
         {
           set_mark_interactive ();
+          regnum = reg;
           execute_with_uniarg (true, uniarg, insert_register, NULL);
           FUNCALL (exchange_point_and_mark);
           deactivate_mark ();
         }
     }
-
-  STR_FREE (regchar);
 }
 END_DEFUN
 
 static void
 write_registers_list (va_list ap GCC_UNUSED)
 {
-  size_t i, count;
+  size_t i;
 
-  bprintf ("%-8s %8s\n", "Register", "Size");
-  bprintf ("%-8s %8s\n", "--------", "----");
-  for (i = count = 0; i < NUM_REGISTERS; ++i)
+  for (i = 0; i < NUM_REGISTERS; ++i)
     if (regs[i] != NULL)
       {
+        const char *s = astr_cstr (regs[i]);
         astr as = astr_new ();
-        ++count;
+        size_t len;
+
         if (isprint (i))
-          astr_afmt (as, "`%c'", i);
+          astr_afmt (as, "%c", i);
         else
-          astr_afmt (as, "`\\%o'", i);
-        bprintf ("%-8s %8d\n", astr_cstr (as), astr_len (regs[i]));
+          astr_afmt (as, "\\%o", i);
+
+        while (*s == ' ' || *s == '\t' || *s == '\n')
+          s++;
+        len = MIN (20, MAX (0, ((int) get_window_ewidth (cur_wp)) - 6)) + 1;
+
+        bprintf ("Register %s contains ", astr_cstr (as));
+        if (strlen (s) > 0)
+          bprintf ("text starting with\n    %.*s\n", len, s);
+        else if (s != astr_cstr (regs[i]))
+          bprintf ("whitespace\n");
+        else
+          bprintf ("the empty string\n");
+
         astr_delete (as);
       }
-  if (!count)
-    bprintf ("No registers defined\n");
 }
 
 DEFUN ("list-registers", list_registers)

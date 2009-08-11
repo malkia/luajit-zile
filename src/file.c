@@ -67,9 +67,10 @@ astr
 agetcwd (void)
 {
   char *s = getcwd (NULL, 0);
+  astr as;
   if (s == NULL)
     s = "";
-  astr as = astr_new_cstr (s);
+  as = astr_new_cstr (s);
   free (s);
   return as;
 }
@@ -450,8 +451,6 @@ If the current buffer now contains an empty file that you just visited
   free (ms);
   if (as)
     astr_delete (as);
-  else
-    free ((char *) buf);
 }
 END_DEFUN
 
@@ -920,9 +919,9 @@ save_buffer (Buffer * bp)
   if (!get_buffer_modified (bp))
     minibuf_write ("(No changes need to be saved)");
   else
+    /* FIXME: Check return value of write_buffer. */
     write_buffer (bp, get_buffer_needname (bp), false, get_buffer_filename (bp),
                   "File to save in: ");
-
   return true;
 }
 
@@ -1027,7 +1026,7 @@ Save some modified file-visiting buffers.  Asks user about each one.
 }
 END_DEFUN
 
-DEFUN ("save-buffers-kill-zile", save_buffers_kill_zile)
+DEFUN ("save-buffers-kill-emacs", save_buffers_kill_emacs)
 /*+
 Offer to save each buffer, then kill this Zile process.
 +*/

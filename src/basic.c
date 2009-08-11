@@ -58,8 +58,9 @@ get_goalc_bp (Buffer * bp, Point pt)
 {
   size_t col = 0, t = tab_width (bp), i;
   const char *sp = astr_cstr (get_line_text (pt.p));
+  size_t end = MIN (pt.o, astr_len (get_line_text (pt.p)));
 
-  for (i = 0; i < pt.o; i++)
+  for (i = 0; i < end; i++)
     {
       if (sp[i] == '\t')
         col |= t - 1;
@@ -359,7 +360,7 @@ END_DEFUN
 static bool
 scroll_down (void)
 {
-  if (get_buffer_pt (cur_bp).n > 0)
+  if (get_buffer_pt (cur_bp).n > get_window_eheight (cur_wp))
     return move_line (-get_window_eheight (cur_wp));
 
   minibuf_error ("Beginning of buffer");
@@ -369,7 +370,8 @@ scroll_down (void)
 static bool
 scroll_up (void)
 {
-  if (get_buffer_pt (cur_bp).n < get_buffer_last_line (cur_bp))
+  if (get_buffer_pt (cur_bp).n <
+      get_buffer_last_line (cur_bp) - get_window_eheight (cur_wp))
     return move_line (get_window_eheight (cur_wp));
 
   minibuf_error ("End of buffer");

@@ -56,35 +56,6 @@ int thisflag = 0, lastflag = 0;
 /* The universal argument repeat count. */
 int last_uniarg = 1;
 
-static void
-loop (void)
-{
-  for (;;)
-    {
-      size_t key;
-
-      if (lastflag & FLAG_NEED_RESYNC)
-        resync_redisplay ();
-      term_redisplay ();
-      term_refresh ();
-
-      thisflag = lastflag & FLAG_DEFINING_MACRO;
-      key = getkey ();
-      minibuf_clear ();
-      process_key (root_bindings, key);
-
-      if (thisflag & FLAG_QUIT)
-        break;
-      if (!(thisflag & FLAG_SET_UNIARG))
-        last_uniarg = 1;
-
-      if (last_command () != F_undo)
-        set_buffer_next_undop (cur_bp, get_buffer_last_undop (cur_bp));
-
-      lastflag = thisflag;
-    }
-}
-
 static const char about_splash_str[] = "\
 " ZILE_VERSION_STRING "\n\
 \n\
@@ -116,40 +87,7 @@ about_screen (void)
 }
 
 static void
-execute_functions (gl_list_t funcs)
-{
-  size_t i;
-  for (i = 0; i < gl_list_size (funcs); i++)
-    {
-      char *func = (char *) gl_list_get_at (funcs, i);
-      term_redisplay ();
-      if (!execute_function (func, 1))
-        minibuf_error ("Function `%s' not defined", func);
-      lastflag |= FLAG_NEED_RESYNC;
-    }
-}
-
-static void
-load_files (gl_list_t files)
-{
-  size_t i;
-  for (i = 0; i < gl_list_size (files); i++)
-    {
-      char *file = (char *) gl_list_get_at (files, i);
-      term_redisplay ();
-      lastflag |= FLAG_NEED_RESYNC;
-      if (!lisp_loadfile (file))
-        {
-          minibuf_error ("Cannot open load file: %s\n", file);
-          break;
-        }
-      if (thisflag & FLAG_QUIT)
-        break;
-    }
-}
-
-static void
-setup_main_screen (int argc)
+setup_main_screen (void)
 {
   Buffer *bp, *last_bp = NULL;
   int c = 0;
@@ -172,28 +110,6 @@ setup_main_screen (int argc)
   /* More than two files. */
   else if (c > 3)
     FUNCALL (list_buffers);
-  else
-    {
-      if (argc < 1)
-        {
-          undo_nosave = true;
-
-          if (!get_variable_bool ("inhibit-splash-screen"))
-            {
-              astr as = astr_new_cstr ("\
-This buffer is for notes you don't want to save.\n\
-If you want to create a file, visit that file with C-x C-f,\n\
-then enter the text in that file's own buffer.\n\
-\n");
-              insert_astr (as);
-              astr_delete (as);
-            }
-
-          undo_nosave = false;
-          set_buffer_modified (cur_bp, false);
-          lastflag |= FLAG_NEED_RESYNC;
-        }
-    }
 }
 
 static void
@@ -248,16 +164,22 @@ at_lua_panic (lua_State *L)
   abort ();
 }
 
+enum {ARG_FUNCTION = 1, ARG_LOADFILE, ARG_FILE};
+
 int
 main (int argc, char **argv)
 {
   int qflag = false;
-  gl_list_t l_args = gl_list_create_empty (GL_LINKED_LIST,
-                                           NULL, NULL, NULL, false);
-  gl_list_t f_args = gl_list_create_empty (GL_LINKED_LIST,
-                                           NULL, NULL, NULL, false);
-  size_t line;
+  gl_list_t arg_type = gl_list_create_empty (GL_LINKED_LIST,
+                                             NULL, NULL, NULL, false);
+  gl_list_t arg_arg = gl_list_create_empty (GL_LINKED_LIST,
+                                             NULL, NULL, NULL, false);
+  gl_list_t arg_line = gl_list_create_empty (GL_LINKED_LIST,
+                                             NULL, NULL, NULL, false);
+  size_t i, line;
   Buffer *scratch_bp;
+  astr as;
+  bool ok = true;
 
   /* Set prog_name to executable name, if available */
   if (argv[0])
@@ -288,11 +210,15 @@ main (int argc, char **argv)
       int this_optind = optind ? optind : 1, longindex, c;
       char *buf, *shortopt;
 
-      /* Leading : so as to return ':' for a missing arg, not '?' */
-      c = getopt_long (argc, argv, ":f:l:q", longopts, &longindex);
+      /* Leading `-' means process all arguments in order, treating
+         non-options as arguments to an option with code 1 */
+      /* Leading `:' so as to return ':' for a missing arg, not '?' */
+      c = getopt_long (argc, argv, "-:f:l:q", longopts, &longindex);
 
       if (c == -1)
         break;
+      else if (c == '\001') /* Non-option (assume file name) */
+        longindex = 5;
       else if (c == '?') /* Unknown option */
         minibuf_error ("Unknown option `%s'", argv[this_optind]);
       else if (c == ':') /* Missing argument */
@@ -314,10 +240,14 @@ main (int argc, char **argv)
           qflag = true;
           break;
         case 1:
-          gl_list_add_last (f_args, (void *) optarg);
+          gl_list_add_last (arg_type, (void *) ARG_FUNCTION);
+          gl_list_add_last (arg_arg, (void *) optarg);
+          gl_list_add_last (arg_line, (void *) 0);
           break;
         case 2:
-          gl_list_add_last (l_args, (void *) optarg);
+          gl_list_add_last (arg_type, (void *) ARG_LOADFILE);
+          gl_list_add_last (arg_arg, (void *) optarg);
+          gl_list_add_last (arg_line, (void *) 0);
           break;
         case 3:
           printf ("Usage: %s [OPTION-OR-FILENAME]...\n"
@@ -350,11 +280,19 @@ main (int argc, char **argv)
                   "under the terms of the GNU General Public License.\n"
                   "For more information about these matters, see the file named COPYING.\n");
           exit (0);
+        case 5:
+          if (*optarg == '+')
+            line = strtoul (optarg + 1, NULL, 10);
+          else
+            {
+              gl_list_add_last (arg_type, (void *) ARG_FILE);
+              gl_list_add_last (arg_arg, (void *) optarg);
+              gl_list_add_last (arg_line, (void *) line);
+            }
+          line = 1;
+          break;
         }
     }
-
-  argc -= optind;
-  argv += optind;
 
   signal_init ();
 
@@ -365,13 +303,19 @@ main (int argc, char **argv)
 
   term_init ();
 
-  /* Create the `*scratch*' buffer. */
+  /* Create the `*scratch*' buffer, so that initialisation commands
+     that act on a buffer have something to act on. */
   create_first_window ();
   scratch_bp = cur_bp;
-  term_redisplay ();
+  as = astr_new_cstr ("\
+;; This buffer is for notes you don't want to save.\n\
+;; If you want to create a file, visit that file with C-x C-f,\n\
+;; then enter the text in that file's own buffer.\n\
+\n");
+  insert_astr (as);
+  astr_delete (as);
+  set_buffer_modified (cur_bp, false);
 
-  /* Read settings after creating *scratch* buffer so that any
-     buffer commands won't cause a crash. */
   if (!qflag)
     {
       astr as = get_home_dir ();
@@ -383,48 +327,61 @@ main (int argc, char **argv)
         }
     }
 
-  /* Open files given on the command line */
-  for (line = 1; *argv; argv++)
-    {
-      if (**argv == '+')
-        line = strtoul (*argv + 1, NULL, 10);
-      else
-        {
-          astr as = astr_afmt (astr_new (), "%d", line);
-          le *branch;
-          branch = leAddDataElement (leAddDataElement (NULL, "", 0), astr_cstr (as), 0);
-          find_file (*argv);
-          F_goto_line (0, branch);
-          leWipe (branch);
-          astr_delete (as);
-          line = 1;
-          lastflag |= FLAG_NEED_RESYNC;
-        }
-    }
-
-  /* Show the splash screen only if no files and no Lisp expression
-     or load file is specified on the command line. */
-  if (minibuf_contents == NULL && argc == 0 &&
-      gl_list_size (f_args) == 0 &&
-      gl_list_size (l_args) == 0)
+  /* Show the splash screen only if no files, function or load file is
+     specified on the command line, and there has been no error. */
+  if (minibuf_contents == NULL && gl_list_size (arg_arg) == 0)
     about_screen ();
-  setup_main_screen (argc);
+  setup_main_screen ();
 
-  /* Load Lisp files given on the command line. */
-  load_files (l_args);
-  gl_list_free (l_args);
+  /* Load files and load files and run functions given on the command
+     line. */
+  for (i = 0; ok && i < gl_list_size (arg_arg); i++)
+    {
+      char *arg = (char *) gl_list_get_at (arg_arg, i);
+
+      switch ((int) gl_list_get_at (arg_type, i))
+        {
+        case ARG_FUNCTION:
+          ok = get_function (arg);
+          if (ok)
+            ok = execute_function (arg, 1);
+          else
+            minibuf_error ("Function `%s' not defined", arg);
+          break;
+        case ARG_LOADFILE:
+          ok = lisp_loadfile (arg);
+          if (!ok)
+            minibuf_error ("Cannot open load file: %s\n", arg);
+          break;
+        case ARG_FILE:
+          {
+            astr as = astr_afmt (astr_new (), "%d", line);
+            le *branch = leAddDataElement (leAddDataElement (NULL, "", 0), astr_cstr (as), 0);
+            ok = find_file (arg);
+            if (ok)
+              F_goto_line (0, branch);
+            leWipe (branch);
+            astr_delete (as);
+            lastflag |= FLAG_NEED_RESYNC;
+          }
+          break;
+        }
+      if (thisflag & FLAG_QUIT)
+        break;
+    }
+  gl_list_free (arg_type);
+  gl_list_free (arg_arg);
+  gl_list_free (arg_line);
+  lastflag |= FLAG_NEED_RESYNC;
 
   /* Reinitialise the scratch buffer to catch settings */
   init_buffer (scratch_bp);
-
-  /* Run command-line functions. */
-  execute_functions (f_args);
-  gl_list_free (f_args);
 
   /* Refresh minibuffer in case there's an error that couldn't be
      written during startup */
   if (minibuf_contents != NULL)
     {
+      /* Copy minibuf_contents because minibuf_write frees it */
       char *buf = xstrdup (minibuf_contents);
 
       minibuf_write (buf);
@@ -432,13 +389,19 @@ main (int argc, char **argv)
     }
 
   /* Run the main loop. */
-  if (!(thisflag & FLAG_QUIT))
-    loop ();
+  while (!(thisflag & FLAG_QUIT))
+    {
+      if (lastflag & FLAG_NEED_RESYNC)
+        resync_redisplay ();
+      term_redisplay ();
+      term_refresh ();
+      process_key (getkey ());
+    }
 
   /* Tidy and close the terminal. */
   term_finish ();
 
-  free_bindings (root_bindings);
+  free_default_bindings ();
   free_eval ();
 
   /* Free all the memory allocated. */

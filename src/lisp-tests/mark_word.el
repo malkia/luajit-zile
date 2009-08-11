@@ -1,6 +1,6 @@
 (mark-word)
-(kill-region)
+(kill-region (point) (mark))
 (end-of-line)
 (yank)
 (save-buffer)
-(save-buffers-kill-zile)
+(save-buffers-kill-emacs)

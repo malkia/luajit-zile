@@ -47,7 +47,7 @@ struct Binding
   size_t vecnum, vecmax;
 };
 
-Binding root_bindings;
+static Binding root_bindings;
 
 static Binding
 node_new (int vecmax)
@@ -268,40 +268,51 @@ set_this_command (Function cmd)
 }
 
 void
-process_key (Binding bindings, size_t key)
+process_key (size_t key)
 {
-  if (key == KBD_NOKEY)
-    return;
+  thisflag = lastflag & FLAG_DEFINING_MACRO;
+  minibuf_clear ();
 
-  if (key & KBD_META && (isdigit ((int) (key & 0xff)) || (key & 0xff) == '-'))
-    /* Got an ESC x sequence where `x' is a digit or `-'. */
-    universal_argument (KBD_META, (int) ((key & 0xff)));
-  else
+  if (key != KBD_NOKEY)
     {
-      gl_list_t keys;
-      Function f = completion_scan (bindings, key, &keys);
-      if (f != NULL)
-        {
-          set_this_command (f);
-          f (last_uniarg, 0);
-          _last_command = _this_command;
-        }
+      if (key & KBD_META && (isdigit ((int) (key & 0xff)) || (key & 0xff) == '-'))
+        /* Got an ESC x sequence where `x' is a digit or `-'. */
+        universal_argument (KBD_META, (int) ((key & 0xff)));
       else
         {
-          astr as = keyvectostr (keys);
-          minibuf_error ("%s is undefined", astr_cstr (as));
-          astr_delete (as);
+          gl_list_t keys;
+          Function f = completion_scan (root_bindings, key, &keys);
+          if (f != NULL)
+            {
+              set_this_command (f);
+              f (last_uniarg, 0);
+              _last_command = _this_command;
+            }
+          else
+            {
+              astr as = keyvectostr (keys);
+              minibuf_error ("%s is undefined", astr_cstr (as));
+              astr_delete (as);
+            }
+          gl_list_free (keys);
         }
-      gl_list_free (keys);
+
+      /* Only add keystrokes if we were already in macro defining mode
+         before the function call, to cope with start-kbd-macro. */
+      if (lastflag & FLAG_DEFINING_MACRO && thisflag & FLAG_DEFINING_MACRO)
+        add_cmd_to_macro ();
     }
 
-  /* Only add keystrokes if we were already in macro defining mode
-     before the function call, to cope with start-kbd-macro. */
-  if (lastflag & FLAG_DEFINING_MACRO && thisflag & FLAG_DEFINING_MACRO)
-    add_cmd_to_macro ();
+  if (!(thisflag & FLAG_SET_UNIARG))
+    last_uniarg = 1;
+
+  if (last_command () != F_undo)
+    set_buffer_next_undop (cur_bp, get_buffer_last_undop (cur_bp));
+
+  lastflag = thisflag;
 }
 
-Binding
+static Binding
 init_bindings (void)
 {
   return node_new (10);
@@ -415,7 +426,7 @@ init_default_bindings (void)
 (global-set-key \"\\C-q\" 'quoted-insert)\
 (global-set-key \"\\C-l\" 'recenter)\
 (global-set-key \"\\C-x\\C-s\" 'save-buffer)\
-(global-set-key \"\\C-x\\C-c\" 'save-buffers-kill-zile)\
+(global-set-key \"\\C-x\\C-c\" 'save-buffers-kill-emacs)\
 (global-set-key \"\\C-xs\" 'save-some-buffers)\
 (global-set-key \"\\M-v\" 'scroll-down)\
 (global-set-key \"\\PRIOR\" 'scroll-down)\
@@ -427,8 +438,8 @@ init_default_bindings (void)
 (global-set-key \"\\M-|\" 'shell-command-on-region)\
 (global-set-key \"\\C-x2\" 'split-window)\
 (global-set-key \"\\C-x(\" 'start-kbd-macro)\
-(global-set-key \"\\C-x\\C-z\" 'suspend-zile)\
-(global-set-key \"\\C-z\" 'suspend-zile)\
+(global-set-key \"\\C-x\\C-z\" 'suspend-emacs)\
+(global-set-key \"\\C-z\" 'suspend-emacs)\
 (global-set-key \"\\C-xb\" 'switch-to-buffer)\
 (global-set-key \"\\M-i\" 'tab-to-tab-stop)\
 (global-set-key \"\\C-x\\C-q\" 'toggle-read-only)\
@@ -441,8 +452,8 @@ init_default_bindings (void)
 (global-set-key \"\\C-u\" 'universal-argument)\
 (global-set-key \"\\C-x\\C-u\" 'upcase-region)\
 (global-set-key \"\\M-u\" 'upcase-word)\
-(global-set-key \"\\C-h\\C-f\" 'view-zile-FAQ)\
-(global-set-key \"\\F1\\C-f\" 'view-zile-FAQ)\
+(global-set-key \"\\C-h\\C-f\" 'view-emacs-FAQ)\
+(global-set-key \"\\F1\\C-f\" 'view-emacs-FAQ)\
 (global-set-key \"\\C-hw\" 'where-is)\
 (global-set-key \"\\F1w\" 'where-is)\
 (global-set-key \"\\C-x\\C-w\" 'write-file)\
@@ -452,7 +463,7 @@ init_default_bindings (void)
   astr_delete (as);
 }
 
-void
+static void
 free_bindings (Binding binding)
 {
   size_t i;
@@ -460,6 +471,12 @@ free_bindings (Binding binding)
     free_bindings (binding->vec[i]);
   free (binding->vec);
   free (binding);
+}
+
+void
+free_default_bindings (void)
+{
+  free_bindings (root_bindings);
 }
 
 DEFUN_ARGS ("global-set-key", global_set_key,

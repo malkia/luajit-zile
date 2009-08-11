@@ -1,6 +1,7 @@
-(next-line)
-(next-line)
-(next-line)
-(insert-char "a")
+; FIXME: Use next-line!
+(forward-line)
+(forward-line)
+(forward-line)
+(insert "a")
 (save-buffer)
-(save-buffers-kill-zile)
+(save-buffers-kill-emacs)

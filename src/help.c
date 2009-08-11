@@ -21,7 +21,7 @@
 
 #include "config.h"
 
-#include <ctype.h>
+#include <assert.h>
 #include <limits.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -59,7 +59,7 @@ show_file (char *filename)
   return leT;
 }
 
-DEFUN ("view-zile-FAQ", view_zile_FAQ)
+DEFUN ("view-emacs-FAQ", view_emacs_FAQ)
 /*+
 Display the Zile Frequently Asked Questions (FAQ) file.
 +*/
@@ -73,8 +73,12 @@ write_function_description (va_list ap)
 {
   const char *name = va_arg (ap, const char *);
   const char *doc = va_arg (ap, const char *);
+  int interactive = get_function_interactive (name);
 
-  bprintf ("Function: %s\n\n" "Documentation:\n%s", name, doc);
+  bprintf ("%s is %s built-in function in `C source code'.\n\n%s",
+           name,
+           interactive ? "an interactive" : "a",
+           doc);
 }
 
 DEFUN_ARGS ("describe-function", describe_function,
@@ -100,13 +104,8 @@ Display the full documentation of a function.
       if (doc == NULL)
         ok = leNIL;
       else
-        {
-          bufname = astr_new ();
-          astr_afmt (bufname, "*Help: function `%s'*", func);
-          write_temp_buffer (astr_cstr (bufname), true,
-                             write_function_description, func, doc);
-          astr_delete (bufname);
-        }
+        write_temp_buffer ("*Help*", true,
+                           write_function_description, func, doc);
     }
 
   STR_FREE (func);
@@ -120,8 +119,7 @@ write_variable_description (va_list ap)
   char *curval = va_arg (ap, char *);
   char *doc = va_arg (ap, char *);
   bprintf ("%s is a variable defined in `C source code'.\n\n"
-           "Its value is %s\n\n"
-           "Documentation:\n%s",
+           "Its value is %s\n\n\n%s",
            name, curval, doc);
 }
 
@@ -144,20 +142,31 @@ Display the full documentation of a variable.
       if (doc == NULL)
         ok = leNIL;
       else
-        {
-          astr bufname = astr_new ();
-
-          astr_afmt (bufname, "*Help: variable `%s'*", name);
-          write_temp_buffer (astr_cstr (bufname), true,
-                             write_variable_description,
-                             name, get_variable (name), doc);
-          astr_delete (bufname);
-        }
+        write_temp_buffer ("*Help*", true,
+                           write_variable_description,
+                           name, get_variable (name), doc);
     }
 
   STR_FREE (name);
 }
 END_DEFUN
+
+static void
+write_key_description (va_list ap)
+{
+  const char *name = va_arg (ap, const char *);
+  const char *doc = va_arg (ap, const char *);
+  const char *binding = va_arg (ap, const char *);
+  int interactive = get_function_interactive (name);
+
+  assert (interactive != -1);
+
+  bprintf ("%s runs the command %s, which is %s built-in\n"
+           "function in `C source code'.\n\n%s",
+           binding, name,
+           interactive ? "an interactive" : "a",
+           doc);
+}
 
 DEFUN_ARGS ("describe-key", describe_key,
             STR_ARG (keystr))
@@ -204,13 +213,8 @@ Display documentation of the command invoked by a key sequence.
       if (doc == NULL)
         ok = leNIL;
       else
-        {
-          astr bufname = astr_new ();
-          astr_afmt (bufname, "*Help: function `%s'*", name);
-          write_temp_buffer (astr_cstr (bufname), true,
-                             write_function_description, name, doc);
-          astr_delete (bufname);
-        }
+        write_temp_buffer ("*Help*", true,
+                           write_key_description, name, doc, astr_cstr (binding));
     }
 
   if (binding)

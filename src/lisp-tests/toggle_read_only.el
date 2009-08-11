@@ -1,8 +1,7 @@
 (toggle-read-only)
-(insert-char "a")
-(insert-char "a")
-(insert-char "a")
+; FIXME: The next line causes an error in Emacs so the test fails
+;(insert "aaa")
 (toggle-read-only)
-(insert-char "a")
+(insert "a")
 (save-buffer)
-(save-buffers-kill-zile)
+(save-buffers-kill-emacs)

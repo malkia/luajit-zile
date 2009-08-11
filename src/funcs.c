@@ -34,7 +34,7 @@
 #include "extern.h"
 
 
-DEFUN ("suspend-zile", suspend_zile)
+DEFUN ("suspend-emacs", suspend_emacs)
 /*+
 Stop Zile and return to superior process.
 +*/
@@ -74,25 +74,6 @@ With arg, turn Transient Mark mode on if arg is positive, off otherwise.
 }
 END_DEFUN
 
-static char *
-make_buffer_flags (Buffer * bp, int iscurrent)
-{
-  static char buf[4];
-
-  buf[0] = iscurrent ? '.' : ' ';
-  buf[1] = get_buffer_modified (bp) ? '*' : ' ';
-  /*
-   * Display the readonly flag if it is set or the buffer is the
-   * `*Buffer List*' buffer.  (The readonly flag is not set when we are
-   * called, as otherwise we wouldn't be able to write to the
-   * buffer!)
-   */
-  buf[2] = (get_buffer_readonly (bp) || bp == cur_bp) ? '%' : ' ';
-  buf[3] = '\0';
-
-  return buf;
-}
-
 static astr
 make_buffer_modeline (Buffer * bp)
 {
@@ -124,15 +105,14 @@ shorten_string (astr as, int maxlen)
 static void
 print_buf (Buffer * old_bp, Buffer * bp)
 {
-  astr mode = make_buffer_modeline (bp);
-
   if (get_buffer_name (bp)[0] == ' ')
     return;
 
-  bprintf ("%3s %-16s %6u  %-13s",
-           make_buffer_flags (bp, old_bp == bp),
-           get_buffer_name (bp), calculate_buffer_size (bp), astr_cstr (mode));
-  astr_delete (mode);
+  bprintf ("%c%c%c %-19s %6u  %-17s",
+           old_bp == bp ? '.' : ' ',
+           get_buffer_readonly (bp) ? '%' : ' ',
+           get_buffer_modified (bp) ? '*' : ' ',
+           get_buffer_name (bp), calculate_buffer_size (bp), "Fundamental");
   if (get_buffer_filename (bp) != NULL)
     {
       astr shortname = shorten_string (compact_path (astr_new_cstr (get_buffer_filename (bp))), 40);
@@ -201,8 +181,9 @@ write_buffers_list (va_list ap)
   Window *old_wp = va_arg (ap, Window *);
   Buffer *bp;
 
-  bprintf (" MR Buffer           Size    Mode         File\n");
-  bprintf (" -- ------           ----    ----         ----\n");
+  /* FIXME: Underline next line properly. */
+  bprintf ("CRM Buffer                Size  Mode             File\n");
+  bprintf ("--- ------                ----  ----             ----\n");
 
   /* Print buffers. */
   bp = get_window_bp (old_wp);
@@ -234,16 +215,22 @@ The @samp{R} column contains a @samp{%} for buffers that are read-only.
 }
 END_DEFUN
 
-DEFUN ("overwrite-mode", overwrite_mode)
+DEFUN_ARGS ("overwrite-mode", overwrite_mode,
+            INT_OR_UNIARG (arg))
 /*+
-In overwrite mode, printing characters typed in replace existing
-text on a one-for-one basis, rather than pushing it to the right.
-At the end of a line, such characters extend the line.
+Toggle overwrite mode.
+With prefix argument @i{arg}, turn overwrite mode on if @i{arg} is positive,
+otherwise turn it off.  In overwrite mode, printing characters typed
+in replace existing text on a one-for-one basis, rather than pushing
+it to the right.  At the end of a line, such characters extend the line.
+Before a tab, such characters insert until the tab is filled in.
 @kbd{C-q} still inserts characters in overwrite mode; this
 is supposed to make it easier to insert characters when necessary.
 +*/
 {
-  set_buffer_overwrite (cur_bp, !get_buffer_overwrite (cur_bp));
+  INT_OR_UNIARG_INIT (arg);
+  set_buffer_overwrite (cur_bp, lastflag & FLAG_SET_UNIARG ? uniarg > 0 :
+                        !get_buffer_overwrite (cur_bp));
 }
 END_DEFUN
 
@@ -325,13 +312,22 @@ set_mark_interactive (void)
   minibuf_write ("Mark set");
 }
 
-DEFUN ("set-mark-command", set_mark_command)
+DEFUN_NONINTERACTIVE ("set-mark", set_mark)
 /*+
-Set mark at where point is.
+Set this buffer's mark to point.
 +*/
 {
   set_mark_interactive ();
   activate_mark ();
+}
+END_DEFUN
+
+DEFUN ("set-mark-command", set_mark_command)
+/*+
+Set the mark where point is.
++*/
+{
+  FUNCALL (set_mark);
 }
 END_DEFUN
 
@@ -421,6 +417,7 @@ You may also type up to 3 octal digits, to insert a character with that code.
 }
 END_DEFUN
 
+/* FIXME: Simplify to one argument, which if KBD_NOKEY is ignored. */
 le
 universal_argument (int keytype, int xarg)
 {
@@ -512,7 +509,7 @@ Repeating @kbd{C-u} without digits or minus sign multiplies the argument
 by 4 each time.
 +*/
 {
-  ok = universal_argument (KBD_CTRL | 'u', 0);
+  ok = universal_argument (0, 0);
 }
 END_DEFUN
 
@@ -1154,16 +1151,15 @@ move to with the same argument.
 }
 END_DEFUN
 
+/* FIXME: Use new macro for arg/uniarg */
 DEFUN_ARGS ("forward-line", forward_line,
-            INT_ARG (n))
+            INT_OR_UNIARG (n))
 /*+
 Move N lines forward (backward if N is negative).
 Precisely, if point is on line I, move to the start of line I + N.
 +*/
 {
-  INT_INIT (n)
-  else
-    n = uniarg;
+  INT_OR_UNIARG_INIT (n);
   if (ok == leT)
     {
       FUNCALL (beginning_of_line);
@@ -1318,12 +1314,14 @@ setcase_word_lowercase (void)
   return setcase_word (case_lower);
 }
 
-DEFUN ("downcase-word", downcase_word)
+DEFUN_ARGS ("downcase-word", downcase_word,
+            INT_OR_UNIARG (arg))
 /*+
-Convert following word (or argument N words) to lower case, moving over.
+Convert following word (or @i{arg} words) to lower case, moving over.
 +*/
 {
-  ok = execute_with_uniarg (true, uniarg, setcase_word_lowercase, NULL);
+  INT_OR_UNIARG_INIT (arg);
+  ok = execute_with_uniarg (true, arg, setcase_word_lowercase, NULL);
 }
 END_DEFUN
 
@@ -1333,12 +1331,14 @@ setcase_word_uppercase (void)
   return setcase_word (case_upper);
 }
 
-DEFUN ("upcase-word", upcase_word)
+DEFUN_ARGS ("upcase-word", upcase_word,
+            INT_OR_UNIARG (arg))
 /*+
-Convert following word (or argument N words) to upper case, moving over.
+Convert following word (or @i{arg} words) to upper case, moving over.
 +*/
 {
-  ok = execute_with_uniarg (true, uniarg, setcase_word_uppercase, NULL);
+  INT_OR_UNIARG_INIT (arg);
+  ok = execute_with_uniarg (true, arg, setcase_word_uppercase, NULL);
 }
 END_DEFUN
 
@@ -1348,14 +1348,16 @@ setcase_word_capitalize (void)
   return setcase_word (case_capitalized);
 }
 
-DEFUN ("capitalize-word", capitalize_word)
+DEFUN_ARGS ("capitalize-word", capitalize_word,
+            INT_OR_UNIARG (arg))
 /*+
-Capitalize the following word (or argument N words), moving over.
-This gives the word(s) a first character in upper case and the rest
-lower case.
+Capitalize the following word (or @i{arg} words), moving over.
+This gives the word(s) a first character in upper case
+and the rest lower case.
 +*/
 {
-  ok = execute_with_uniarg (true, uniarg, setcase_word_capitalize, NULL);
+  INT_OR_UNIARG_INIT (arg);
+  ok = execute_with_uniarg (true, arg, setcase_word_capitalize, NULL);
 }
 END_DEFUN
 
@@ -1530,6 +1532,8 @@ says to insert the output in the current buffer.
 END_DEFUN
 
 DEFUN_ARGS ("shell-command-on-region", shell_command_on_region,
+            INT_ARG (start)
+            INT_ARG (end)
             STR_ARG (cmd)
             BOOL_ARG (insert))
 /*+
@@ -1537,6 +1541,7 @@ Execute string command in inferior shell with region as input.
 Normally display output (if any) in temp buffer `*Shell Command Output*';
 Prefix arg means replace the region with it.  Return the exit code of
 command.
+
 If the command generates output, the output may be displayed
 in the echo area or in a buffer.
 If the output is short enough to display in the echo area, it is shown
@@ -1544,6 +1549,8 @@ there.  Otherwise it is displayed in the buffer `*Shell Command Output*'.
 The output is available in that buffer in both cases.
 +*/
 {
+  INT_INIT (start);
+  INT_INIT (end);
   STR_INIT (cmd)
   else
     cmd = minibuf_read_shell_command ();

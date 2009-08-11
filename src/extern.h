@@ -35,15 +35,15 @@ void gotobob (void);
 void gotoeob (void);
 
 /* bind.c ----------------------------------------------------------------- */
-extern Binding root_bindings;
+Function last_command (void);
+void set_this_command (Function cmd);
 size_t do_binding_completion (astr as);
 const char *get_function_by_key (size_t key);
-void process_key (Binding bindings, size_t key);
-Binding init_bindings (void);
+void process_key (size_t key);
 void init_default_bindings (void);
 Function last_command (void);
 void set_this_command (Function cmd);
-void free_bindings (Binding p);
+void free_default_bindings (void);
 
 /* buffer.c --------------------------------------------------------------- */
 #define FIELD(ty, field)                                \
@@ -188,6 +188,7 @@ le execute_with_uniarg (bool undo, int uniarg, bool (*forward) (void),
                         bool (*backward) (void));
 le execute_function (const char *name, int uniarg);
 Function get_function (const char *name);
+int get_function_interactive (const char *name);
 const char *get_function_doc (const char *name);
 const char *get_function_name (Function p);
 const char *minibuf_read_function_name (const char *fmt, ...);
@@ -269,6 +270,7 @@ void init_search (void);
 void free_search (void);
 
 /* term_curses.c ---------------------------------------------------------- */
+size_t term_buf_len (void);
 void term_init (void);
 void term_close (void);
 void term_suspend (void);

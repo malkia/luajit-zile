@@ -1,3 +1,3 @@
-(insert-char "a")
+(insert "a")
 (save-buffer)
-(save-buffers-kill-zile)
+(save-buffers-kill-emacs)

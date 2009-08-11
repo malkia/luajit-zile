@@ -21,31 +21,26 @@ dnl MA 02111-1301, USA.
 
 dnl Initialise autoconf and automake
 AC_INIT(Zile, 2.4.0, bug-zile@gnu.org)
-AM_INIT_AUTOMAKE(std-options)
+AM_INIT_AUTOMAKE([std-options check-news])
 
 dnl Checks for programs
 AC_GNU_SOURCE
 AC_PROG_CC
+AX_CFLAGS_WARN_ALL
 if test "$GCC" = "yes"; then
-  CFLAGS="$CFLAGS -Wall -W -Wmissing-prototypes -Wstrict-prototypes -pedantic -D_FORTIFY_SOURCE=2"
+  CFLAGS="$CFLAGS -W -Wmissing-prototypes -Wstrict-prototypes -D_FORTIFY_SOURCE=2"
 fi
 gl_EARLY
 AM_PROG_CC_C_O
 
 dnl help2man
-AC_PATH_PROG(HELP2MAN, help2man)
+AX_WITH_PROG(HELP2MAN, help2man)
 
 dnl Valgrind
-AC_ARG_ENABLE(valgrind,
-  [AS_HELP_STRING([--disable-valgrind],
-    [do not run tests with Valgrind])],
-  [],
-  [enable_valgrind=yes])
-AS_IF([test "$enable_valgrind" != "no"],
-  [AC_PATH_PROG(VALGRIND, valgrind)
-  if test -n "$VALGRIND"; then
-    VALGRIND="$VALGRIND --error-exitcode=1 --leak-check=full"
-  fi])
+AX_WITH_PROG(VALGRIND, valgrind)
+if test -n "$VALGRIND"; then
+  VALGRIND="$VALGRIND --error-exitcode=1 --leak-check=full"
+fi
 
 dnl Checks for functions and headers
 gl_INIT
@@ -55,9 +50,21 @@ AC_CHECK_FUNCS(fchmod)
 dnl Curses
 MP_WITH_CURSES
 if test "$mp_cv_curses" != "yes"; then
-  AC_MSG_FAILURE([cannot find curses])
+  AC_MSG_ERROR([cannot find curses])
 fi
-AC_SUBST(CURSES_LIB)
+AC_ARG_VAR(CURSES_LIB, [linker flags for curses library])
+
+dnl Emacs
+AX_WITH_PROG(EMACS, emacs)
+if test -n "$EMACS"; then
+  emacs_min_version=23.1
+  emacs_version=$($EMACS --version 2>&1 | head -n 1 | cut -d' ' -f3)
+  AC_MSG_CHECKING([Emacs version $emacs_version >= $emacs_min_version])
+  AX_COMPARE_VERSION("$emacs_version", ge, $emacs_min_version,
+    AC_MSG_RESULT([yes]),
+    [AC_MSG_RESULT([no])
+    unset EMACS])
+fi
 
 dnl Lua
 AX_WITH_LUA
@@ -76,7 +83,7 @@ dnl Extra definitions for config.h
 AC_DEFINE_UNQUOTED(CONFIGURE_DATE, ["`date '+%a %b %d %Y'`"],
                    [The date of compilation.])
 AC_DEFINE_UNQUOTED(CONFIGURE_HOST, ["${ac_hostname}"],
-                   [The host of compilation.])
+                   [The compilation host.])
 
 dnl Generate output
 AC_CONFIG_HEADER(config.h)
