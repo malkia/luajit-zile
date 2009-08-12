@@ -125,7 +125,7 @@ execute_function (const char *name, int uniarg)
   Macro *mp;
 
   if (func)
-    return func (uniarg, LUA_REFNIL);
+    return func (uniarg, LUA_NOREF);
   else
     {
       mp = get_macro (name);

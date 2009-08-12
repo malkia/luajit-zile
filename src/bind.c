@@ -285,7 +285,7 @@ process_key (size_t key)
           if (f != NULL)
             {
               set_this_command (f);
-              f (last_uniarg, 0);
+              f (last_uniarg, LUA_NOREF);
               _last_command = _this_command;
             }
           else
