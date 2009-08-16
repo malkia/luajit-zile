@@ -340,8 +340,6 @@ init_default_bindings (void)
     }
   gl_list_free (keys);
 
-  /* FIXME: Rename -zile commands to -emacs commands to be able to run
-     tests in Emacs. */
   as = astr_new_cstr ("\
 (global-set-key \"\\M-m\" 'back-to-indentation)\
 (global-set-key \"\\C-b\" 'backward-char)\
