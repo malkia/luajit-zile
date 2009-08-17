@@ -81,7 +81,6 @@ size_t tab_width (Buffer * bp);
 char *copy_text_block (size_t startn, size_t starto, size_t size);
 Buffer *create_scratch_buffer (void);
 void kill_buffer (Buffer * kill_bp);
-Completion *make_buffer_completion (void);
 bool check_modified_buffer (Buffer * bp);
 
 /* completion.c ----------------------------------------------------------- */
@@ -100,6 +99,8 @@ void completion_scroll_up (void);
 void completion_scroll_down (void);
 void popup_completion (Completion * cp);
 int completion_try (Completion * cp, astr search);
+char *minibuf_read_variable_name (char *fmt, ...);
+Completion *make_buffer_completion (void);
 
 /* editfns.c -------------------------------------------------------------- */
 void push_mark (void);
@@ -312,7 +313,6 @@ void undo_set_unchanged (Undo *up);
 /* variables.c ------------------------------------------------------------ */
 void init_variables (void);
 void free_variable_list (int ref);
-char *minibuf_read_variable_name (char *fmt, ...);
 void set_variable (const char *var, const char *val);
 const char *get_variable_doc (const char *var, char **defval);
 const char *get_variable_bp (Buffer * bp, const char *var);

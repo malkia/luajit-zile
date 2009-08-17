@@ -214,34 +214,6 @@ get_variable_bool (const char *var)
   return false;
 }
 
-char *
-minibuf_read_variable_name (char *fmt, ...)
-{
-  va_list ap;
-  char *ms;
-  Completion *cp = completion_new (false);
-
-  lua_getglobal (L, "main_vars");
-  lua_pushnil (L);
-  while (lua_next (L, -2) != 0) {
-    char *s = (char *) lua_tostring (L, -2);
-    assert (s);
-    gl_sortedlist_add (get_completion_completions (cp), completion_strcmp,
-                       xstrdup (s));
-    lua_pop (L, 1);
-  }
-  lua_pop (L, 1);
-
-  va_start (ap, fmt);
-  ms = minibuf_vread_completion (fmt, "", cp, NULL,
-                                 "No variable name given",
-                                 minibuf_test_in_completions,
-                                 "Undefined variable name `%s'", ap);
-  va_end (ap);
-
-  return ms;
-}
-
 DEFUN_ARGS ("set-variable", set_variable,
             STR_ARG (var)
             STR_ARG (val))

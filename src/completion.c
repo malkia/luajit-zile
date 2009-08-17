@@ -36,6 +36,7 @@
 #include "extern.h"
 
 
+/* FIXME: Make this a Lua table; use completion_struct.lua */
 /*
  * Structure
  */
@@ -373,4 +374,46 @@ completion_try (Completion * cp, astr search)
     }
 
   abort ();
+}
+
+char *
+minibuf_read_variable_name (char *fmt, ...)
+{
+  va_list ap;
+  char *ms;
+  Completion *cp = completion_new (false);
+
+  lua_getglobal (L, "main_vars");
+  lua_pushnil (L);
+  while (lua_next (L, -2) != 0) {
+    char *s = (char *) lua_tostring (L, -2);
+    assert (s);
+    gl_sortedlist_add (get_completion_completions (cp), completion_strcmp,
+                       xstrdup (s));
+    lua_pop (L, 1);
+  }
+  lua_pop (L, 1);
+
+  va_start (ap, fmt);
+  ms = minibuf_vread_completion (fmt, "", cp, NULL,
+                                 "No variable name given",
+                                 minibuf_test_in_completions,
+                                 "Undefined variable name `%s'", ap);
+  va_end (ap);
+
+  return ms;
+}
+
+Completion *
+make_buffer_completion (void)
+{
+  Buffer *bp;
+  Completion *cp;
+
+  cp = completion_new (false);
+  for (bp = head_bp; bp != NULL; bp = get_buffer_next (bp))
+    gl_sortedlist_add (get_completion_completions (cp), completion_strcmp,
+                       xstrdup (get_buffer_name (bp)));
+
+  return cp;
 }

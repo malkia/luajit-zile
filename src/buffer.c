@@ -639,20 +639,6 @@ With a nil argument, kill the current buffer.
 }
 END_DEFUN
 
-Completion *
-make_buffer_completion (void)
-{
-  Buffer *bp;
-  Completion *cp;
-
-  cp = completion_new (false);
-  for (bp = head_bp; bp != NULL; bp = get_buffer_next (bp))
-    gl_sortedlist_add (get_completion_completions (cp), completion_strcmp,
-                       xstrdup (get_buffer_name (bp)));
-
-  return cp;
-}
-
 /*
  * Check if the buffer has been modified.  If so, asks the user if
  * he/she wants to save the changes.  If the response is positive, return
