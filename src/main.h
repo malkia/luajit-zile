@@ -112,6 +112,47 @@ enum
     p->field = field ? xstrdup (field) : NULL;                  \
   }
 
+#define LUA_GETTER(name, cty, lty, field)       \
+  cty                                           \
+  get_ ## name ## _ ## field (const le p)       \
+  {                                             \
+    cty ret;                                    \
+    lua_rawgeti (L, LUA_REGISTRYINDEX, p);      \
+    lua_getfield (L, -1, #field);               \
+    ret = lua_to ## lty (L, -1);                \
+    lua_pop (L, 2);                             \
+    return ret;                                 \
+  }                                             \
+
+#define LUA_TABLE_GETTER(name, field)           \
+  int                                           \
+  get_ ## name ## _ ## field (const le p)       \
+  {                                             \
+    int ret = LUA_REFNIL;                       \
+    lua_rawgeti (L, LUA_REGISTRYINDEX, p);      \
+    lua_getfield (L, -1, #field);               \
+    if (lua_istable (L, -1))                    \
+      ret = luaL_ref (L, LUA_REGISTRYINDEX);    \
+    lua_pop (L, 1);                             \
+    return ret;                                 \
+  }                                             \
+
+/* FIXME: Write LUA_SETTER and LUA_STR_SETTER */
+#define LUA_SETTER(name, ty, field)                     \
+  void                                                  \
+  set_ ## name ## _ ## field (const le p, ty field)     \
+  {                                                     \
+    p->field = field;                                   \
+  }
+
+#define LUA_STR_SETTER(name, field)                             \
+  void                                                          \
+  set_ ## name ## _ ## field (const le p, const char *field)    \
+  {                                                             \
+    free ((char *) p->field);                                   \
+    p->field = field ? xstrdup (field) : NULL;                  \
+  }
+
 /*--------------------------------------------------------------------------
  * Zile commands to C bindings.
  *--------------------------------------------------------------------------*/
