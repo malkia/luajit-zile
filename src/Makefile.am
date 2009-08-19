@@ -26,7 +26,26 @@ bin_PROGRAMS = zile
 
 zile_LDADD = $(LDADD) $(LIBOBJS)
 
-zile_base_SOURCES =					\
+zile_FUNCTION_SOURCES =					\
+	basic.c						\
+	bind.c						\
+	buffer.c					\
+	file.c						\
+	funcs.c						\
+	help.c						\
+	killring.c					\
+	line.c						\
+	lisp.c						\
+	macro.c						\
+	redisplay.c					\
+	registers.c					\
+	search.c					\
+	undo.c						\
+	variables.c					\
+	window.c
+
+zile_BASE_SOURCES =					\
+	$(zile_FUNCTION_SOURCES)			\
 	astr.c						\
 	astr.h						\
 	xalloc_extra.c					\
@@ -37,46 +56,31 @@ zile_base_SOURCES =					\
 	list_fields.h					\
 	lists.c						\
 	lists.h						\
-	lisp.c						\
-	basic.c						\
-	bind.c						\
 	buffer.h					\
-	buffer.c					\
 	region.h					\
 	completion.h					\
 	completion.c					\
 	editfns.c					\
-	file.c						\
-	funcs.c						\
 	getkey.c					\
-	help.c						\
 	history.c					\
 	keycode.c					\
-	killring.c					\
 	line.h						\
-	line.c						\
-	macro.c						\
 	main.c						\
 	marker.h					\
 	marker.c					\
 	minibuf.c					\
 	point.c						\
-	redisplay.c					\
-	registers.c					\
-	search.c					\
-	undo.c						\
-	variables.c					\
 	window.h					\
-	window.c					\
 	term_minibuf.c					\
 	term_redisplay.c				\
 	term_curses.c
 
-# FIXME: This is a circular dependency
-#extern.h: tbl_funcs.h
+clue_SOURCES =						\
+	clue.h
 
 zile_SOURCES =						\
-	$(zile_base_SOURCES)				\
+	$(zile_BASE_SOURCES)				\
+	$(clue_SOURCES)					\
 	tbl_funcs.h					\
 	tbl_opts.h.in
 
@@ -90,10 +94,10 @@ LUA_BUILDTIME = 					\
 	mkfuncs.lua					\
 	mkvars.lua
 
-ALLSOURCES = $(zile_base_SOURCES) $(LUA_BUILDTIME) $(LUA_RUNTIME)
+ALLSOURCES = $(zile_BASE_SOURCES) $(LUA_BUILDTIME) $(LUA_RUNTIME)
 
-tbl_funcs.h: $(zile_base_SOURCES) mkfuncs.lua $(LUA_RUNTIME)
-	LUA_INIT= LUA_PATH="$(srcdir)/?.lua" $(LUA) -e 'PACKAGE_NAME="$(PACKAGE_NAME)"' $(srcdir)/mkfuncs.lua $(srcdir) $(zile_base_SOURCES)
+extern.h tbl_funcs.h: $(zile_FUNCTION_SOURCES) mkfuncs.lua $(LUA_RUNTIME)
+	LUA_INIT= LUA_PATH="$(srcdir)/?.lua" $(LUA) -e 'PACKAGE_NAME="$(PACKAGE_NAME)"' $(srcdir)/mkfuncs.lua $(srcdir) $(zile_FUNCTION_SOURCES)
 
 mkvars.stamp: tbl_vars.h.in mkvars.lua $(LUA_RUNTIME)
 	@rm -f mkvars.tmp
