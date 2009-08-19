@@ -53,7 +53,7 @@ end
 
 -- Returns the length of the longest string that is a prefix of
 -- both s1 and s2.
-function common_prefix_length (s1, s2)
+local function common_prefix_length (s1, s2)
   local len = math.min (#s1, #s2)
   for i = 1, len do
     if string.sub (s1, 1, i) ~= string.sub (s2, 1, i) then
@@ -74,8 +74,7 @@ end
 -- function returns true, otherwise not modified.
 --
 -- To format the completions for a popup, you should call completion_write
--- after this method. You may want to call completion_remove_suffix and/or
--- completion_remove_prefix in between to keep the list manageable.
+-- after this method.
 function completion_try (cp, search)
   fullmatches = 0
   cp.matches = {}
@@ -103,43 +102,4 @@ function completion_try (cp, search)
   cp.match = string.sub (cp.match, 1, prefix_len)
 
   return true
-end
-
--- Find the last occurrence of string `s2' before `before_pos' in
--- `s1'. Returns the offset into `s1' of `s2', or 0 if not found.
-function last_occurrence (s, before_pos, c)
-  return before_pos - (string.find (string.reverse (string.sub (s, 1, before_pos - 1)), c) or before_pos)
-end
-
--- If two or more `cp.matches' have a common prefix that is longer than
--- `cp.match' and end in `_', replaces them with the longest such prefix.
--- Repeats as often as possible.
-function completion_remove_suffix(cp)
-  if #cp.matches == 0 then
-    return
-  end
-  local ans = {}
-  local previous = cp.matches[1]
-  for p = 2, #cp.matches do
-    local length = last_occurrence (previous, common_prefix_length (previous, cp.matches[p]), '_')
-    if length > #cp.matches then
-      previous = string.sub (previous, 0, length)
-    else
-      table.insert (ans, previous)
-      previous = cp.matches[p]
-    end
-  end
-  table.insert (ans, previous)
-  cp.matches = ans
-end
-
--- Finds the longest prefix of `search' that ends in an underscore, and removes
--- it from all `cp->matches'. Does nothing if there is no such prefix.
-function completion_remove_prefix (cp, search)
-  local pos = last_occurrence (search, #search, '_')
-  if pos > 0 then
-    for i, v in ipairs (cp.matches) do
-      cp.matches[i] = string.sub (v, pos)
-    end
-  end
 end
