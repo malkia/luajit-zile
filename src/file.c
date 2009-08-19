@@ -465,7 +465,7 @@ Select buffer @i{buffer} in the current window.
   STR_INIT (buffer)
   else
     {
-      Completion *cp = make_buffer_completion ();
+      Completion cp = make_buffer_completion ();
       buffer = minibuf_read_completion ("Switch to buffer (default %s): ",
                                         "", cp, NULL, get_buffer_name (bp));
       free_completion (cp);
@@ -545,7 +545,7 @@ Puts mark after the inserted text.
   STR_INIT (buffer)
   else
     {
-      Completion *cp = make_buffer_completion ();
+      Completion cp = make_buffer_completion ();
       buffer = minibuf_read_completion ("Insert buffer (default %s): ",
                                         "", cp, NULL, get_buffer_name (def_bp));
       if (buffer == NULL)

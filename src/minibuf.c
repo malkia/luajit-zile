@@ -108,7 +108,7 @@ minibuf_read (const char *fmt, const char *value, ...)
   xvasprintf (&buf, fmt, ap);
   va_end (ap);
 
-  p = term_minibuf_read (buf, value ? value : "", SIZE_MAX, NULL, NULL);
+  p = term_minibuf_read (buf, value ? value : "", SIZE_MAX, LUA_NOREF, NULL);
   free (buf);
 
   return p;
@@ -159,7 +159,7 @@ minibuf_read_filename (const char *fmt, const char *value,
 {
   va_list ap;
   char *buf, *p = NULL;
-  Completion *cp;
+  Completion cp;
   astr as;
   size_t pos;
 
@@ -240,7 +240,7 @@ minibuf_read_yesno (const char *fmt, ...)
   va_list ap;
   char *ms;
   const char *errmsg = "Please answer yes or no.";
-  Completion *cp = completion_new (false);
+  Completion cp = completion_new (false);
   int ret = -1;
 
   gl_sortedlist_add (get_completion_completions (cp), completion_strcmp, xstrdup ("yes"));
@@ -265,7 +265,7 @@ minibuf_read_yesno (const char *fmt, ...)
 }
 
 char *
-minibuf_read_completion (const char *fmt, char *value, Completion * cp,
+minibuf_read_completion (const char *fmt, char *value, Completion cp,
                          History * hp, ...)
 {
   va_list ap;
@@ -285,7 +285,7 @@ minibuf_read_completion (const char *fmt, char *value, Completion * cp,
  * Read a string from the minibuffer using a completion.
  */
 char *
-minibuf_vread_completion (const char *fmt, char *value, Completion * cp,
+minibuf_vread_completion (const char *fmt, char *value, Completion cp,
                           History * hp, const char *empty_err,
                           bool (*test) (const char *s, gl_list_t completions),
                           const char *invalid_err, va_list ap)

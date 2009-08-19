@@ -606,7 +606,7 @@ With a nil argument, kill the current buffer.
   STR_INIT (buffer)
   else
     {
-      Completion *cp = make_buffer_completion ();
+      Completion cp = make_buffer_completion ();
       buffer = minibuf_read_completion ("Kill buffer (default %s): ",
                                         "", cp, NULL, get_buffer_name (cur_bp));
       free_completion (cp);

@@ -84,23 +84,23 @@ void kill_buffer (Buffer * kill_bp);
 bool check_modified_buffer (Buffer * bp);
 
 /* completion.c ----------------------------------------------------------- */
-#define FIELD(ty, field)                                        \
-  ty get_completion_ ## field (const Completion *cp);           \
-  void set_completion_ ## field (Completion *cp, ty field);
+#define FIELD(cty, lty, field)                                  \
+  cty get_completion_ ## field (const Completion cp);           \
+  void set_completion_ ## field (Completion cp, cty field);
 #define FIELD_STR(field)                        \
-  FIELD(const char *, field)
+  FIELD(const char *, string, field)
 #include "completion.h"
 #undef FIELD
 #undef FIELD_STR
 int completion_strcmp (const void *p1, const void *p2);
-Completion *completion_new (int fileflag);
-void free_completion (Completion * cp);
+Completion completion_new (int fileflag);
+void free_completion (Completion cp);
 void completion_scroll_up (void);
 void completion_scroll_down (void);
-void popup_completion (Completion * cp);
-int completion_try (Completion * cp, astr search);
+void popup_completion (Completion cp);
+int completion_try (Completion cp, astr search);
 char *minibuf_read_variable_name (char *fmt, ...);
-Completion *make_buffer_completion (void);
+Completion make_buffer_completion (void);
 
 /* editfns.c -------------------------------------------------------------- */
 void push_mark (void);
@@ -240,9 +240,9 @@ unsigned long minibuf_read_number (const char *fmt, ...);
 bool minibuf_test_in_completions (const char *ms, gl_list_t completions);
 int minibuf_read_yn (const char *fmt, ...);
 int minibuf_read_yesno (const char *fmt, ...);
-char *minibuf_read_completion (const char *fmt, char *value, Completion * cp,
+char *minibuf_read_completion (const char *fmt, char *value, Completion cp,
                                History * hp, ...);
-char *minibuf_vread_completion (const char *fmt, char *value, Completion * cp,
+char *minibuf_vread_completion (const char *fmt, char *value, Completion cp,
                                 History * hp, const char *empty_err,
                                 bool (*test) (const char *s, gl_list_t completions),
                                 const char *invalid_err, va_list ap);
@@ -289,7 +289,7 @@ void term_ungetkey (size_t key);
 /* term_minibuf.c --------------------------------------------------------- */
 void term_minibuf_write (const char *fmt);
 char *term_minibuf_read (const char *prompt, const char *value, size_t pos,
-                         Completion * cp, History * hp);
+                         Completion cp, History * hp);
 
 /* term_redisplay.c ------------------------------------------------------- */
 size_t term_width (void);

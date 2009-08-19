@@ -53,7 +53,7 @@ typedef struct Macro Macro;
 typedef struct Binding *Binding;
 typedef struct Buffer Buffer;
 typedef struct Window Window;
-typedef struct Completion Completion;
+typedef int Completion;
 
 /* FIXME: Types which should really be opaque. */
 typedef struct Point Point;

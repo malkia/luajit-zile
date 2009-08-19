@@ -79,7 +79,7 @@ draw_minibuf_read (const char *prompt, const char *value,
 
 static astr
 do_minibuf_read (const char *prompt, const char *value, size_t pos,
-               Completion * cp, History * hp)
+               Completion cp, History * hp)
 {
   static int overwrite_mode = 0;
   int c, thistab, lasttab = -1;
@@ -178,7 +178,7 @@ do_minibuf_read (const char *prompt, const char *value, size_t pos,
           break;
         case KBD_META | 'v':
         case KBD_PGUP:
-          if (cp == NULL)
+          if (LUA_NIL (cp))
             {
               ding ();
               break;
@@ -192,7 +192,7 @@ do_minibuf_read (const char *prompt, const char *value, size_t pos,
           break;
         case KBD_CTRL | 'v':
         case KBD_PGDN:
-          if (cp == NULL)
+          if (LUA_NIL (cp))
             {
               ding ();
               break;
@@ -235,7 +235,7 @@ do_minibuf_read (const char *prompt, const char *value, size_t pos,
           break;
         case KBD_TAB:
         got_tab:
-          if (cp == NULL)
+          if (LUA_NIL (cp))
             {
               ding ();
               break;
@@ -278,7 +278,7 @@ do_minibuf_read (const char *prompt, const char *value, size_t pos,
             }
           break;
         case ' ':
-          if (cp != NULL)
+          if (!LUA_NIL (cp))
             goto got_tab;
           /* FALLTHROUGH */
         default:
@@ -298,7 +298,7 @@ do_minibuf_read (const char *prompt, const char *value, size_t pos,
 
 char *
 term_minibuf_read (const char *prompt, const char *value, size_t pos,
-                   Completion * cp, History * hp)
+                   Completion cp, History * hp)
 {
   Window *wp, *old_wp = cur_wp;
   char *s = NULL;
@@ -314,7 +314,7 @@ term_minibuf_read (const char *prompt, const char *value, size_t pos,
       astr_delete (as);
     }
 
-  if (cp != NULL && (get_completion_flags (cp) & CFLAG_POPPEDUP)
+  if (!LUA_NIL (cp) && (get_completion_flags (cp) & CFLAG_POPPEDUP)
       && (wp = find_window ("*Completions*")) != NULL)
     {
       set_current_window (wp);

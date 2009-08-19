@@ -23,10 +23,10 @@
 FIELD_STR(match)		/* The match buffer. */
 
 /* Other fields of Completion. */
-FIELD(Buffer *, old_bp)		/* The buffer from which the completion was invoked. */
-FIELD(gl_list_t, completions)	/* The completions list. */
-FIELD(gl_list_t, matches)	/* The matches list. */
-FIELD(size_t, matchsize)	/* The match buffer size. */
-FIELD(size_t, partmatches)	/* Number of partial matches. */
-FIELD(int, flags)		/* Completion flags. */
-FIELD(astr, path)		/* Path for a filename completion. */
+FIELD(Buffer *, lightuserdata, old_bp)		/* The buffer from which the completion was invoked. */
+FIELD(gl_list_t, lightuserdata, completions)	/* The completions list. */
+FIELD(gl_list_t, lightuserdata, matches)	/* The matches list. */
+FIELD(size_t, integer, matchsize)	/* The match buffer size. */
+FIELD(size_t, integer, partmatches)	/* Number of partial matches. */
+FIELD(int, integer, flags)		/* Completion flags. */
+FIELD(astr, lightuserdata, path)	/* Path for a filename completion. */

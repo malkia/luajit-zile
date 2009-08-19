@@ -36,26 +36,16 @@
 #include "extern.h"
 
 
-/* FIXME: Make this a Lua table; use completion_struct.lua */
 /*
  * Structure
  */
-struct Completion
-{
-#define FIELD(ty, name) ty name;
-#define FIELD_STR(name) const char *name;
-#include "completion.h"
-#undef FIELD
-#undef FIELD_STR
-};
+#define FIELD(cty, lty, field)                  \
+  LUA_GETTER (completion, cty, lty, field)      \
+  LUA_SETTER (completion, cty, lty, field)
 
-#define FIELD(ty, field)                        \
-  GETTER (Completion, completion, ty, field)    \
-  SETTER (Completion, completion, ty, field)
-
-#define FIELD_STR(field)                                        \
-  GETTER (Completion, completion, const char *, field)          \
-  STR_SETTER (Completion, completion, field)
+#define FIELD_STR(field)                                 \
+  LUA_GETTER (completion, const char *, string, field)   \
+  LUA_SETTER (completion, const char *, string, field)
 
 #include "completion.h"
 #undef FIELD
@@ -79,22 +69,24 @@ completion_streq (const void *p1, const void *p2)
 /*
  * Allocate a new completion structure.
  */
-Completion *
+Completion
 completion_new (int fileflag)
 {
-  Completion *cp = (Completion *) XZALLOC (Completion);
+  Completion cp;
 
-  cp->completions = gl_list_create_empty (GL_LINKED_LIST,
-                                          completion_streq, NULL,
-                                          list_free, false);
-  cp->matches = gl_list_create_empty (GL_LINKED_LIST,
-                                      completion_streq, NULL,
-                                      NULL, false);
+  lua_newtable (L);
+  cp = luaL_ref (L, LUA_REGISTRYINDEX);
+  set_completion_completions (cp, gl_list_create_empty (GL_LINKED_LIST,
+                                                        completion_streq, NULL,
+                                                        list_free, false));
+  set_completion_matches (cp, gl_list_create_empty (GL_LINKED_LIST,
+                                                    completion_streq, NULL,
+                                                    NULL, false));
 
   if (fileflag)
     {
-      cp->path = astr_new ();
-      cp->flags |= CFLAG_FILENAME;
+      set_completion_path (cp, astr_new ());
+      set_completion_flags (cp, CFLAG_FILENAME);
     }
 
   return cp;
@@ -104,13 +96,12 @@ completion_new (int fileflag)
  * Dispose an completion structure.
  */
 void
-free_completion (Completion * cp)
+free_completion (Completion cp)
 {
-  gl_list_free (cp->completions);
-  gl_list_free (cp->matches);
-  if (cp->flags & CFLAG_FILENAME)
-    astr_delete (cp->path);
-  free (cp);
+  gl_list_free (get_completion_completions (cp));
+  gl_list_free (get_completion_matches (cp));
+  if (get_completion_flags (cp) & CFLAG_FILENAME)
+    astr_delete (get_completion_path (cp));
 }
 
 /*
@@ -204,25 +195,25 @@ completion_print (gl_list_t l, size_t size)
 static void
 write_completion (va_list ap)
 {
-  Completion *cp = va_arg (ap, Completion *);
+  Completion cp = va_arg (ap, Completion);
   size_t num = va_arg (ap, size_t);
-  completion_print (cp->matches, num);
+  completion_print (get_completion_matches (cp), num);
 }
 
 /*
  * Popup the completion window.
  */
 void
-popup_completion (Completion * cp)
+popup_completion (Completion cp)
 {
-  cp->flags |= CFLAG_POPPEDUP;
+  set_completion_flags (cp, get_completion_flags (cp) | CFLAG_POPPEDUP);
   if (get_window_next (head_wp) == NULL)
-    cp->flags |= CFLAG_CLOSE;
+    set_completion_flags (cp, get_completion_flags (cp) | CFLAG_CLOSE);
 
-  write_temp_buffer ("*Completions*", true, write_completion, cp, cp->partmatches);
+  write_temp_buffer ("*Completions*", true, write_completion, cp, get_completion_partmatches (cp));
 
-  if (!(cp->flags & CFLAG_CLOSE))
-    cp->old_bp = cur_bp;
+  if (!(get_completion_flags (cp) & CFLAG_CLOSE))
+    set_completion_old_bp (cp, cur_bp);
 
   term_redisplay ();
 }
@@ -231,7 +222,7 @@ popup_completion (Completion * cp)
  * Reread directory for completions.
  */
 static int
-completion_readdir (Completion * cp, astr as)
+completion_readdir (Completion cp, astr as)
 {
   DIR *dir;
   char *s1, *s2;
@@ -240,11 +231,11 @@ completion_readdir (Completion * cp, astr as)
   struct stat st;
   astr bs;
 
-  gl_list_free (cp->completions);
+  gl_list_free (get_completion_completions (cp));
 
-  cp->completions = gl_list_create_empty (GL_LINKED_LIST,
-                                          completion_streq, NULL,
-                                          list_free, false);
+  set_completion_completions (cp, gl_list_create_empty (GL_LINKED_LIST,
+                                                        completion_streq, NULL,
+                                                        list_free, false));
 
   if (!expand_path (as))
     return false;
@@ -291,13 +282,13 @@ completion_readdir (Completion * cp, astr as)
             }
           else
             astr_cpy_cstr (buf, d->d_name);
-          gl_sortedlist_add (cp->completions, completion_strcmp,
+          gl_sortedlist_add (get_completion_completions (cp), completion_strcmp,
                              xstrdup (astr_cstr (buf)));
         }
       closedir (dir);
 
-      astr_delete (cp->path);
-      cp->path = compact_path (astr_new_cstr (pdir));
+      astr_delete (get_completion_path (cp));
+      set_completion_path (cp, compact_path (astr_new_cstr (pdir)));
       astr_delete (buf);
     }
 
@@ -312,62 +303,62 @@ completion_readdir (Completion * cp, astr as)
  * Match completions.
  */
 int
-completion_try (Completion * cp, astr search)
+completion_try (Completion cp, astr search)
 {
   size_t i, j, ssize;
   size_t fullmatches = 0;
   char c;
 
-  cp->partmatches = 0;
-  gl_list_free (cp->matches);
-  cp->matches = gl_list_create_empty (GL_LINKED_LIST, completion_streq, NULL, NULL, false);
+  set_completion_partmatches (cp, 0);
+  gl_list_free (get_completion_matches (cp));
+  set_completion_matches (cp, gl_list_create_empty (GL_LINKED_LIST, completion_streq, NULL, NULL, false));
 
-  if (cp->flags & CFLAG_FILENAME)
+  if (get_completion_flags (cp) & CFLAG_FILENAME)
     if (!completion_readdir (cp, search))
       return COMPLETION_NOTMATCHED;
 
   ssize = astr_len (search);
 
-  for (i = 0; i < gl_list_size (cp->completions); i++)
+  for (i = 0; i < gl_list_size (get_completion_completions (cp)); i++)
     {
-      char *s = (char *) gl_list_get_at (cp->completions, i);
+      char *s = (char *) gl_list_get_at (get_completion_completions (cp), i);
       if (!strncmp (s, astr_cstr (search), ssize))
         {
-          ++cp->partmatches;
-          gl_sortedlist_add (cp->matches, completion_strcmp, s);
+          set_completion_partmatches (cp, get_completion_partmatches (cp) + 1);
+          gl_sortedlist_add (get_completion_matches (cp), completion_strcmp, s);
           if (!strcmp (s, astr_cstr (search)))
             ++fullmatches;
         }
     }
 
-  if (cp->partmatches == 0)
+  if (get_completion_partmatches (cp) == 0)
     return COMPLETION_NOTMATCHED;
-  else if (cp->partmatches == 1)
+  else if (get_completion_partmatches (cp) == 1)
     {
-      cp->match = (char *) gl_list_get_at (cp->matches, 0);
-      cp->matchsize = strlen (cp->match);
+      set_completion_match (cp, (char *) gl_list_get_at (get_completion_matches (cp), 0));
+      set_completion_matchsize (cp, strlen (get_completion_match (cp)));
       return COMPLETION_MATCHED;
     }
 
-  if (fullmatches == 1 && cp->partmatches > 1)
+  if (fullmatches == 1 && get_completion_partmatches (cp) > 1)
     {
-      cp->match = (char *) gl_list_get_at (cp->matches, 0);
-      cp->matchsize = strlen (cp->match);
+      set_completion_match (cp, (char *) gl_list_get_at (get_completion_matches (cp), 0));
+      set_completion_matchsize (cp, strlen (get_completion_match (cp)));
       return COMPLETION_MATCHEDNONUNIQUE;
     }
 
   for (j = ssize;; ++j)
     {
-      const char *s = (char *) gl_list_get_at (cp->matches, 0);
+      const char *s = (char *) gl_list_get_at (get_completion_matches (cp), 0);
 
       c = s[j];
-      for (i = 1; i < cp->partmatches; ++i)
+      for (i = 1; i < get_completion_partmatches (cp); ++i)
         {
-          s = gl_list_get_at (cp->matches, i);
+          s = gl_list_get_at (get_completion_matches (cp), i);
           if (s[j] != c)
             {
-              cp->match = (char *) gl_list_get_at (cp->matches, 0);
-              cp->matchsize = j;
+              set_completion_match (cp, (char *) gl_list_get_at (get_completion_matches (cp), 0));
+              set_completion_matchsize (cp, j);
               return COMPLETION_NONUNIQUE;
             }
         }
@@ -381,7 +372,7 @@ minibuf_read_variable_name (char *fmt, ...)
 {
   va_list ap;
   char *ms;
-  Completion *cp = completion_new (false);
+  Completion cp = completion_new (false);
 
   lua_getglobal (L, "main_vars");
   lua_pushnil (L);
@@ -404,13 +395,12 @@ minibuf_read_variable_name (char *fmt, ...)
   return ms;
 }
 
-Completion *
+Completion
 make_buffer_completion (void)
 {
   Buffer *bp;
-  Completion *cp;
+  Completion cp = completion_new (false);
 
-  cp = completion_new (false);
   for (bp = head_bp; bp != NULL; bp = get_buffer_next (bp))
     gl_sortedlist_add (get_completion_completions (cp), completion_strcmp,
                        xstrdup (get_buffer_name (bp)));

@@ -173,7 +173,7 @@ minibuf_read_function_name (const char *fmt, ...)
 {
   va_list ap;
   char *ms;
-  Completion *cp = completion_new (false);
+  Completion cp = completion_new (false);
   size_t i;
 
   for (i = 0; i < fentry_table_size; ++i)
