@@ -25,7 +25,6 @@ FIELD_STR(match)		/* The match buffer. */
 /* Other fields of Completion. */
 FIELD(Buffer *, lightuserdata, old_bp)		/* The buffer from which the completion was invoked. */
 FIELD(gl_list_t, lightuserdata, completions)	/* The completions list. */
-FIELD(gl_list_t, lightuserdata, matches)	/* The matches list. */
 FIELD(size_t, integer, matchsize)	/* The match buffer size. */
 FIELD(size_t, integer, partmatches)	/* Number of partial matches. */
 FIELD(int, integer, flags)		/* Completion flags. */

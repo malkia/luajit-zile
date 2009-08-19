@@ -79,9 +79,9 @@ completion_new (int fileflag)
   set_completion_completions (cp, gl_list_create_empty (GL_LINKED_LIST,
                                                         completion_streq, NULL,
                                                         list_free, false));
-  set_completion_matches (cp, gl_list_create_empty (GL_LINKED_LIST,
-                                                    completion_streq, NULL,
-                                                    NULL, false));
+  lua_rawgeti (L, LUA_REGISTRYINDEX, cp);
+  lua_setglobal (L, "cp");
+  CLUE_DO (L, "cp.matches = {}");
 
   if (fileflag)
     {
@@ -99,7 +99,6 @@ void
 free_completion (Completion cp)
 {
   gl_list_free (get_completion_completions (cp));
-  gl_list_free (get_completion_matches (cp));
   if (get_completion_flags (cp) & CFLAG_FILENAME)
     astr_delete (get_completion_path (cp));
 }
@@ -147,57 +146,18 @@ completion_scroll_down (void)
   term_redisplay ();
 }
 
-/*
- * Calculate the maximum length of the completions.
- */
-static size_t
-calculate_max_length (gl_list_t l, size_t size)
-{
-  size_t i, maxlen = 0;
-
-  for (i = 0; i < MIN (size, gl_list_size (l)); i++)
-    {
-      size_t len = strlen ((char *) gl_list_get_at (l, i));
-      maxlen = MAX (len, maxlen);
-    }
-
-  return maxlen;
-}
-
-/*
- * Print the list of completions in a set of columns.
- */
-static void
-completion_print (gl_list_t l, size_t size)
-{
-  size_t i, j, col, max, numcols;
-
-  max = calculate_max_length (l, size) + 5;
-  numcols = (get_window_ewidth (cur_wp) - 1) / max;
-
-  bprintf ("Possible completions are:\n");
-  for (i = col = 0; i < MIN (size, gl_list_size (l)); i++)
-    {
-      char *s = (char *) gl_list_get_at (l, i);
-      size_t len = strlen (s);
-      if (col >= numcols)
-        {
-          col = 0;
-          insert_newline ();
-        }
-      insert_nstring (s, len);
-      for (j = max - len; j > 0; --j)
-        insert_char_in_insert_mode (' ');
-      ++col;
-    }
-}
-
 static void
 write_completion (va_list ap)
 {
   Completion cp = va_arg (ap, Completion);
-  size_t num = va_arg (ap, size_t);
-  completion_print (get_completion_matches (cp), num);
+  size_t width = va_arg (ap, size_t);
+  const char *s;
+  lua_rawgeti (L, LUA_REGISTRYINDEX, cp);
+  lua_setglobal (L, "cp");
+  CLUE_SET (L, width, integer, width);
+  CLUE_DO (L, "s = completion_write (cp, width)");
+  CLUE_GET (L, s, string, s);
+  bprintf ("%s", s);
 }
 
 /*
@@ -210,7 +170,7 @@ popup_completion (Completion cp)
   if (get_window_next (head_wp) == NULL)
     set_completion_flags (cp, get_completion_flags (cp) | CFLAG_CLOSE);
 
-  write_temp_buffer ("*Completions*", true, write_completion, cp, get_completion_partmatches (cp));
+  write_temp_buffer ("*Completions*", true, write_completion, cp, get_window_ewidth (cur_wp));
 
   if (!(get_completion_flags (cp) & CFLAG_CLOSE))
     set_completion_old_bp (cp, cur_bp);
@@ -310,8 +270,9 @@ completion_try (Completion cp, astr search)
   char c;
 
   set_completion_partmatches (cp, 0);
-  gl_list_free (get_completion_matches (cp));
-  set_completion_matches (cp, gl_list_create_empty (GL_LINKED_LIST, completion_streq, NULL, NULL, false));
+  lua_rawgeti (L, LUA_REGISTRYINDEX, cp);
+  lua_setglobal (L, "cp");
+  CLUE_DO (L, "cp.matches = {}");
 
   if (get_completion_flags (cp) & CFLAG_FILENAME)
     if (!completion_readdir (cp, search))
@@ -319,45 +280,63 @@ completion_try (Completion cp, astr search)
 
   ssize = astr_len (search);
 
+  lua_rawgeti (L, LUA_REGISTRYINDEX, cp);
+  lua_setglobal (L, "cp");
   for (i = 0; i < gl_list_size (get_completion_completions (cp)); i++)
     {
       char *s = (char *) gl_list_get_at (get_completion_completions (cp), i);
       if (!strncmp (s, astr_cstr (search), ssize))
         {
           set_completion_partmatches (cp, get_completion_partmatches (cp) + 1);
-          gl_sortedlist_add (get_completion_matches (cp), completion_strcmp, s);
+          CLUE_SET (L, s, string, s);
+          CLUE_DO (L, "table.insert (cp.matches, s)");
           if (!strcmp (s, astr_cstr (search)))
             ++fullmatches;
         }
     }
+  CLUE_DO (L, "table.sort (cp.matches)");
+  CLUE_DO (L, "io.stderr:write (cp.matches)");
 
   if (get_completion_partmatches (cp) == 0)
     return COMPLETION_NOTMATCHED;
   else if (get_completion_partmatches (cp) == 1)
     {
-      set_completion_match (cp, (char *) gl_list_get_at (get_completion_matches (cp), 0));
+      const char *s;
+      CLUE_DO (L, "s = cp.matches[1]");
+      CLUE_GET (L, s, string, s);
+      set_completion_match (cp, s);
       set_completion_matchsize (cp, strlen (get_completion_match (cp)));
       return COMPLETION_MATCHED;
     }
 
   if (fullmatches == 1 && get_completion_partmatches (cp) > 1)
     {
-      set_completion_match (cp, (char *) gl_list_get_at (get_completion_matches (cp), 0));
+      const char *s;
+      CLUE_DO (L, "s = cp.matches[1]");
+      CLUE_GET (L, s, string, s);
+      set_completion_match (cp, s);
       set_completion_matchsize (cp, strlen (get_completion_match (cp)));
       return COMPLETION_MATCHEDNONUNIQUE;
     }
 
   for (j = ssize;; ++j)
     {
-      const char *s = (char *) gl_list_get_at (get_completion_matches (cp), 0);
+      const char *s;
+      CLUE_DO (L, "s = cp.matches[1]");
+      CLUE_GET (L, s, string, s);
 
       c = s[j];
       for (i = 1; i < get_completion_partmatches (cp); ++i)
         {
-          s = gl_list_get_at (get_completion_matches (cp), i);
+          CLUE_SET (L, i, integer, i + 1);
+          CLUE_DO (L, "s = cp.matches[i]");
+          CLUE_GET (L, s, string, s);
           if (s[j] != c)
             {
-              set_completion_match (cp, (char *) gl_list_get_at (get_completion_matches (cp), 0));
+              const char *s;
+              CLUE_DO (L, "s = cp.matches[1]");
+              CLUE_GET (L, s, string, s);
+              set_completion_match (cp, s);
               set_completion_matchsize (cp, j);
               return COMPLETION_NONUNIQUE;
             }
