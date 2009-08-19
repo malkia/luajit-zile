@@ -92,7 +92,6 @@ bool check_modified_buffer (Buffer * bp);
 #include "completion.h"
 #undef FIELD
 #undef FIELD_STR
-int completion_strcmp (const void *p1, const void *p2);
 Completion completion_new (int fileflag);
 void free_completion (Completion cp);
 void completion_scroll_up (void);
@@ -207,7 +206,7 @@ void remove_key_from_cmd (void);
 void call_macro (Macro * mp);
 void free_macros (void);
 Macro *get_macro (const char *name);
-void add_macros_to_list (gl_list_t l, gl_listelement_compar_fn f);
+void add_macros_to_list (int l);
 
 /* main.c ----------------------------------------------------------------- */
 CLUE_DECLS(L);
@@ -237,14 +236,14 @@ void minibuf_error (const char *fmt, ...);
 void minibuf_write (const char *fmt, ...);
 char *minibuf_read (const char *fmt, const char *value, ...);
 unsigned long minibuf_read_number (const char *fmt, ...);
-bool minibuf_test_in_completions (const char *ms, gl_list_t completions);
+bool minibuf_test_in_completions (const char *ms, Completion cp);
 int minibuf_read_yn (const char *fmt, ...);
 int minibuf_read_yesno (const char *fmt, ...);
 char *minibuf_read_completion (const char *fmt, char *value, Completion cp,
                                History * hp, ...);
 char *minibuf_vread_completion (const char *fmt, char *value, Completion cp,
                                 History * hp, const char *empty_err,
-                                bool (*test) (const char *s, gl_list_t completions),
+                                bool (*test) (const char *s, Completion cp),
                                 const char *invalid_err, va_list ap);
 char *minibuf_read_filename (const char *fmt, const char *value,
                              const char *file, ...);

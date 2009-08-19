@@ -200,9 +200,15 @@ minibuf_read_filename (const char *fmt, const char *value,
 }
 
 bool
-minibuf_test_in_completions (const char *ms, gl_list_t completions)
+minibuf_test_in_completions (const char *ms, Completion cp)
 {
-  return gl_sortedlist_search (completions, completion_strcmp, ms) != NULL;
+  bool found;
+  lua_rawgeti (L, LUA_REGISTRYINDEX, cp);
+  lua_setglobal (L, "cp");
+  CLUE_SET (L, s, string, ms);
+  CLUE_DO (L, "found = false; for i, v in cp.completions do if i == s then found = true end end");
+  CLUE_GET (L, found, boolean, found);
+  return found;
 }
 
 int
@@ -243,8 +249,9 @@ minibuf_read_yesno (const char *fmt, ...)
   Completion cp = completion_new (false);
   int ret = -1;
 
-  gl_sortedlist_add (get_completion_completions (cp), completion_strcmp, xstrdup ("yes"));
-  gl_sortedlist_add (get_completion_completions (cp), completion_strcmp, xstrdup ("no"));
+  lua_rawgeti (L, LUA_REGISTRYINDEX, cp);
+  lua_setglobal (L, "cp");
+  CLUE_DO (L, "cp.completions = {'no', 'yes'}");
 
   va_start (ap, fmt);
   ms = minibuf_vread_completion (fmt, "", cp, NULL, errmsg,
@@ -252,13 +259,7 @@ minibuf_read_yesno (const char *fmt, ...)
   va_end (ap);
 
   if (ms != NULL)
-    {
-      gl_list_node_t n = gl_sortedlist_search (get_completion_completions (cp),
-                                               completion_strcmp, ms);
-      assert (n);
-      ret = !strcmp ((char *) gl_list_node_value (get_completion_completions (cp), n),
-                     "yes");
-    }
+    ret = !strcmp (ms, "yes");
   free_completion (cp);
 
   return ret;
@@ -287,7 +288,7 @@ minibuf_read_completion (const char *fmt, char *value, Completion cp,
 char *
 minibuf_vread_completion (const char *fmt, char *value, Completion cp,
                           History * hp, const char *empty_err,
-                          bool (*test) (const char *s, gl_list_t completions),
+                          bool (*test) (const char *s, Completion cp),
                           const char *invalid_err, va_list ap)
 {
   char *buf, *ms;
@@ -326,7 +327,7 @@ minibuf_vread_completion (const char *fmt, char *value, Completion cp,
             popup_completion (cp);
           astr_delete (as);
 
-          if (test (ms, get_completion_completions (cp)))
+          if (test (ms, cp))
             {
               if (hp)
                 add_history_element (hp, ms);

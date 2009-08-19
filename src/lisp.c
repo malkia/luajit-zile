@@ -176,11 +176,16 @@ minibuf_read_function_name (const char *fmt, ...)
   Completion cp = completion_new (false);
   size_t i;
 
+  lua_rawgeti (L, LUA_REGISTRYINDEX, cp);
+  lua_setglobal (L, "cp");
   for (i = 0; i < fentry_table_size; ++i)
     if (fentry_table[i].interactive)
-      gl_sortedlist_add (get_completion_completions (cp), completion_strcmp,
-                         xstrdup (fentry_table[i].name));
-  add_macros_to_list (get_completion_completions (cp), completion_strcmp);
+      {
+        char *s;
+        CLUE_SET (L, s, string, fentry_table[i].name);
+        CLUE_DO (L, "table.insert (cp.completions, s)");
+      }
+  add_macros_to_list (cp);
 
   va_start (ap, fmt);
   ms = minibuf_vread_completion (fmt, "", cp, functions_history,

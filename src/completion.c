@@ -30,7 +30,6 @@
 #include <string.h>
 #include <unistd.h>
 #include "dirname.h"
-#include "gl_linked_list.h"
 
 #include "main.h"
 #include "extern.h"
@@ -52,21 +51,6 @@
 #undef FIELD_STR
 
 /*
- * List methods for completions and matches
- */
-int
-completion_strcmp (const void *p1, const void *p2)
-{
-  return strcmp ((char *) p1, (char *) p2);
-}
-
-static bool
-completion_streq (const void *p1, const void *p2)
-{
-  return strcmp ((char *) p1, (char *) p2) == 0;
-}
-
-/*
  * Allocate a new completion structure.
  */
 Completion
@@ -76,12 +60,9 @@ completion_new (int fileflag)
 
   lua_newtable (L);
   cp = luaL_ref (L, LUA_REGISTRYINDEX);
-  set_completion_completions (cp, gl_list_create_empty (GL_LINKED_LIST,
-                                                        completion_streq, NULL,
-                                                        list_free, false));
   lua_rawgeti (L, LUA_REGISTRYINDEX, cp);
   lua_setglobal (L, "cp");
-  CLUE_DO (L, "cp.matches = {}");
+  CLUE_DO (L, "cp.matches, cp.completions = {}, {}");
 
   if (fileflag)
     {
@@ -93,12 +74,11 @@ completion_new (int fileflag)
 }
 
 /*
- * Dispose an completion structure.
+ * Free a completion structure.
  */
 void
 free_completion (Completion cp)
 {
-  gl_list_free (get_completion_completions (cp));
   if (get_completion_flags (cp) & CFLAG_FILENAME)
     astr_delete (get_completion_path (cp));
 }
@@ -191,11 +171,9 @@ completion_readdir (Completion cp, astr as)
   struct stat st;
   astr bs;
 
-  gl_list_free (get_completion_completions (cp));
-
-  set_completion_completions (cp, gl_list_create_empty (GL_LINKED_LIST,
-                                                        completion_streq, NULL,
-                                                        list_free, false));
+  lua_rawgeti (L, LUA_REGISTRYINDEX, cp);
+  lua_setglobal (L, "cp");
+  CLUE_DO (L, "cp.completions = {}");
 
   if (!expand_path (as))
     return false;
@@ -242,8 +220,8 @@ completion_readdir (Completion cp, astr as)
             }
           else
             astr_cpy_cstr (buf, d->d_name);
-          gl_sortedlist_add (get_completion_completions (cp), completion_strcmp,
-                             xstrdup (astr_cstr (buf)));
+          CLUE_SET (L, s, string, astr_cstr (buf));
+          CLUE_DO (L, "table.insert (cp.completions, s)");
         }
       closedir (dir);
 
@@ -265,7 +243,7 @@ completion_readdir (Completion cp, astr as)
 int
 completion_try (Completion cp, astr search)
 {
-  size_t i, j, ssize;
+  size_t i, j, ssize, completions;
   size_t fullmatches = 0;
   char c;
 
@@ -280,11 +258,14 @@ completion_try (Completion cp, astr search)
 
   ssize = astr_len (search);
 
-  lua_rawgeti (L, LUA_REGISTRYINDEX, cp);
-  lua_setglobal (L, "cp");
-  for (i = 0; i < gl_list_size (get_completion_completions (cp)); i++)
+  CLUE_DO (L, "completions = #cp.completions");
+  CLUE_GET (L, completions, integer, completions);
+  for (i = 0; i < completions; i++)
     {
-      char *s = (char *) gl_list_get_at (get_completion_completions (cp), i);
+      const char *s;
+      CLUE_SET (L, i, integer, i + 1);
+      CLUE_DO (L, "s = cp.completions[i]");
+      CLUE_GET (L, s, string, s);
       if (!strncmp (s, astr_cstr (search), ssize))
         {
           set_completion_partmatches (cp, get_completion_partmatches (cp) + 1);
@@ -356,11 +337,9 @@ minibuf_read_variable_name (char *fmt, ...)
   lua_getglobal (L, "main_vars");
   lua_pushnil (L);
   while (lua_next (L, -2) != 0) {
-    char *s = (char *) lua_tostring (L, -2);
-    assert (s);
-    gl_sortedlist_add (get_completion_completions (cp), completion_strcmp,
-                       xstrdup (s));
-    lua_pop (L, 1);
+    assert (lua_tostring (L, -2));
+    lua_setglobal (L, "s");
+    CLUE_DO (L, "table.insert (cp.completions, s)");
   }
   lua_pop (L, 1);
 
@@ -380,9 +359,13 @@ make_buffer_completion (void)
   Buffer *bp;
   Completion cp = completion_new (false);
 
+  lua_rawgeti (L, LUA_REGISTRYINDEX, cp);
+  lua_setglobal (L, "cp");
   for (bp = head_bp; bp != NULL; bp = get_buffer_next (bp))
-    gl_sortedlist_add (get_completion_completions (cp), completion_strcmp,
-                       xstrdup (get_buffer_name (bp)));
+    {
+      CLUE_SET (L, s, string, get_buffer_name (bp));
+      CLUE_DO (L, "table.insert (cp.completions, s)");
+    }
 
   return cp;
 }

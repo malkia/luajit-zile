@@ -298,10 +298,16 @@ get_macro (const char *name)
  * Add macro names to a list.
  */
 void
-add_macros_to_list (gl_list_t l, gl_listelement_compar_fn f)
+add_macros_to_list (int l)
 {
   Macro *mp;
 
+  lua_rawgeti (L, LUA_REGISTRYINDEX, l);
+  lua_setglobal (L, "cp");
   for (mp = head_mp; mp; mp = mp->next)
-    gl_sortedlist_add (l, f, xstrdup (mp->name));
+    {
+      char *s;
+      CLUE_SET (L, s, string, mp->name);
+      CLUE_DO (L, "table.insert (cp.completions, s)");
+    }
 }
