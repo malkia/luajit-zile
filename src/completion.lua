@@ -63,19 +63,19 @@ function common_prefix_length (s1, s2)
   return len
 end
 
---  Match completions
---  cp - the completions
---  search - the prefix to search for (not modified).
---  Returns false if `search' is not a prefix of any completion, and true
---  otherwise. The effect on cp is as follows:
---  cp.completions - not modified.
---  cp.matches - replaced with the list of matching completions, sorted.
---  cp.match - replaced with the longest common prefix of the matches, if the
---  function returns true, otherwise not modified.
+-- Match completions
+-- cp - the completions
+-- search - the prefix to search for (not modified).
+-- Returns false if `search' is not a prefix of any completion, and true
+-- otherwise. The effect on cp is as follows:
+-- cp.completions - not modified.
+-- cp.matches - replaced with the list of matching completions, sorted.
+-- cp.match - replaced with the longest common prefix of the matches, if the
+-- function returns true, otherwise not modified.
 --
---  To format the completions for a popup, you should call completion_write
---  after this method. You may want to call completion_remove_suffix and/or
---  completion_remove_prefix in between to keep the list manageable.
+-- To format the completions for a popup, you should call completion_write
+-- after this method. You may want to call completion_remove_suffix and/or
+-- completion_remove_prefix in between to keep the list manageable.
 function completion_try (cp, search)
   fullmatches = 0
   cp.matches = {}
@@ -133,8 +133,8 @@ function completion_remove_suffix(cp)
   cp.matches = ans
 end
 
---  Finds the longest prefix of `search' that ends in an underscore, and removes
---  it from all `cp->matches'. Does nothing if there is no such prefix.
+-- Finds the longest prefix of `search' that ends in an underscore, and removes
+-- it from all `cp->matches'. Does nothing if there is no such prefix.
 function completion_remove_prefix (cp, search)
   local pos = last_occurrence (search, #search, '_')
   if pos > 0 then
