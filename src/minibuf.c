@@ -206,7 +206,7 @@ minibuf_test_in_completions (const char *ms, Completion cp)
   lua_rawgeti (L, LUA_REGISTRYINDEX, cp);
   lua_setglobal (L, "cp");
   CLUE_SET (L, s, string, ms);
-  CLUE_DO (L, "found = false; for i, v in cp.completions do if i == s then found = true end end");
+  CLUE_DO (L, "found = false; for i, v in pairs (cp.completions) do if v == s then found = true end end");
   CLUE_GET (L, found, boolean, found);
   return found;
 }
