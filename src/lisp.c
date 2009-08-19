@@ -28,7 +28,6 @@
 
 #include "main.h"
 #include "extern.h"
-#include "clue.h"
 
 /*
  * Zile Lisp functions.

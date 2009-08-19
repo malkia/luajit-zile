@@ -21,40 +21,13 @@
 
 #include "config.h"
 
-#include <stdlib.h>
-
 #include "main.h"
 #include "extern.h"
 
-#define LIST_GETTER(cty, lty, field)            \
-  cty                                           \
-  get_lists_ ## field (const le p)              \
-  {                                             \
-    cty ret;                                    \
-    lua_rawgeti (L, LUA_REGISTRYINDEX, p);      \
-    lua_getfield (L, -1, #field);               \
-    ret = lua_to ## lty (L, -1);                \
-    lua_pop (L, 2);                             \
-    return ret;                                 \
-  }                                             \
-
-#define LIST_TABLE_GETTER(field)                \
-  int                                           \
-  get_lists_ ## field (const le p)              \
-  {                                             \
-    int ret = LUA_REFNIL;                        \
-    lua_rawgeti (L, LUA_REGISTRYINDEX, p);      \
-    lua_getfield (L, -1, #field);               \
-    if (lua_istable (L, -1))                    \
-      ret = luaL_ref (L, LUA_REGISTRYINDEX);    \
-    lua_pop (L, 1);                             \
-    return ret;                                 \
-  }                                             \
-
-#define FIELD(cty, lty, field)         \
-  LIST_GETTER (cty, lty, field)
+#define FIELD(cty, lty, field)                  \
+  LUA_GETTER (lists, cty, lty, field)
 #define TABLE_FIELD(field)                      \
-  LIST_TABLE_GETTER (field)
+  LUA_TABLE_GETTER (lists, field)
 
 #include "list_fields.h"
 #undef FIELD
