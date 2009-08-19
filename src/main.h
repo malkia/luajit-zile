@@ -137,21 +137,18 @@ enum
     return ret;                                 \
   }                                             \
 
-/* FIXME: Write LUA_SETTER and LUA_STR_SETTER */
-#define LUA_SETTER(name, ty, field)                     \
+#define LUA_SETTER(name, cty, lty, field)               \
   void                                                  \
-  set_ ## name ## _ ## field (const le p, ty field)     \
+  set_ ## name ## _ ## field (const le p, cty val)      \
   {                                                     \
-    p->field = field;                                   \
+    lua_rawgeti (L, LUA_REGISTRYINDEX, p);              \
+    lua_push ## lty (L, val);                           \
+    lua_setfield (L, -2, #field);                       \
+    lua_pop (L, 1);                                     \
   }
 
-#define LUA_STR_SETTER(name, field)                             \
-  void                                                          \
-  set_ ## name ## _ ## field (const le p, const char *field)    \
-  {                                                             \
-    free ((char *) p->field);                                   \
-    p->field = field ? xstrdup (field) : NULL;                  \
-  }
+/* Alias to make macros above work */
+#define lua_tolightuserdata lua_touserdata
 
 /*--------------------------------------------------------------------------
  * Zile commands to C bindings.
