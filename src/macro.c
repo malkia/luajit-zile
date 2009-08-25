@@ -208,13 +208,14 @@ process_keys (gl_list_t keys)
     pushkey ((size_t) gl_list_get_at (keys, len - i - 1));
 
   while (term_buf_len () > cur)
-    process_key (getkey ());
+    process_command ();
 }
 
 void
 call_macro (Macro * mp)
 {
   assert (mp);
+  assert (mp->keys);
   process_keys (mp->keys);
 }
 
@@ -306,8 +307,7 @@ add_macros_to_list (int l)
   lua_setglobal (L, "cp");
   for (mp = head_mp; mp; mp = mp->next)
     {
-      char *s;
       CLUE_SET (L, s, string, mp->name);
-      CLUE_DO (L, "table.insert (cp.completions, s)");
+      (void) CLUE_DO (L, "table.insert (cp.completions, s)");
     }
 }

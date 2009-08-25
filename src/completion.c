@@ -62,7 +62,7 @@ completion_new (int fileflag)
   cp = luaL_ref (L, LUA_REGISTRYINDEX);
   lua_rawgeti (L, LUA_REGISTRYINDEX, cp);
   lua_setglobal (L, "cp");
-  CLUE_DO (L, "cp.matches, cp.completions = {}, {}");
+  (void) CLUE_DO (L, "cp.matches, cp.completions = {}, {}");
 
   if (fileflag)
     {
@@ -135,7 +135,7 @@ write_completion (va_list ap)
   lua_rawgeti (L, LUA_REGISTRYINDEX, cp);
   lua_setglobal (L, "cp");
   CLUE_SET (L, width, integer, width);
-  CLUE_DO (L, "s = completion_write (cp, width)");
+  (void) CLUE_DO (L, "s = completion_write (cp, width)");
   CLUE_GET (L, s, string, s);
   bprintf ("%s", s);
 }
@@ -173,7 +173,7 @@ completion_readdir (Completion cp, astr as)
 
   lua_rawgeti (L, LUA_REGISTRYINDEX, cp);
   lua_setglobal (L, "cp");
-  CLUE_DO (L, "cp.completions = {}");
+  (void) CLUE_DO (L, "cp.completions = {}");
 
   if (!expand_path (as))
     return false;
@@ -221,7 +221,7 @@ completion_readdir (Completion cp, astr as)
           else
             astr_cpy_cstr (buf, d->d_name);
           CLUE_SET (L, s, string, astr_cstr (buf));
-          CLUE_DO (L, "table.insert (cp.completions, s)");
+          (void) CLUE_DO (L, "table.insert (cp.completions, s)");
         }
       closedir (dir);
 
@@ -250,7 +250,7 @@ completion_try (Completion cp, astr search)
   set_completion_partmatches (cp, 0);
   lua_rawgeti (L, LUA_REGISTRYINDEX, cp);
   lua_setglobal (L, "cp");
-  CLUE_DO (L, "cp.matches = {}");
+  (void) CLUE_DO (L, "cp.matches = {}");
 
   if (get_completion_flags (cp) & CFLAG_FILENAME)
     if (!completion_readdir (cp, search))
@@ -258,32 +258,32 @@ completion_try (Completion cp, astr search)
 
   ssize = astr_len (search);
 
-  CLUE_DO (L, "completions = #cp.completions");
+  (void) CLUE_DO (L, "completions = #cp.completions");
   CLUE_GET (L, completions, integer, completions);
   for (i = 0; i < completions; i++)
     {
       const char *s;
       CLUE_SET (L, i, integer, i + 1);
-      CLUE_DO (L, "s = cp.completions[i]");
+      (void) CLUE_DO (L, "s = cp.completions[i]");
       CLUE_GET (L, s, string, s);
       if (!strncmp (s, astr_cstr (search), ssize))
         {
           set_completion_partmatches (cp, get_completion_partmatches (cp) + 1);
           CLUE_SET (L, s, string, s);
-          CLUE_DO (L, "table.insert (cp.matches, s)");
+          (void) CLUE_DO (L, "table.insert (cp.matches, s)");
           if (!strcmp (s, astr_cstr (search)))
             ++fullmatches;
         }
     }
-  CLUE_DO (L, "table.sort (cp.matches)");
-  CLUE_DO (L, "io.stderr:write (cp.matches)");
+  (void) CLUE_DO (L, "table.sort (cp.matches)");
+  (void) CLUE_DO (L, "io.stderr:write (cp.matches)");
 
   if (get_completion_partmatches (cp) == 0)
     return COMPLETION_NOTMATCHED;
   else if (get_completion_partmatches (cp) == 1)
     {
       const char *s;
-      CLUE_DO (L, "s = cp.matches[1]");
+      (void) CLUE_DO (L, "s = cp.matches[1]");
       CLUE_GET (L, s, string, s);
       set_completion_match (cp, s);
       set_completion_matchsize (cp, strlen (get_completion_match (cp)));
@@ -293,7 +293,7 @@ completion_try (Completion cp, astr search)
   if (fullmatches == 1 && get_completion_partmatches (cp) > 1)
     {
       const char *s;
-      CLUE_DO (L, "s = cp.matches[1]");
+      (void) CLUE_DO (L, "s = cp.matches[1]");
       CLUE_GET (L, s, string, s);
       set_completion_match (cp, s);
       set_completion_matchsize (cp, strlen (get_completion_match (cp)));
@@ -303,19 +303,19 @@ completion_try (Completion cp, astr search)
   for (j = ssize;; ++j)
     {
       const char *s;
-      CLUE_DO (L, "s = cp.matches[1]");
+      (void) CLUE_DO (L, "s = cp.matches[1]");
       CLUE_GET (L, s, string, s);
 
       c = s[j];
       for (i = 1; i < get_completion_partmatches (cp); ++i)
         {
           CLUE_SET (L, i, integer, i + 1);
-          CLUE_DO (L, "s = cp.matches[i]");
+          (void) CLUE_DO (L, "s = cp.matches[i]");
           CLUE_GET (L, s, string, s);
           if (s[j] != c)
             {
               const char *s;
-              CLUE_DO (L, "s = cp.matches[1]");
+              (void) CLUE_DO (L, "s = cp.matches[1]");
               CLUE_GET (L, s, string, s);
               set_completion_match (cp, s);
               set_completion_matchsize (cp, j);
@@ -339,7 +339,7 @@ minibuf_read_variable_name (char *fmt, ...)
   while (lua_next (L, -2) != 0) {
     assert (lua_tostring (L, -2));
     lua_setglobal (L, "s");
-    CLUE_DO (L, "table.insert (cp.completions, s)");
+    (void) CLUE_DO (L, "table.insert (cp.completions, s)");
   }
   lua_pop (L, 1);
 
@@ -364,7 +364,7 @@ make_buffer_completion (void)
   for (bp = head_bp; bp != NULL; bp = get_buffer_next (bp))
     {
       CLUE_SET (L, s, string, get_buffer_name (bp));
-      CLUE_DO (L, "table.insert (cp.completions, s)");
+      (void) CLUE_DO (L, "table.insert (cp.completions, s)");
     }
 
   return cp;

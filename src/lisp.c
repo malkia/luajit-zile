@@ -181,9 +181,8 @@ minibuf_read_function_name (const char *fmt, ...)
   for (i = 0; i < fentry_table_size; ++i)
     if (fentry_table[i].interactive)
       {
-        char *s;
         CLUE_SET (L, s, string, fentry_table[i].name);
-        CLUE_DO (L, "table.insert (cp.completions, s)");
+        (void) CLUE_DO (L, "table.insert (cp.completions, s)");
       }
   add_macros_to_list (cp);
 

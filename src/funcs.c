@@ -406,44 +406,44 @@ You may also type up to 3 octal digits, to insert a character with that code.
 }
 END_DEFUN
 
-/* FIXME: Simplify to one argument, which if KBD_NOKEY is ignored. */
-le
-universal_argument (int keytype, int xarg)
+DEFUN ("universal-argument", universal_argument)
+/*+
+Begin a numeric argument for the following command.
+Digits or minus sign following @kbd{C-u} make up the numeric argument.
+@kbd{C-u} following the digits or minus sign ends the argument.
+@kbd{C-u} without digits or minus sign provides 4 as argument.
+Repeating @kbd{C-u} without digits or minus sign multiplies the argument
+by 4 each time.
++*/
 {
-  int i = 0, arg = 4, sgn = 1, digit;
-  size_t key;
+  int i = 0, arg = 4, sgn = 1;
   astr as = astr_new ();
 
-  thisflag &= ~FLAG_UNIARG_EMPTY;
-
-  if (keytype == KBD_META)
-    {
-      astr_cpy_cstr (as, "ESC");
-      pushkey ((size_t) (xarg));
-    }
-  else
-    {
-      astr_cpy_cstr (as, "C-u");
-      thisflag |= FLAG_UNIARG_EMPTY;
-    }
+  /* Need to process key used to invoke universal-argument. */
+  pushkey (lastkey ());
 
   for (;;)
     {
-      astr_cat_char (as, '-'); /* Add the '-' character. */
+      size_t key;
+
+      astr_cat_char (as, '-'); /* Add the `-' character. */
       key = do_binding_completion (as);
-      astr_truncate (as, astr_len (as) - 1); /* Remove the '-' character. */
+      astr_truncate (as, astr_len (as) - 1); /* Remove the `-' character. */
 
       /* Cancelled. */
       if (key == KBD_CANCEL)
-        return FUNCALL (keyboard_quit);
+        {
+          ok = FUNCALL (keyboard_quit);
+          break;
+        }
       /* Digit pressed. */
       else if (isdigit (key & 0xff))
         {
-          digit = (key & 0xff) - '0';
+          int digit = (key & 0xff) - '0';
           thisflag &= ~FLAG_UNIARG_EMPTY;
 
           if (key & KBD_META)
-            astr_cat_cstr (as, " ESC");
+            astr_cat_cstr (as, "ESC");
 
           astr_afmt (as, " %d", digit);
 
@@ -456,7 +456,7 @@ universal_argument (int keytype, int xarg)
         }
       else if (key == (KBD_CTRL | 'u'))
         {
-          astr_cat_cstr (as, " C-u");
+          astr_cat_cstr (as, "C-u");
           if (i == 0)
             arg *= 4;
           else
@@ -467,8 +467,8 @@ universal_argument (int keytype, int xarg)
           if (sgn > 0)
             {
               sgn = -sgn;
-              astr_cat_cstr (as, " -");
-              /* The default negative arg isn't -4, it's -1. */
+              astr_cat_char (as, '-');
+              /* The default negative arg is -1, not -4. */
               arg = 1;
               thisflag &= ~FLAG_UNIARG_EMPTY;
             }
@@ -480,25 +480,13 @@ universal_argument (int keytype, int xarg)
         }
     }
 
-  last_uniarg = arg * sgn;
-  thisflag |= FLAG_SET_UNIARG;
-  minibuf_clear ();
-  astr_delete (as);
-
-  return leT;
-}
-
-DEFUN ("universal-argument", universal_argument)
-/*+
-Begin a numeric argument for the following command.
-Digits or minus sign following @kbd{C-u} make up the numeric argument.
-@kbd{C-u} following the digits or minus sign ends the argument.
-@kbd{C-u} without digits or minus sign provides 4 as argument.
-Repeating @kbd{C-u} without digits or minus sign multiplies the argument
-by 4 each time.
-+*/
-{
-  ok = universal_argument (0, 0);
+  if (ok == leT)
+    {
+      last_uniarg = arg * sgn;
+      thisflag |= FLAG_SET_UNIARG;
+      minibuf_clear ();
+      astr_delete (as);
+    }
 }
 END_DEFUN
 
@@ -1140,7 +1128,6 @@ move to with the same argument.
 }
 END_DEFUN
 
-/* FIXME: Use new macro for arg/uniarg */
 DEFUN_ARGS ("forward-line", forward_line,
             INT_OR_UNIARG (n))
 /*+

@@ -38,8 +38,9 @@ void gotoeob (void);
 Function last_command (void);
 void set_this_command (Function cmd);
 size_t do_binding_completion (astr as);
-const char *get_function_by_key (size_t key);
-void process_key (size_t key);
+gl_list_t get_key_sequence (void);
+Function get_function_by_keys (gl_list_t keys);
+void process_command (void);
 void init_default_bindings (void);
 Function last_command (void);
 void set_this_command (Function cmd);
@@ -130,7 +131,6 @@ void zile_exit (int doabort);
 
 /* funcs.c ---------------------------------------------------------------- */
 void set_mark_interactive (void);
-le universal_argument (int keytype, int xarg);
 void write_temp_buffer (const char *name, bool show, void (*func) (va_list ap), ...);
 
 /* getkey.c --------------------------------------------------------------- */
@@ -327,7 +327,7 @@ bool get_variable_bool (const char *var);
   FIELD(const char *, field)
 #include "window.h"
 #undef FIELD
-void create_first_window (void);
+void create_scratch_window (void);
 Window *find_window (const char *name);
 void free_windows (void);
 Window *popup_window (void);
