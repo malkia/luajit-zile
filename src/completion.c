@@ -276,7 +276,6 @@ completion_try (Completion cp, astr search)
         }
     }
   (void) CLUE_DO (L, "table.sort (cp.matches)");
-  (void) CLUE_DO (L, "io.stderr:write (cp.matches)");
 
   if (get_completion_partmatches (cp) == 0)
     return COMPLETION_NOTMATCHED;
