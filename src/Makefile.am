@@ -85,8 +85,9 @@ zile_SOURCES =						\
 	tbl_funcs.h					\
 	tbl_opts.h.in
 
-LUA_RUNTIME =						\
-	std.lua						\
+LUA_STD = std.lua
+
+zile_LUA =						\
 	completion.lua					\
 	file.lua					\
 	lisp.lua
@@ -99,12 +100,12 @@ LUA_BUILDSCRIPTS = 					\
 	mkfuncs.lua					\
 	mkvars.lua
 
-ALLSOURCES = $(zile_BASE_SOURCES) $(LUA_BUILDTIME) $(LUA_RUNTIME) $(LUA_BUILDSCRIPTS)
+ALLSOURCES = $(zile_BASE_SOURCES) $(LUA_BUILDTIME) $(zile_LUA) $(LUA_BUILDSCRIPTS)
 
-extern.h tbl_funcs.h: $(zile_FUNCTION_SOURCES) mkfuncs.lua $(LUA_RUNTIME)
+extern.h tbl_funcs.h: $(zile_FUNCTION_SOURCES) mkfuncs.lua $(zile_LUA)
 	LUA_INIT= LUA_PATH="$(srcdir)/?.lua" $(LUA) -e 'PACKAGE_NAME="$(PACKAGE_NAME)"' $(srcdir)/mkfuncs.lua $(srcdir) $(zile_FUNCTION_SOURCES)
 
-mkvars.stamp: tbl_vars.h.in mkvars.lua $(LUA_RUNTIME)
+mkvars.stamp: tbl_vars.h.in mkvars.lua $(zile_LUA)
 	@rm -f mkvars.tmp
 	@touch mkvars.tmp
 	LUA_INIT= LUA_PATH="$(srcdir)/?.lua" $(LUA) -e 'PACKAGE="$(PACKAGE)"' $(srcdir)/mkvars.lua $(srcdir)/tbl_vars.h.in
@@ -359,7 +360,8 @@ LISP_TESTS_OUTPUTS =					\
 # Distribute tbl_vars.h & mkvars.stamp so that Lua is not needed for
 # building a release.
 EXTRA_DIST =						\
-	$(LUA_RUNTIME)					\
+	$(zile_LUA)					\
+	$(LUA_STD)					\
 	$(LUA_BUILDTIME)				\
 	$(LUA_BUILDSCRIPTS)				\
 	$(LISP_TESTS)					\
