@@ -85,7 +85,7 @@ shorten_string (astr as, int maxlen)
   if (len > maxlen)
     {
       astr_replace_cstr (as, 0, 0, "...");
-      astr_truncate (as, len - maxlen + 3);
+      astr_truncate (as, maxlen);
     }
 
   return as;
