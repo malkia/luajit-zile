@@ -41,8 +41,8 @@ function normalize_path (path)
   -- Deal with `~', `~user', `..', `.'
   local comp = io.splitdir (path)
   local ncomp = {}
-  for i, v in pairs (comp) do
-    if string.match (v, "^~$") then -- `~'
+  for _, v in ipairs (comp) do
+    if v == "~" then -- `~'
       local home = posix.getpasswd (nil, "dir")
       if home ~= nil then
         table.insert (ncomp, home)
@@ -58,15 +58,21 @@ function normalize_path (path)
         else
           return nil
         end
-      elseif string.match (v, "^%.%.$") then -- `..'
+      elseif v == ".." then -- `..'
         table.remove (ncomp)
-      elseif not string.match (v, "^%.$") then -- not `.'
+      elseif v ~= "." then -- not `.'
         table.insert (ncomp, v)
       end
     end
   end
 
-  return io.catdir (ncomp)
+  local npath = io.catdir (unpack (ncomp))
+  -- Add back trailing slash if there was one originally and it would
+  -- not be redundant (i.e. path is not "/")
+  if path[-1] == "/" and npath[-1] ~= "/" then
+    npath = npath .. "/"
+  end
+  return npath
 end
 
 -- Return a `~/foo' like path if the user is under his home directory,

@@ -75,104 +75,18 @@ agetcwd (void)
   return as;
 }
 
-/*
- * This function does some corrections and expansions to
- * the passed path:
- *
- * - expands `~/' and `~name/' expressions;
- * - replaces `//' with `/' (restarting from the root directory);
- * - removes `..' and `.' entries.
- *
- * The return value indicates success or failure.
- */
 bool
 expand_path (astr path)
 {
-  int ok = true;
-  const char *sp = astr_cstr (path), *p;
-  astr epath = astr_new ();
+  const char *s;
 
-  CLUE_SET (L, path, string, sp);
+  CLUE_SET (L, path, string, astr_cstr (path));
+  (void) CLUE_DO (L, "path = normalize_path (path)");
+  CLUE_GET (L, path, string, s);
+  /* fprintf (stderr, "normalize %s => %s\n", astr_cstr (path), s); */
+  astr_cpy_cstr (path, s);
 
-  if (*sp != '/' && *sp != '~')
-    {
-      astr cwd = agetcwd ();
-      astr_cat (epath, cwd);
-      astr_delete (cwd);
-      if (astr_len (epath) == 0 ||
-          astr_get (epath, astr_len (epath) - 1) != '/')
-        astr_cat_char (epath, '/');
-    }
-
-  for (p = sp; *p != '\0';)
-    {
-      if (*p == '/')
-        {
-          if (*++p == '/')
-            { /* Got `//'.  Restart from this point. */
-              while (*p == '/')
-                p++;
-              astr_truncate (epath, 0);
-            }
-          if (astr_len (epath) == 0 ||
-              astr_get (epath, astr_len (epath) - 1) != '/')
-            astr_cat_char (epath, '/');
-        }
-      else if (*p == '~' && (p == sp || p[-1] == '/'))
-        { /* Got `/~' or leading `~'.  Restart from this point. */
-          struct passwd *pw;
-
-          astr_truncate (epath, 0);
-          ++p;
-
-          if (*p == '/')
-            { /* Got `~/'.  Insert the user's home directory. */
-              pw = getpwuid (getuid ());
-              if (pw == NULL)
-                {
-                  ok = false;
-                  break;
-                }
-              if (strcmp (pw->pw_dir, "/") != 0)
-                astr_cat_cstr (epath, pw->pw_dir);
-            }
-          else
-            { /* Got `~something'.  Insert that user's home directory. */
-              astr as = astr_new ();
-              while (*p != '\0' && *p != '/')
-                astr_cat_char (as, *p++);
-              pw = getpwnam (astr_cstr (as));
-              astr_delete (as);
-              if (pw == NULL)
-                {
-                  ok = false;
-                  break;
-                }
-              astr_cat_cstr (epath, pw->pw_dir);
-            }
-        }
-      else if (*p == '.' && (p[1] == '/' || p[1] == '\0'))
-        { /* Got `.'. */
-          ++p;
-        }
-      else if (*p == '.' && p[1] == '.' && (p[2] == '/' || p[2] == '\0'))
-        { /* Got `..'. */
-          if (astr_len (epath) >= 1 && astr_get (epath, astr_len (epath) - 1) == '/')
-            astr_truncate (epath, astr_len (epath) - 1);
-          while (astr_get (epath, astr_len (epath) - 1) != '/' && astr_len (epath) >= 1)
-            astr_truncate (epath, astr_len (epath) - 1);
-          p += 2;
-        }
-
-      if (*p != '~')
-        while (*p != '\0' && *p != '/')
-          astr_cat_char (epath, *p++);
-    }
-
-  astr_cpy (path, epath);
-  astr_delete (epath);
-
-  return ok;
+  return true;
 }
 
 astr
