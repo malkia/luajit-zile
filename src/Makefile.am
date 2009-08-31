@@ -19,8 +19,9 @@
 # Free Software Foundation, Fifth Floor, 51 Franklin Street, Boston,
 # MA 02111-1301, USA.
 
-AM_CPPFLAGS = $(LUA_INCLUDE) -I$(top_builddir)/lib -I$(top_srcdir)/lib -DPATH_DATA="\"$(pkgdatadir)\""
-LDADD = $(top_builddir)/lib/libgnu.a $(LIB_EACCESS) $(LIBINTL) $(CURSES_LIB) $(LUA_LIB)
+AM_CPPFLAGS = $(LUA_INCLUDE) $(LUA_POSIX_CFLAGS) -I$(top_builddir)/lib -I$(top_srcdir)/lib -DPATH_DATA="\"$(pkgdatadir)\""
+AM_CFLAGS = $(LUA_POSIX_CFLAGS)
+LDADD = $(top_builddir)/lib/libgnu.a $(LIB_EACCESS) $(LIBINTL) $(CURSES_LIB) $(LUA_LIB) $(LUA_POSIX_LIBS)
 
 bin_PROGRAMS = zile
 
@@ -85,16 +86,20 @@ zile_SOURCES =						\
 	tbl_opts.h.in
 
 LUA_RUNTIME =						\
+	std.lua						\
 	completion.lua					\
+	file.lua					\
+	lisp.lua
+
+LUA_BUILDTIME =						\
 	lib.lua						\
-	lisp.lua					\
 	texinfo.lua
 
-LUA_BUILDTIME = 					\
+LUA_BUILDSCRIPTS = 					\
 	mkfuncs.lua					\
 	mkvars.lua
 
-ALLSOURCES = $(zile_BASE_SOURCES) $(LUA_BUILDTIME) $(LUA_RUNTIME)
+ALLSOURCES = $(zile_BASE_SOURCES) $(LUA_BUILDTIME) $(LUA_RUNTIME) $(LUA_BUILDSCRIPTS)
 
 extern.h tbl_funcs.h: $(zile_FUNCTION_SOURCES) mkfuncs.lua $(LUA_RUNTIME)
 	LUA_INIT= LUA_PATH="$(srcdir)/?.lua" $(LUA) -e 'PACKAGE_NAME="$(PACKAGE_NAME)"' $(srcdir)/mkfuncs.lua $(srcdir) $(zile_FUNCTION_SOURCES)
@@ -356,6 +361,7 @@ LISP_TESTS_OUTPUTS =					\
 EXTRA_DIST =						\
 	$(LUA_RUNTIME)					\
 	$(LUA_BUILDTIME)				\
+	$(LUA_BUILDSCRIPTS)				\
 	$(LISP_TESTS)					\
 	$(LISP_TESTS_ZILE_ONLY)				\
 	$(LISP_TESTS_OUTPUTS)				\

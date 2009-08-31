@@ -78,6 +78,7 @@ AX_LUA_LIB_VERSION(501, 502)
 AC_SUBST(LUA)
 AC_SUBST(LUA_INCLUDE)
 AC_SUBST(LUA_LIB)
+PKG_CHECK_MODULES([LUA_POSIX], [lua5.1-posix >= 5.1])
 
 dnl Extra definitions for config.h
 AC_DEFINE_UNQUOTED(CONFIGURE_DATE, ["`date '+%a %b %d %Y'`"],

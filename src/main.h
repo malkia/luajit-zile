@@ -27,6 +27,7 @@
 #include <limits.h>
 #include <lua.h>
 #include <lauxlib.h>
+#include "lua-posix.h"
 #include "config.h"
 #include "xalloc.h"
 #include "size_max.h"

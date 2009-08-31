@@ -76,7 +76,7 @@ agetcwd (void)
 }
 
 /*
- * This functions does some corrections and expansions to
+ * This function does some corrections and expansions to
  * the passed path:
  *
  * - expands `~/' and `~name/' expressions;
@@ -91,6 +91,8 @@ expand_path (astr path)
   int ok = true;
   const char *sp = astr_cstr (path), *p;
   astr epath = astr_new ();
+
+  CLUE_SET (L, path, string, sp);
 
   if (*sp != '/' && *sp != '~')
     {
@@ -173,31 +175,15 @@ expand_path (astr path)
   return ok;
 }
 
-/*
- * Return a `~/foo' like path if the user is under his home directory,
- * and restart from / if // found, else the unmodified path.
- */
 astr
 compact_path (astr path)
 {
-  struct passwd *pw = getpwuid (getuid ());
+  const char *s;
 
-  if (pw != NULL)
-    {
-      /* Replace `/userhome/' (if found) with `~/'. */
-      size_t homelen = strlen (pw->pw_dir);
-      if (!strncmp (pw->pw_dir, astr_cstr (path),
-                    MIN (homelen, astr_len (path))))
-        {
-          astr buf = astr_new_cstr ("~/");
-          if (!strcmp (pw->pw_dir, "/"))
-            astr_cat_cstr (buf, astr_cstr (path) + 1);
-          else
-            astr_cat_cstr (buf, astr_cstr (path) + homelen + 1);
-          astr_cpy (path, buf);
-          astr_delete (buf);
-        }
-    }
+  CLUE_SET (L, path, string, astr_cstr (path));
+  (void) CLUE_DO (L, "path = compact_path (path)");
+  CLUE_GET (L, path, string, s);
+  astr_cpy_cstr (path, s);
 
   return path;
 }

@@ -186,15 +186,18 @@ main (int argc, char **argv)
     prog_name = base_name (argv[0]);
 
   /* Set up Lua environment. */
-  CLUE_INIT(L);
-  assert(L);
+  CLUE_INIT (L);
+  assert (L);
+  luaopen_posix (L);
   lua_atpanic (L, at_lua_panic);
 
   /* Load Lua files. */
-  /* FIXME: Generate this list */
+  /* FIXME: Generate this list from LUA_RUNTIME */
   /* FIXME: Load Lua into Zile via LUA_PATH prefixed with appropriate
      directory, should work at compile and install time. */
+  (void) luaL_dofile (L, "std.lua");
   (void) luaL_dofile (L, "completion.lua");
+  (void) luaL_dofile (L, "file.lua");
   (void) luaL_dofile (L, "lisp.lua");
 
   /* Set up Lisp environment now so it's available to files and
