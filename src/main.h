@@ -82,11 +82,6 @@ enum
   COMPLETION_NONUNIQUE
 };
 
-/* Completion flags */
-#define CFLAG_POPPEDUP	0000001	/* Completion window has been popped up. */
-#define CFLAG_CLOSE	0000002	/* The completion window should be closed. */
-#define CFLAG_FILENAME	0000004	/* This is a filename completion. */
-
 /*--------------------------------------------------------------------------
  * Object field getter and setter generators.
  *--------------------------------------------------------------------------*/

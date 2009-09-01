@@ -184,7 +184,7 @@ do_minibuf_read (const char *prompt, const char *value, size_t pos,
               break;
             }
 
-          if (get_completion_flags (cp) & CFLAG_POPPEDUP)
+          if (get_completion_poppedup (cp))
             {
               completion_scroll_down ();
               thistab = lasttab;
@@ -198,7 +198,7 @@ do_minibuf_read (const char *prompt, const char *value, size_t pos,
               break;
             }
 
-          if (get_completion_flags (cp) & CFLAG_POPPEDUP)
+          if (get_completion_poppedup (cp))
             {
               completion_scroll_up ();
               thistab = lasttab;
@@ -242,7 +242,7 @@ do_minibuf_read (const char *prompt, const char *value, size_t pos,
             }
 
           if (lasttab != -1 && lasttab != COMPLETION_NOTMATCHED
-              && get_completion_flags (cp) & CFLAG_POPPEDUP)
+              && get_completion_poppedup (cp))
             {
               completion_scroll_up ();
               thistab = lasttab;
@@ -261,7 +261,7 @@ do_minibuf_read (const char *prompt, const char *value, size_t pos,
                 case COMPLETION_MATCHED:
                   {
                     bs = astr_new ();
-                    if (get_completion_flags (cp) & CFLAG_FILENAME)
+                    if (get_completion_filename (cp))
                       astr_cat (bs, get_completion_path (cp));
                     astr_ncat_cstr (bs, get_completion_match (cp), get_completion_matchsize (cp));
                     if (strncmp (astr_cstr (as), astr_cstr (bs),
@@ -314,11 +314,11 @@ term_minibuf_read (const char *prompt, const char *value, size_t pos,
       astr_delete (as);
     }
 
-  if (!LUA_NIL (cp) && (get_completion_flags (cp) & CFLAG_POPPEDUP)
+  if (!LUA_NIL (cp) && get_completion_poppedup (cp)
       && (wp = find_window ("*Completions*")) != NULL)
     {
       set_current_window (wp);
-      if (get_completion_flags (cp) & CFLAG_CLOSE)
+      if (get_completion_close (cp))
         FUNCALL (delete_window);
       else if (get_completion_old_bp (cp))
         switch_to_buffer (get_completion_old_bp (cp));

@@ -67,7 +67,7 @@ completion_new (int fileflag)
   if (fileflag)
     {
       set_completion_path (cp, astr_new ());
-      set_completion_flags (cp, CFLAG_FILENAME);
+      set_completion_filename (cp, true);
     }
 
   return cp;
@@ -79,7 +79,7 @@ completion_new (int fileflag)
 void
 free_completion (Completion cp)
 {
-  if (get_completion_flags (cp) & CFLAG_FILENAME)
+  if (get_completion_filename (cp))
     astr_delete (get_completion_path (cp));
 }
 
@@ -146,13 +146,13 @@ write_completion (va_list ap)
 void
 popup_completion (Completion cp)
 {
-  set_completion_flags (cp, get_completion_flags (cp) | CFLAG_POPPEDUP);
+  set_completion_poppedup (cp, true);
   if (get_window_next (head_wp) == NULL)
-    set_completion_flags (cp, get_completion_flags (cp) | CFLAG_CLOSE);
+    set_completion_close (cp, true);
 
   write_temp_buffer ("*Completions*", true, write_completion, cp, get_window_ewidth (cur_wp));
 
-  if (!(get_completion_flags (cp) & CFLAG_CLOSE))
+  if (!get_completion_close (cp))
     set_completion_old_bp (cp, cur_bp);
 
   term_redisplay ();
@@ -252,9 +252,8 @@ completion_try (Completion cp, astr search)
   lua_setglobal (L, "cp");
   (void) CLUE_DO (L, "cp.matches = {}");
 
-  if (get_completion_flags (cp) & CFLAG_FILENAME)
-    if (!completion_readdir (cp, search))
-      return COMPLETION_NOTMATCHED;
+  if (get_completion_filename (cp) && !completion_readdir (cp, search))
+    return COMPLETION_NOTMATCHED;
 
   ssize = astr_len (search);
 

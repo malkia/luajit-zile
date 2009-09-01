@@ -23,8 +23,10 @@
 FIELD_STR(match)		/* The match buffer. */
 
 /* Other fields of Completion. */
-FIELD(Buffer *, lightuserdata, old_bp)		/* The buffer from which the completion was invoked. */
+FIELD(Buffer *, lightuserdata, old_bp)	/* The buffer from which the completion was invoked. */
 FIELD(size_t, integer, matchsize)	/* The match buffer size. */
 FIELD(size_t, integer, partmatches)	/* Number of partial matches. */
-FIELD(int, integer, flags)		/* Completion flags. */
+FIELD(int, boolean, poppedup)		/* Completion window has been popped up. */
+FIELD(int, boolean, close)		/* The completion window should be closed. */
+FIELD(int, boolean, filename)		/* This is a filename completion. */
 FIELD(astr, lightuserdata, path)	/* Path for a filename completion. */
