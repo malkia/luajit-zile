@@ -83,7 +83,6 @@ expand_path (astr path)
   CLUE_SET (L, path, string, astr_cstr (path));
   (void) CLUE_DO (L, "path = normalize_path (path)");
   CLUE_GET (L, path, string, s);
-  /* fprintf (stderr, "normalize %s => %s\n", astr_cstr (path), s); */
   astr_cpy_cstr (path, s);
 
   return true;
