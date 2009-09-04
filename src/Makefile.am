@@ -102,6 +102,7 @@ LUA_BUILDSCRIPTS = 					\
 
 ALLSOURCES = $(zile_BASE_SOURCES) $(LUA_BUILDTIME) $(zile_LUA) $(LUA_BUILDSCRIPTS)
 
+# FIXME: Something wrong with this causing rebuilding on every make in a loop of two steps.
 extern.h tbl_funcs.h: $(zile_FUNCTION_SOURCES) mkfuncs.lua $(zile_LUA)
 	LUA_INIT= LUA_PATH="$(srcdir)/?.lua" $(LUA) -e 'PACKAGE_NAME="$(PACKAGE_NAME)"' $(srcdir)/mkfuncs.lua $(srcdir) $(zile_FUNCTION_SOURCES)
 
