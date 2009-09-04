@@ -100,7 +100,13 @@ LUA_BUILDSCRIPTS = 					\
 	mkfuncs.lua					\
 	mkvars.lua
 
-ALLSOURCES = $(zile_BASE_SOURCES) $(LUA_BUILDTIME) $(zile_LUA) $(LUA_BUILDSCRIPTS)
+PRODUCTIONSOURCES =					\
+	$(zile_BASE_SOURCES)				\
+	$(LUA_BUILDTIME)				\
+	$(zile_LUA)					\
+	$(LUA_BUILDSCRIPTS)				\
+	Makefile.am ../Makefile.am ../configure.ac	\
+	*.el
 
 # FIXME: Something wrong with this causing rebuilding on every make in a loop of two steps.
 extern.h tbl_funcs.h: $(zile_FUNCTION_SOURCES) mkfuncs.lua $(zile_LUA)
@@ -143,9 +149,20 @@ MAINTAINERCLEANFILES =					\
 	tbl_funcs.h					\
 	tbl_vars.h
 
+CLOC = cloc --no3
+
+TESTSOURCES = $(LISP_TESTS) $(LISP_TESTS_ZILE_ONLY) $(TESTSCRIPTS)
+
+ALLSOURCES = $(TESTSOURCES) $(PRODUCTIONSOURCES)
+
 loc:
-	cloc --no3 $(ALLSOURCES) $(LISP_TESTS) $(LISP_TESTS_ZILE_ONLY) *.el \
-	Makefile.am ../Makefile.am ../configure.ac
+	$(CLOC) $(PRODUCTIONSOURCES)
+
+loc-tests:
+	$(CLOC) $(TESTSOURCES)
+
+loc-all:
+	$(CLOC) $(ALLSOURCES)
 
 TESTS_VARS = srcdir=$(srcdir) builddir=$(builddir)
 TESTS_ENVIRONMENT = $(TESTS_VARS) $(VALGRIND)
@@ -160,6 +177,10 @@ check_PROGRAMS = astr
 
 astr_CPPFLAGS = -DTEST -DSRCPATH="\"$(top_srcdir)/src\"" $(AM_CPPFLAGS)
 astr_LDADD = xalloc_extra.o $(LDADD)
+
+TESTSCRIPTS =						\
+	run-lisp-tests					\
+	test-bad-argument
 
 # FIXME: Find a way of making these work
 #	lisp-tests/scroll_down.el			\
@@ -368,8 +389,7 @@ EXTRA_DIST =						\
 	$(LISP_TESTS)					\
 	$(LISP_TESTS_ZILE_ONLY)				\
 	$(LISP_TESTS_OUTPUTS)				\
-	run-lisp-tests					\
-	test-bad-argument				\
+	$(TESTSCRIPTS)					\
 	quit.el						\
 	dotzile-extra.el				\
 	tbl_opts.h.in					\
