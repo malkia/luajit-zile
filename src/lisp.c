@@ -192,7 +192,6 @@ minibuf_read_function_name (const char *fmt, ...)
                                  minibuf_test_in_completions,
                                  "Undefined function name `%s'", ap);
   va_end (ap);
-  free_completion (cp);
 
   return ms;
 }

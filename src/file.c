@@ -369,7 +369,6 @@ Select buffer @i{buffer} in the current window.
       Completion cp = make_buffer_completion ();
       buffer = minibuf_read_completion ("Switch to buffer (default %s): ",
                                         "", cp, NULL, get_buffer_name (bp));
-      free_completion (cp);
 
       if (buffer == NULL)
         ok = FUNCALL (keyboard_quit);
@@ -451,7 +450,6 @@ Puts mark after the inserted text.
                                         "", cp, NULL, get_buffer_name (def_bp));
       if (buffer == NULL)
         ok = FUNCALL (keyboard_quit);
-      free_completion (cp);
     }
 
   if (ok == leT)

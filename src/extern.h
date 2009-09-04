@@ -94,7 +94,6 @@ bool check_modified_buffer (Buffer * bp);
 #undef FIELD
 #undef FIELD_STR
 Completion completion_new (int fileflag);
-void free_completion (Completion cp);
 void completion_scroll_up (void);
 void completion_scroll_down (void);
 void popup_completion (Completion cp);

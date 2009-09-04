@@ -262,7 +262,7 @@ do_minibuf_read (const char *prompt, const char *value, size_t pos,
                   {
                     bs = astr_new ();
                     if (get_completion_filename (cp))
-                      astr_cat (bs, get_completion_path (cp));
+                      astr_cat_cstr (bs, get_completion_path (cp));
                     astr_ncat_cstr (bs, get_completion_match (cp), get_completion_matchsize (cp));
                     if (strncmp (astr_cstr (as), astr_cstr (bs),
                                  astr_len (bs)) != 0)

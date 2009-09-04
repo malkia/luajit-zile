@@ -177,7 +177,6 @@ minibuf_read_filename (const char *fmt, const char *value,
       if (file)
         pos -= strlen (file);
       p = term_minibuf_read (buf, astr_cstr (as), pos, cp, files_history);
-      free_completion (cp);
       free (buf);
 
       if (p != NULL)
@@ -260,7 +259,6 @@ minibuf_read_yesno (const char *fmt, ...)
 
   if (ms != NULL)
     ret = !strcmp (ms, "yes");
-  free_completion (cp);
 
   return ret;
 }

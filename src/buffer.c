@@ -614,7 +614,6 @@ With a nil argument, kill the current buffer.
       Completion cp = make_buffer_completion ();
       buffer = minibuf_read_completion ("Kill buffer (default %s): ",
                                         "", cp, NULL, get_buffer_name (cur_bp));
-      free_completion (cp);
       if (buffer == NULL)
         ok = FUNCALL (keyboard_quit);
     }
