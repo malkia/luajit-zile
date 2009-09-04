@@ -172,7 +172,8 @@ minibuf_read_filename (const char *fmt, const char *value,
 
       as = compact_path (as);
 
-      cp = completion_new (true);
+      cp = completion_new ();
+      set_completion_filename (cp, true);
       pos = astr_len (as);
       if (file)
         pos -= strlen (file);
@@ -245,7 +246,7 @@ minibuf_read_yesno (const char *fmt, ...)
   va_list ap;
   char *ms;
   const char *errmsg = "Please answer yes or no.";
-  Completion cp = completion_new (false);
+  Completion cp = completion_new ();
   int ret = -1;
 
   lua_rawgeti (L, LUA_REGISTRYINDEX, cp);

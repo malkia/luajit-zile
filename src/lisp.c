@@ -173,7 +173,7 @@ minibuf_read_function_name (const char *fmt, ...)
 {
   va_list ap;
   char *ms;
-  Completion cp = completion_new (false);
+  Completion cp = completion_new ();
   size_t i;
 
   lua_rawgeti (L, LUA_REGISTRYINDEX, cp);

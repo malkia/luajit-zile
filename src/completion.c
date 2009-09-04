@@ -54,20 +54,11 @@
  * Allocate a new completion structure.
  */
 Completion
-completion_new (int fileflag)
+completion_new (void)
 {
-  Completion cp;
-
-  lua_newtable (L);
-  cp = luaL_ref (L, LUA_REGISTRYINDEX);
-  lua_rawgeti (L, LUA_REGISTRYINDEX, cp);
-  lua_setglobal (L, "cp");
-  (void) CLUE_DO (L, "cp.matches, cp.completions = {}, {}");
-
-  if (fileflag)
-    set_completion_filename (cp, true);
-
-  return cp;
+  (void) CLUE_DO (L, "cp = {matches = {}, completions = {}}");
+  lua_getglobal (L, "cp");
+  return luaL_ref (L, LUA_REGISTRYINDEX);
 }
 
 /*
@@ -176,7 +167,7 @@ minibuf_read_variable_name (char *fmt, ...)
 {
   va_list ap;
   char *ms;
-  Completion cp = completion_new (false);
+  Completion cp = completion_new ();
 
   lua_getglobal (L, "main_vars");
   lua_pushnil (L);
@@ -201,7 +192,7 @@ Completion
 make_buffer_completion (void)
 {
   Buffer *bp;
-  Completion cp = completion_new (false);
+  Completion cp = completion_new ();
 
   lua_rawgeti (L, LUA_REGISTRYINDEX, cp);
   lua_setglobal (L, "cp");
