@@ -69,7 +69,7 @@ function normalize_path (path)
   local npath = io.catdir (unpack (ncomp))
   -- Add back trailing slash if there was one originally and it would
   -- not be redundant (i.e. path is not "/")
-  if path[-1] == "/" and npath[-1] ~= "/" then
+  if path[-1] == "/" and npath ~= "/" then
     npath = npath .. "/"
   end
   return npath
