@@ -159,7 +159,6 @@ minibuf_read_filename (const char *fmt, const char *value,
 {
   va_list ap;
   char *buf, *p = NULL;
-  Completion cp;
   astr as;
   size_t pos;
 
@@ -172,12 +171,14 @@ minibuf_read_filename (const char *fmt, const char *value,
 
       as = compact_path (as);
 
-      cp = completion_new ();
-      set_completion_filename (cp, true);
+      (void) CLUE_DO (L, "cp = completion_new ()");
+      (void) CLUE_DO (L, "cp.filename = true");
+      lua_getglobal (L, "cp");
+
       pos = astr_len (as);
       if (file)
         pos -= strlen (file);
-      p = term_minibuf_read (buf, astr_cstr (as), pos, cp, files_history);
+      p = term_minibuf_read (buf, astr_cstr (as), pos, luaL_ref (L, LUA_REGISTRYINDEX), files_history);
       free (buf);
 
       if (p != NULL)
@@ -246,15 +247,14 @@ minibuf_read_yesno (const char *fmt, ...)
   va_list ap;
   char *ms;
   const char *errmsg = "Please answer yes or no.";
-  Completion cp = completion_new ();
   int ret = -1;
 
-  lua_rawgeti (L, LUA_REGISTRYINDEX, cp);
-  lua_setglobal (L, "cp");
+  (void) CLUE_DO (L, "cp = completion_new ()");
   (void) CLUE_DO (L, "cp.completions = {'no', 'yes'}");
+  lua_getglobal (L, "cp");
 
   va_start (ap, fmt);
-  ms = minibuf_vread_completion (fmt, "", cp, NULL, errmsg,
+  ms = minibuf_vread_completion (fmt, "", luaL_ref (L, LUA_REGISTRYINDEX), NULL, errmsg,
                                  minibuf_test_in_completions, errmsg, ap);
   va_end (ap);
 

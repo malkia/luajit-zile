@@ -173,11 +173,13 @@ minibuf_read_function_name (const char *fmt, ...)
 {
   va_list ap;
   char *ms;
-  Completion cp = completion_new ();
+  Completion cp;
   size_t i;
 
-  lua_rawgeti (L, LUA_REGISTRYINDEX, cp);
-  lua_setglobal (L, "cp");
+  (void) CLUE_DO (L, "cp = completion_new ()");
+  lua_getglobal (L, "cp");
+  cp = luaL_ref (L, LUA_REGISTRYINDEX);
+
   for (i = 0; i < fentry_table_size; ++i)
     if (fentry_table[i].interactive)
       {

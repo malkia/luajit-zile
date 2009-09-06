@@ -29,6 +29,11 @@
 --   close - true if the completion window should be closed
 -- }
 
+-- Make a new completions table
+function completion_new ()
+  return {completions = {}, matches = {}}
+end
+
 -- Write the matches in `l' in a set of columns. The width of the
 -- columns is chosen to be big enough for the longest string, with a
 -- COLUMN_GAP-character gap between each column.

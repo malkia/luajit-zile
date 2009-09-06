@@ -51,17 +51,6 @@
 #undef FIELD_STR
 
 /*
- * Allocate a new completion structure.
- */
-Completion
-completion_new (void)
-{
-  (void) CLUE_DO (L, "cp = {matches = {}, completions = {}}");
-  lua_getglobal (L, "cp");
-  return luaL_ref (L, LUA_REGISTRYINDEX);
-}
-
-/*
  * Scroll completions up.
  */
 void
@@ -124,9 +113,11 @@ write_completion (va_list ap)
 void
 popup_completion (Completion cp)
 {
-  set_completion_poppedup (cp, true);
+  lua_rawgeti (L, LUA_REGISTRYINDEX, cp);
+  lua_setglobal (L, "cp");
+  (void) CLUE_DO (L, "cp.poppedup = true");
   if (get_window_next (head_wp) == NULL)
-    set_completion_close (cp, true);
+    (void) CLUE_DO (L, "cp.close = true");
 
   write_temp_buffer ("*Completions*", true, write_completion, cp, get_window_ewidth (cur_wp));
 
@@ -167,16 +158,13 @@ minibuf_read_variable_name (char *fmt, ...)
 {
   va_list ap;
   char *ms;
-  Completion cp = completion_new ();
+  Completion cp;
 
-  lua_getglobal (L, "main_vars");
-  lua_pushnil (L);
-  while (lua_next (L, -2) != 0) {
-    assert (lua_tostring (L, -2));
-    lua_setglobal (L, "s");
-    (void) CLUE_DO (L, "table.insert (cp.completions, s)");
-  }
-  lua_pop (L, 1);
+  (void) CLUE_DO (L, "cp = completion_new ()");
+  (void) CLUE_DO (L, "for v in pairs (main_vars) do table.insert (cp.completions, v) end");
+
+  lua_getglobal (L, "cp");
+  cp = luaL_ref (L, LUA_REGISTRYINDEX);
 
   va_start (ap, fmt);
   ms = minibuf_vread_completion (fmt, "", cp, NULL,
@@ -192,15 +180,14 @@ Completion
 make_buffer_completion (void)
 {
   Buffer *bp;
-  Completion cp = completion_new ();
 
-  lua_rawgeti (L, LUA_REGISTRYINDEX, cp);
-  lua_setglobal (L, "cp");
+  (void) CLUE_DO (L, "cp = completion_new ()");
   for (bp = head_bp; bp != NULL; bp = get_buffer_next (bp))
     {
       CLUE_SET (L, s, string, get_buffer_name (bp));
       (void) CLUE_DO (L, "table.insert (cp.completions, s)");
     }
 
-  return cp;
+  lua_getglobal (L, "cp");
+  return luaL_ref (L, LUA_REGISTRYINDEX);
 }
