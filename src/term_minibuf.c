@@ -79,7 +79,7 @@ draw_minibuf_read (const char *prompt, const char *value,
 
 static astr
 do_minibuf_read (const char *prompt, const char *value, size_t pos,
-               Completion cp, History * hp)
+               Completion cp, int hp)
 {
   static int overwrite_mode = 0;
   int c, thistab, lasttab = -1;
@@ -208,7 +208,13 @@ do_minibuf_read (const char *prompt, const char *value, size_t pos,
         case KBD_META | 'p':
           if (hp)
             {
-              const char *elem = previous_history_element (hp);
+              const char *elem;
+
+              lua_rawgeti (L, LUA_REGISTRYINDEX, hp);
+              lua_setglobal (L, "hp");
+              (void) CLUE_DO (L, "elem = previous_history_element (hp)");
+              CLUE_GET (L, elem, string, elem);
+
               if (elem)
                 {
                   if (!saved)
@@ -222,7 +228,13 @@ do_minibuf_read (const char *prompt, const char *value, size_t pos,
         case KBD_META | 'n':
           if (hp)
             {
-              const char *elem = next_history_element (hp);
+              const char *elem;
+
+              lua_rawgeti (L, LUA_REGISTRYINDEX, hp);
+              lua_setglobal (L, "hp");
+              (void) CLUE_DO (L, "elem = next_history_element (hp)");
+              CLUE_GET (L, elem, string, elem);
+
               if (elem)
                 astr_cpy_cstr (as, elem);
               else if (saved)
@@ -298,14 +310,18 @@ do_minibuf_read (const char *prompt, const char *value, size_t pos,
 
 char *
 term_minibuf_read (const char *prompt, const char *value, size_t pos,
-                   Completion cp, History * hp)
+                   Completion cp, int hp)
 {
   Window *wp, *old_wp = cur_wp;
   char *s = NULL;
   astr as;
 
-  if (hp)
-    prepare_history (hp);
+  if (hp != LUA_NOREF)
+    {
+      lua_rawgeti (L, LUA_REGISTRYINDEX, hp);
+      lua_setglobal (L, "hp");
+      (void) CLUE_DO (L, "prepare_history (hp)");
+    }
 
   as = do_minibuf_read (prompt, value, pos, cp, hp);
   if (as)

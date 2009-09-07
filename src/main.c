@@ -197,6 +197,7 @@ main (int argc, char **argv)
      directory, should work at compile and install time. */
   (void) luaL_dofile (L, "std.lua");
   (void) luaL_dofile (L, "completion.lua");
+  (void) luaL_dofile (L, "history.lua");
   (void) luaL_dofile (L, "file.lua");
   (void) luaL_dofile (L, "lisp.lua");
 
@@ -401,7 +402,6 @@ main (int argc, char **argv)
   term_finish ();
 
   free_default_bindings ();
-  free_eval ();
 
   /* Free all the memory allocated. */
   free_search ();

@@ -141,14 +141,6 @@ void waitkey (size_t delay);
 void init_getkey (void);
 void free_getkey (void);
 
-/* history.c -------------------------------------------------------------- */
-History *history_new (void);
-void free_history (History * hp);
-void add_history_element (History * hp, const char *string);
-void prepare_history (History * hp);
-const char *previous_history_element (History * hp);
-const char *next_history_element (History * hp);
-
 /* keycode.c -------------------------------------------------------------- */
 astr chordtostr (size_t key);
 size_t strtochord (const char *buf, size_t * len);
@@ -191,7 +183,6 @@ const char *get_function_doc (const char *name);
 const char *get_function_name (Function p);
 const char *minibuf_read_function_name (const char *fmt, ...);
 void init_eval (void);
-void free_eval (void);
 void init_lisp (void);
 void lisp_loadstring (astr as);
 bool lisp_loadfile (const char *file);
@@ -238,9 +229,9 @@ bool minibuf_test_in_completions (const char *ms, Completion cp);
 int minibuf_read_yn (const char *fmt, ...);
 int minibuf_read_yesno (const char *fmt, ...);
 char *minibuf_read_completion (const char *fmt, char *value, Completion cp,
-                               History * hp, ...);
+                               int hp, ...);
 char *minibuf_vread_completion (const char *fmt, char *value, Completion cp,
-                                History * hp, const char *empty_err,
+                                int hp, const char *empty_err,
                                 bool (*test) (const char *s, Completion cp),
                                 const char *invalid_err, va_list ap);
 char *minibuf_read_filename (const char *fmt, const char *value,
@@ -286,7 +277,7 @@ void term_ungetkey (size_t key);
 /* term_minibuf.c --------------------------------------------------------- */
 void term_minibuf_write (const char *fmt);
 char *term_minibuf_read (const char *prompt, const char *value, size_t pos,
-                         Completion cp, History * hp);
+                         Completion cp, int hp);
 
 /* term_redisplay.c ------------------------------------------------------- */
 size_t term_width (void);

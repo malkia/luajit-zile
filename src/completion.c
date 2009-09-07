@@ -167,7 +167,7 @@ minibuf_read_variable_name (char *fmt, ...)
   cp = luaL_ref (L, LUA_REGISTRYINDEX);
 
   va_start (ap, fmt);
-  ms = minibuf_vread_completion (fmt, "", cp, NULL,
+  ms = minibuf_vread_completion (fmt, "", cp, LUA_NOREF,
                                  "No variable name given",
                                  minibuf_test_in_completions,
                                  "Undefined variable name `%s'", ap);

@@ -167,7 +167,7 @@ END_DEFUN
 /*
  * Read a function name from the minibuffer.
  */
-static History *functions_history = NULL;
+static int functions_history = LUA_NOREF;
 const char *
 minibuf_read_function_name (const char *fmt, ...)
 {
@@ -328,12 +328,8 @@ END_DEFUN
 void
 init_eval (void)
 {
-  functions_history = history_new ();
+  (void) CLUE_DO (L, "hp = history_new ()");
+  lua_getglobal (L, "hp");
+  functions_history = luaL_ref (L, LUA_REGISTRYINDEX);
   lua_register (L, "call_zile_command", call_zile_command);
-}
-
-void
-free_eval (void)
-{
-  free_history (functions_history);
 }

@@ -30,7 +30,7 @@
 #include "main.h"
 #include "extern.h"
 
-static History *files_history = NULL;
+static int files_history = LUA_NOREF;
 char *minibuf_contents = NULL;
 
 /*--------------------------------------------------------------------------
@@ -40,13 +40,14 @@ char *minibuf_contents = NULL;
 void
 init_minibuf (void)
 {
-  files_history = history_new ();
+  (void) CLUE_DO (L, "hp = history_new ()");
+  lua_getglobal (L, "hp");
+  files_history = luaL_ref (L, LUA_REGISTRYINDEX);
 }
 
 void
 free_minibuf (void)
 {
-  free_history (files_history);
   free (minibuf_contents);
 }
 
@@ -108,7 +109,7 @@ minibuf_read (const char *fmt, const char *value, ...)
   xvasprintf (&buf, fmt, ap);
   va_end (ap);
 
-  p = term_minibuf_read (buf, value ? value : "", SIZE_MAX, LUA_NOREF, NULL);
+  p = term_minibuf_read (buf, value ? value : "", SIZE_MAX, LUA_NOREF, LUA_NOREF);
   free (buf);
 
   return p;
@@ -186,7 +187,10 @@ minibuf_read_filename (const char *fmt, const char *value,
           astr as = astr_new_cstr (p);
           if (expand_path (as))
             {
-              add_history_element (files_history, p);
+              lua_rawgeti (L, LUA_REGISTRYINDEX, files_history);
+              lua_setglobal (L, "hp");
+              CLUE_SET (L, s, string, p);
+              (void) CLUE_DO (L, "add_history_element (hp, s)");
               free (p);
               p = xstrdup (astr_cstr (as));
             }
@@ -254,7 +258,7 @@ minibuf_read_yesno (const char *fmt, ...)
   lua_getglobal (L, "cp");
 
   va_start (ap, fmt);
-  ms = minibuf_vread_completion (fmt, "", luaL_ref (L, LUA_REGISTRYINDEX), NULL, errmsg,
+  ms = minibuf_vread_completion (fmt, "", luaL_ref (L, LUA_REGISTRYINDEX), LUA_NOREF, errmsg,
                                  minibuf_test_in_completions, errmsg, ap);
   va_end (ap);
 
@@ -264,9 +268,9 @@ minibuf_read_yesno (const char *fmt, ...)
   return ret;
 }
 
+/* FIXME: Make all callers use history */
 char *
-minibuf_read_completion (const char *fmt, char *value, Completion cp,
-                         History * hp, ...)
+minibuf_read_completion (const char *fmt, char *value, Completion cp, int hp, ...)
 {
   va_list ap;
   char *buf, *ms;
@@ -286,7 +290,7 @@ minibuf_read_completion (const char *fmt, char *value, Completion cp,
  */
 char *
 minibuf_vread_completion (const char *fmt, char *value, Completion cp,
-                          History * hp, const char *empty_err,
+                          int hp, const char *empty_err,
                           bool (*test) (const char *s, Completion cp),
                           const char *invalid_err, va_list ap)
 {
@@ -329,7 +333,12 @@ minibuf_vread_completion (const char *fmt, char *value, Completion cp,
           if (test (ms, cp))
             {
               if (hp)
-                add_history_element (hp, ms);
+                {
+                  lua_rawgeti (L, LUA_REGISTRYINDEX, hp);
+                  lua_setglobal (L, "hp");
+                  CLUE_SET (L, s, string, ms);
+                  (void) CLUE_DO (L, "add_history_element (hp, s)");
+                }
               minibuf_clear ();
               break;
             }

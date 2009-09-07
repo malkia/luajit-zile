@@ -63,7 +63,6 @@ zile_BASE_SOURCES =					\
 	completion.c					\
 	editfns.c					\
 	getkey.c					\
-	history.c					\
 	keycode.c					\
 	line.h						\
 	main.c						\
@@ -89,6 +88,7 @@ LUA_STD = std.lua
 
 zile_LUA =						\
 	completion.lua					\
+	history.lua					\
 	file.lua					\
 	lisp.lua
 
