@@ -45,6 +45,7 @@ zile_FUNCTION_SOURCES =					\
 	variables.c					\
 	window.c
 
+# FIXME: Move lcurses.c to lib/
 zile_BASE_SOURCES =					\
 	$(zile_FUNCTION_SOURCES)			\
 	astr.c						\
