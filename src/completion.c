@@ -21,15 +21,8 @@
 
 #include "config.h"
 
-#include <sys/stat.h>
-#include <assert.h>
-#include <dirent.h>
 #include <stdarg.h>
-#include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include "dirname.h"
 
 #include "main.h"
 #include "extern.h"
