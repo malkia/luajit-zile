@@ -39,8 +39,7 @@
  * Structure
  */
 #define FIELD(cty, lty, field)                  \
-  LUA_GETTER (completion, cty, lty, field)      \
-  static LUA_SETTER (completion, cty, lty, field)
+  LUA_GETTER (completion, cty, lty, field)
 
 #include "completion.h"
 #undef FIELD
@@ -74,7 +73,11 @@ popup_completion (int cp)
   write_temp_buffer ("*Completions*", true, write_completion, cp, get_window_ewidth (cur_wp));
 
   if (!get_completion_close (cp))
-    set_completion_old_bp (cp, cur_bp);
+    {
+      lua_pushlightuserdata (L, cur_bp);
+      lua_setglobal (L, "cur_bp");
+      (void) CLUE_DO (L, "cp.old_bp = cur_bp");
+    }
 
   term_redisplay ();
 }
