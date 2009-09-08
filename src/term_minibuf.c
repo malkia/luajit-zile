@@ -34,8 +34,9 @@ term_minibuf_write (const char *s)
 {
   size_t x;
 
-  term_move (term_height () - 1, 0);
-  term_clrtoeol ();
+  CLUE_SET (L, y, integer, term_height () - 1);
+  (void) CLUE_DO (L, "term_move (y, 0)");
+  (void) CLUE_DO (L, "term_clrtoeol ()");
 
   for (x = 0; *s != '\0' && x < term_width (); s++)
     {
@@ -66,15 +67,18 @@ draw_minibuf_read (const char *prompt, const char *value,
 
   if (strlen (value + n) >= term_width () - prompt_len - margin)
     {
-      term_move (term_height () - 1, term_width () - 1);
+      CLUE_SET (L, y, integer, term_height () - 1);
+      CLUE_SET (L, x, integer, term_width () - 1);
+      (void) CLUE_DO (L, "term_move (y, x)");
       term_addch ('$');
     }
 
-  term_move (term_height () - 1,
-             prompt_len + margin - 1 + pointo % (term_width () - prompt_len -
-                                                 margin));
+  CLUE_SET (L, y, integer, term_height () - 1);
+  CLUE_SET (L, x, integer, prompt_len + margin - 1 + pointo % (term_width () - prompt_len -
+                                                               margin));
+  (void) CLUE_DO (L, "term_move (y, x)");
 
-  term_refresh ();
+  (void) CLUE_DO (L, "term_refresh ()");
 }
 
 static astr
@@ -119,14 +123,16 @@ do_minibuf_read (const char *prompt, const char *value, size_t pos,
           FUNCALL (suspend_emacs);
           break;
         case KBD_RET:
-          term_move (term_height () - 1, 0);
-          term_clrtoeol ();
+          CLUE_SET (L, y, integer, term_height () - 1);
+          (void) CLUE_DO (L, "term_move (y, 0)");
+          (void) CLUE_DO (L, "term_clrtoeol ()");
           if (saved)
             astr_delete (saved);
           return as;
         case KBD_CANCEL:
-          term_move (term_height () - 1, 0);
-          term_clrtoeol ();
+          CLUE_SET (L, y, integer, term_height () - 1);
+          (void) CLUE_DO (L, "term_move (y, 0)");
+          (void) CLUE_DO (L, "term_clrtoeol ()");
           if (saved)
             astr_delete (saved);
           astr_delete (as);

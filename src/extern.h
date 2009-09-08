@@ -180,6 +180,9 @@ void init_lisp (void);
 void lisp_loadstring (astr as);
 bool lisp_loadfile (const char *file);
 
+/* lcurses.c -------------------------------------------------------------- */
+int luaopen_curses (lua_State *L);
+
 /* macro.c ---------------------------------------------------------------- */
 void cancel_kbd_macro (void);
 void add_cmd_to_macro (void);
@@ -257,13 +260,8 @@ void term_init (void);
 void term_close (void);
 void term_suspend (void);
 void term_resume (void);
-void term_move (size_t y, size_t x);
-void term_clrtoeol (void);
-void term_refresh (void);
-void term_clear (void);
 void term_addch (int c);
 void term_attrset (size_t attr);
-void term_beep (void);
 size_t term_xgetkey (int mode, size_t timeout);
 void term_ungetkey (size_t key);
 

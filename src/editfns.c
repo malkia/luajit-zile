@@ -168,5 +168,5 @@ ding (void)
     cancel_kbd_macro ();
 
   if (get_variable_bool ("ring-bell") && cur_wp != NULL)
-    term_beep ();
+    (void) CLUE_DO (L, "term_beep ()");
 }

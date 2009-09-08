@@ -51,6 +51,7 @@ zile_BASE_SOURCES =					\
 	astr.h						\
 	xalloc_extra.c					\
 	xalloc_extra.h					\
+	lcurses.c					\
 	extern.h					\
 	main.h						\
 	tbl_vars.h					\
@@ -90,7 +91,8 @@ zile_LUA =						\
 	completion.lua					\
 	history.lua					\
 	file.lua					\
-	lisp.lua
+	lisp.lua					\
+	term_curses.lua
 
 LUA_BUILDTIME =						\
 	lib.lua						\

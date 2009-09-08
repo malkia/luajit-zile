@@ -81,7 +81,7 @@ about_screen (void)
   if (!get_variable_bool ("inhibit-splash-screen"))
     {
       show_splash_screen (about_splash_str);
-      term_refresh ();
+      (void) CLUE_DO (L, "term_refresh ()");
       waitkey (20 * 10);
     }
 }
@@ -189,6 +189,7 @@ main (int argc, char **argv)
   CLUE_INIT (L);
   assert (L);
   luaopen_posix (L);
+  luaopen_curses (L);
   lua_atpanic (L, at_lua_panic);
 
   /* Load Lua files. */
@@ -200,6 +201,7 @@ main (int argc, char **argv)
   (void) luaL_dofile (L, "history.lua");
   (void) luaL_dofile (L, "file.lua");
   (void) luaL_dofile (L, "lisp.lua");
+  (void) luaL_dofile (L, "term_curses.lua");
 
   /* Set up Lisp environment now so it's available to files and
      expressions specified on the command-line. */
@@ -394,7 +396,7 @@ main (int argc, char **argv)
       if (lastflag & FLAG_NEED_RESYNC)
         resync_redisplay ();
       term_redisplay ();
-      term_refresh ();
+      (void) CLUE_DO (L, "term_refresh ()");
       process_command ();
     }
 

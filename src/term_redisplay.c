@@ -99,7 +99,9 @@ draw_end_of_line (size_t line, Window * wp, size_t lineno, Region * rp,
 {
   if (x >= term_width ())
     {
-      term_move (line, term_width () - 1);
+      CLUE_SET (L, y, integer, line);
+      CLUE_SET (L, x, integer, term_width () - 1);
+      (void) CLUE_DO (L, "term_move (y, x)");
       term_addch ('$');
     }
   else if (highlight)
@@ -120,7 +122,8 @@ draw_line (size_t line, size_t startcol, Window * wp, Line * lp,
 {
   size_t x, i;
 
-  term_move (line, 0);
+  CLUE_SET (L, y, integer, line);
+  (void) CLUE_DO (L, "term_move (y, 0)");
   for (x = 0, i = startcol; i < astr_len (get_line_text (lp)) && x < get_window_ewidth (wp); i++)
     {
       if (highlight && in_region (lineno, i, rp))
@@ -180,8 +183,9 @@ draw_window (size_t topline, Window * wp)
   for (i = topline; i < get_window_eheight (wp) + topline; ++i, ++lineno)
     {
       /* Clear the line. */
-      term_move (i, 0);
-      term_clrtoeol ();
+      CLUE_SET (L, y, integer, i);
+      (void) CLUE_DO (L, "term_move (y, 0)");
+      (void) CLUE_DO (L, "term_clrtoeol ()");
 
       /* If at the end of the buffer, don't write any text. */
       if (lp == get_buffer_lines (get_window_bp (wp)))
@@ -193,7 +197,8 @@ draw_window (size_t topline, Window * wp)
 
       if (get_window_start_column (wp) > 0)
         {
-          term_move (i, 0);
+          CLUE_SET (L, y, integer, i);
+          (void) CLUE_DO (L, "term_move (y, 0)");
           term_addch ('$');
         }
 
@@ -297,7 +302,8 @@ draw_status_line (size_t line, Window * wp)
 
   term_attrset (FONT_REVERSE);
 
-  term_move (line, 0);
+  CLUE_SET (L, y, integer, line);
+  (void) CLUE_DO (L, "term_move (y, 0)");
   for (i = 0; i < get_window_ewidth (wp); ++i)
     term_addch ('-');
 
@@ -308,7 +314,8 @@ draw_status_line (size_t line, Window * wp)
   else
     eol_type = ":";
 
-  term_move (line, 0);
+  CLUE_SET (L, y, integer, line);
+  (void) CLUE_DO (L, "term_move (y, 0)");
   bs = astr_afmt (astr_new (), "(%d,%d)", pt.n + 1,
                   get_goalc_bp (get_window_bp (wp), window_pt (wp)));
   as = astr_afmt (astr_new (), "--%s%2s  %-15s   %s %-9s (Fundamental",
@@ -359,13 +366,15 @@ term_redisplay (void)
     }
 
   /* Redraw cursor. */
-  term_move (cur_topline + get_window_topdelta (cur_wp), point_screen_column);
+  CLUE_SET (L, y, integer, cur_topline + get_window_topdelta (cur_wp));
+  CLUE_SET (L, x, integer, point_screen_column);
+  (void) CLUE_DO (L, "term_move (y, x)");
 }
 
 void
 term_full_redisplay (void)
 {
-  term_clear ();
+  (void) CLUE_DO (L, "term_clear ()");
   term_redisplay ();
 }
 
@@ -377,14 +386,19 @@ show_splash_screen (const char *splash)
 
   for (i = 0; i < term_height () - 2; ++i)
     {
-      term_move (i, 0);
-      term_clrtoeol ();
+      CLUE_SET (L, y, integer, i);
+      (void) CLUE_DO (L, "term_move (y, 0)");
+      (void) CLUE_DO (L, "term_clrtoeol ()");
     }
 
-  term_move (0, 0);
+  (void) CLUE_DO (L, "term_move (0, 0)");
   for (i = 0, p = splash; *p != '\0' && i < term_height () - 2; ++p)
     if (*p == '\n')
-      term_move (++i, 0);
+      {
+        ++i;
+        CLUE_SET (L, y, integer, i);
+        (void) CLUE_DO (L, "term_move (y, 0)");
+      }
     else
       term_addch (*p);
 }
@@ -395,10 +409,11 @@ show_splash_screen (const char *splash)
 void
 term_tidy (void)
 {
-  term_move (term_height () - 1, 0);
-  term_clrtoeol ();
+  CLUE_SET (L, y, integer, term_height () - 1);
+  (void) CLUE_DO (L, "term_move (y, 0)");
+  (void) CLUE_DO (L, "term_clrtoeol ()");
   term_attrset (FONT_NORMAL);
-  term_refresh ();
+  (void) CLUE_DO (L, "term_refresh ()");
 }
 
 /*

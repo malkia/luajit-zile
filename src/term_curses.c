@@ -43,30 +43,6 @@ term_buf_len (void)
 }
 
 void
-term_move (size_t y, size_t x)
-{
-  move ((int) y, (int) x);
-}
-
-void
-term_clrtoeol (void)
-{
-  clrtoeol ();
-}
-
-void
-term_refresh (void)
-{
-  refresh ();
-}
-
-void
-term_clear (void)
-{
-  clear ();
-}
-
-void
 term_addch (int c)
 {
   addch ((chtype) (c & ~A_ATTRIBUTES));
@@ -79,15 +55,9 @@ term_attrset (size_t attr)
 }
 
 void
-term_beep (void)
-{
-  beep ();
-}
-
-void
 term_init (void)
 {
-  initscr ();
+  (void) CLUE_DO (L, "curses.initscr ()");
   term_set_size ((size_t) COLS, (size_t) LINES);
   noecho ();
   nonl ();
@@ -102,9 +72,10 @@ void
 term_close (void)
 {
   /* Clear last line. */
-  term_move ((size_t) (LINES - 1), 0);
-  term_clrtoeol ();
-  term_refresh ();
+  CLUE_SET (L, y, integer, LINES - 1);
+  (void) CLUE_DO (L, "term_move (y, 0)");
+  (void) CLUE_DO (L, "term_clrtoeol ()");
+  (void) CLUE_DO (L, "term_refresh ()");
 
   /* Free memory and finish with ncurses. */
   gl_list_free (key_buf);
