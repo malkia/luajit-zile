@@ -205,7 +205,7 @@ minibuf_read_filename (const char *fmt, const char *value,
 }
 
 bool
-minibuf_test_in_completions (const char *ms, Completion cp)
+minibuf_test_in_completions (const char *ms, int cp)
 {
   bool found;
   lua_rawgeti (L, LUA_REGISTRYINDEX, cp);
@@ -270,7 +270,7 @@ minibuf_read_yesno (const char *fmt, ...)
 
 /* FIXME: Make all callers use history */
 char *
-minibuf_read_completion (const char *fmt, char *value, Completion cp, int hp, ...)
+minibuf_read_completion (const char *fmt, char *value, int cp, int hp, ...)
 {
   va_list ap;
   char *buf, *ms;
@@ -289,9 +289,9 @@ minibuf_read_completion (const char *fmt, char *value, Completion cp, int hp, ..
  * Read a string from the minibuffer using a completion.
  */
 char *
-minibuf_vread_completion (const char *fmt, char *value, Completion cp,
+minibuf_vread_completion (const char *fmt, char *value, int cp,
                           int hp, const char *empty_err,
-                          bool (*test) (const char *s, Completion cp),
+                          bool (*test) (const char *s, int cp),
                           const char *invalid_err, va_list ap)
 {
   char *buf, *ms;
@@ -316,11 +316,13 @@ minibuf_vread_completion (const char *fmt, char *value, Completion cp,
         }
       else
         {
-          astr as = astr_new ();
           int comp;
-          astr_cpy_cstr (as, ms);
           /* Complete partial words if possible. */
-          comp = completion_try (cp, as);
+          lua_rawgeti (L, LUA_REGISTRYINDEX, cp);
+          lua_setglobal (L, "cp");
+          CLUE_SET (L, search, string, ms);
+          (void) CLUE_DO (L, "ret = completion_try (cp, search)");
+          CLUE_GET (L, ret, integer, comp);
           if (comp == COMPLETION_MATCHED)
             {
               free ((char *) ms);
@@ -328,7 +330,6 @@ minibuf_vread_completion (const char *fmt, char *value, Completion cp,
             }
           else if (comp == COMPLETION_NONUNIQUE)
             popup_completion (cp);
-          astr_delete (as);
 
           if (test (ms, cp))
             {

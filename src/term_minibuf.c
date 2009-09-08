@@ -79,7 +79,7 @@ draw_minibuf_read (const char *prompt, const char *value,
 
 static astr
 do_minibuf_read (const char *prompt, const char *value, size_t pos,
-               Completion cp, int hp)
+                 int cp, int hp)
 {
   static int overwrite_mode = 0;
   int c, thistab, lasttab = -1;
@@ -261,10 +261,12 @@ do_minibuf_read (const char *prompt, const char *value, size_t pos,
             }
           else
             {
-              astr bs = astr_new ();
-              astr_cpy (bs, as);
-              thistab = completion_try (cp, bs);
-              astr_delete (bs);
+              lua_rawgeti (L, LUA_REGISTRYINDEX, cp);
+              lua_setglobal (L, "cp");
+              CLUE_SET (L, search, string, astr_cstr (as));
+              (void) CLUE_DO (L, "ret = completion_try (cp, search)");
+              CLUE_GET (L, ret, integer, thistab);
+
               switch (thistab)
                 {
                 case COMPLETION_NONUNIQUE:
@@ -272,7 +274,7 @@ do_minibuf_read (const char *prompt, const char *value, size_t pos,
                   popup_completion (cp);
                 case COMPLETION_MATCHED:
                   {
-                    bs = astr_new ();
+                    astr bs = astr_new ();
                     if (get_completion_filename (cp))
                       astr_cat_cstr (bs, get_completion_path (cp));
                     astr_ncat_cstr (bs, get_completion_match (cp), get_completion_matchsize (cp));
@@ -310,7 +312,7 @@ do_minibuf_read (const char *prompt, const char *value, size_t pos,
 
 char *
 term_minibuf_read (const char *prompt, const char *value, size_t pos,
-                   Completion cp, int hp)
+                   int cp, int hp)
 {
   Window *wp, *old_wp = cur_wp;
   char *s = NULL;

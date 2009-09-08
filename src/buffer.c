@@ -611,7 +611,7 @@ With a nil argument, kill the current buffer.
   STR_INIT (buffer)
   else
     {
-      Completion cp = make_buffer_completion ();
+      int cp = make_buffer_completion ();
       buffer = minibuf_read_completion ("Kill buffer (default %s): ",
                                         "", cp, LUA_NOREF, get_buffer_name (cur_bp));
       if (buffer == NULL)

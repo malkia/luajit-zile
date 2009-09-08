@@ -173,7 +173,7 @@ minibuf_read_function_name (const char *fmt, ...)
 {
   va_list ap;
   char *ms;
-  Completion cp;
+  int cp;
   size_t i;
 
   (void) CLUE_DO (L, "cp = completion_new ()");

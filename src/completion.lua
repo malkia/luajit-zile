@@ -131,6 +131,11 @@ end
 --
 -- To format the completions for a popup, you should call completion_write
 -- after this method.
+COMPLETION_NOTMATCHED = 0
+COMPLETION_MATCHED = 1
+COMPLETION_MATCHEDNONUNIQUE = 2
+COMPLETION_NONUNIQUE = 3
+
 function completion_try (cp, search)
   cp.matches = {}
 
@@ -155,5 +160,17 @@ function completion_try (cp, search)
   end
   cp.match = string.sub (match, 1, prefix_len)
 
-  return search
+  local ret = COMPLETION_NONUNIQUE
+  if #cp.matches == 0 then
+    ret = COMPLETION_NOTMATCHED
+  elseif #cp.matches == 1 then
+    ret = COMPLETION_MATCHED
+  elseif #cp.matches > 1 then
+    local len = math.min (#search, #cp.match)
+    if string.sub (cp.match, 1, len) == string.sub (search, 1, len) then
+      ret = COMPLETION_MATCHEDNONUNIQUE
+    end
+  end
+
+  return ret, search
 end

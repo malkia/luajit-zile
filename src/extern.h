@@ -86,17 +86,12 @@ bool check_modified_buffer (Buffer * bp);
 
 /* completion.c ----------------------------------------------------------- */
 #define FIELD(cty, lty, field)                                  \
-  cty get_completion_ ## field (const Completion cp);           \
-  void set_completion_ ## field (Completion cp, cty field);
-#define FIELD_STR(field)                        \
-  FIELD(const char *, string, field)
+  cty get_completion_ ## field (int cp);
 #include "completion.h"
 #undef FIELD
-#undef FIELD_STR
-void popup_completion (Completion cp);
-int completion_try (Completion cp, astr search);
+void popup_completion (int cp);
 char *minibuf_read_variable_name (char *fmt, ...);
-Completion make_buffer_completion (void);
+int make_buffer_completion (void);
 
 /* editfns.c -------------------------------------------------------------- */
 void push_mark (void);
@@ -223,14 +218,14 @@ void minibuf_error (const char *fmt, ...);
 void minibuf_write (const char *fmt, ...);
 char *minibuf_read (const char *fmt, const char *value, ...);
 unsigned long minibuf_read_number (const char *fmt, ...);
-bool minibuf_test_in_completions (const char *ms, Completion cp);
+bool minibuf_test_in_completions (const char *ms, int cp);
 int minibuf_read_yn (const char *fmt, ...);
 int minibuf_read_yesno (const char *fmt, ...);
-char *minibuf_read_completion (const char *fmt, char *value, Completion cp,
+char *minibuf_read_completion (const char *fmt, char *value, int cp,
                                int hp, ...);
-char *minibuf_vread_completion (const char *fmt, char *value, Completion cp,
+char *minibuf_vread_completion (const char *fmt, char *value, int cp,
                                 int hp, const char *empty_err,
-                                bool (*test) (const char *s, Completion cp),
+                                bool (*test) (const char *s, int cp),
                                 const char *invalid_err, va_list ap);
 char *minibuf_read_filename (const char *fmt, const char *value,
                              const char *file, ...);
@@ -275,7 +270,7 @@ void term_ungetkey (size_t key);
 /* term_minibuf.c --------------------------------------------------------- */
 void term_minibuf_write (const char *fmt);
 char *term_minibuf_read (const char *prompt, const char *value, size_t pos,
-                         Completion cp, int hp);
+                         int cp, int hp);
 
 /* term_redisplay.c ------------------------------------------------------- */
 size_t term_width (void);

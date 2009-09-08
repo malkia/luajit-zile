@@ -40,7 +40,7 @@
  */
 #define FIELD(cty, lty, field)                  \
   LUA_GETTER (completion, cty, lty, field)      \
-  LUA_SETTER (completion, cty, lty, field)
+  static LUA_SETTER (completion, cty, lty, field)
 
 #include "completion.h"
 #undef FIELD
@@ -48,7 +48,7 @@
 static void
 write_completion (va_list ap)
 {
-  Completion cp = va_arg (ap, Completion);
+  int cp = va_arg (ap, int);
   size_t width = va_arg (ap, size_t);
   const char *s;
   lua_rawgeti (L, LUA_REGISTRYINDEX, cp);
@@ -63,7 +63,7 @@ write_completion (va_list ap)
  * Popup the completion window.
  */
 void
-popup_completion (Completion cp)
+popup_completion (int cp)
 {
   lua_rawgeti (L, LUA_REGISTRYINDEX, cp);
   lua_setglobal (L, "cp");
@@ -79,38 +79,12 @@ popup_completion (Completion cp)
   term_redisplay ();
 }
 
-/*
- * Match completions.
- */
-int
-completion_try (Completion cp, astr search)
-{
-  int matches;
-  const char *s;
-
-  CLUE_SET (L, search, string, astr_cstr (search));
-  (void) CLUE_DO (L, "search = completion_try (cp, search)");
-  (void) CLUE_DO (L, "matches = #cp.matches");
-  CLUE_GET (L, matches, integer, matches);
-  CLUE_GET (L, search, string, s);
-  astr_cpy_cstr (search, s);
-
-  if (matches == 0)
-    return COMPLETION_NOTMATCHED;
-  else if (matches == 1)
-    return COMPLETION_MATCHED;
-  else if (strncmp (get_completion_match (cp), astr_cstr (search), astr_len (search)) == 0 && matches > 1)
-    return COMPLETION_MATCHEDNONUNIQUE;
-  else
-    return COMPLETION_NONUNIQUE;
-}
-
 char *
 minibuf_read_variable_name (char *fmt, ...)
 {
   va_list ap;
   char *ms;
-  Completion cp;
+  int cp;
 
   (void) CLUE_DO (L, "cp = completion_new ()");
   (void) CLUE_DO (L, "for v in pairs (main_vars) do table.insert (cp.completions, v) end");
@@ -128,7 +102,7 @@ minibuf_read_variable_name (char *fmt, ...)
   return ms;
 }
 
-Completion
+int
 make_buffer_completion (void)
 {
   Buffer *bp;
