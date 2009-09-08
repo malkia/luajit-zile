@@ -129,8 +129,8 @@ end
 --   cp.matches - replaced with the list of matching completions, sorted
 --   cp.match - replaced with the longest common prefix of the matches
 --
--- To format the completions for a popup, you should call completion_write
--- after this method.
+-- To format the completions for a popup, call completion_write
+-- after this function.
 COMPLETION_NOTMATCHED = 0
 COMPLETION_MATCHED = 1
 COMPLETION_MATCHEDNONUNIQUE = 2
