@@ -42,13 +42,8 @@
   LUA_GETTER (completion, cty, lty, field)      \
   LUA_SETTER (completion, cty, lty, field)
 
-#define FIELD_STR(field)                                 \
-  LUA_GETTER (completion, const char *, string, field)   \
-  LUA_SETTER (completion, const char *, string, field)
-
 #include "completion.h"
 #undef FIELD
-#undef FIELD_STR
 
 /*
  * Scroll completions up.
