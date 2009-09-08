@@ -93,8 +93,6 @@ bool check_modified_buffer (Buffer * bp);
 #include "completion.h"
 #undef FIELD
 #undef FIELD_STR
-void completion_scroll_up (void);
-void completion_scroll_down (void);
 void popup_completion (Completion cp);
 int completion_try (Completion cp, astr search);
 char *minibuf_read_variable_name (char *fmt, ...);
@@ -323,6 +321,8 @@ Window *popup_window (void);
 void set_current_window (Window * wp);
 void delete_window (Window * del_wp);
 Point window_pt (Window * wp);
+void completion_scroll_up (void);
+void completion_scroll_down (void);
 
 
 /*

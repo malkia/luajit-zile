@@ -346,3 +346,46 @@ window_pt (Window * wp)
         return get_buffer_pt (wp->bp);
     }
 }
+
+/*
+ * Scroll completions up.
+ */
+void
+completion_scroll_up (void)
+{
+  Window *wp, *old_wp = cur_wp;
+  Point pt;
+
+  wp = find_window ("*Completions*");
+  assert (wp != NULL);
+  set_current_window (wp);
+  pt = get_buffer_pt (cur_bp);
+  if (pt.n >= get_buffer_last_line (cur_bp) - get_window_eheight (cur_wp) || !FUNCALL (scroll_up))
+    gotobob ();
+  set_current_window (old_wp);
+
+  term_redisplay ();
+}
+
+/*
+ * Scroll completions down.
+ */
+void
+completion_scroll_down (void)
+{
+  Window *wp, *old_wp = cur_wp;
+  Point pt;
+
+  wp = find_window ("*Completions*");
+  assert (wp != NULL);
+  set_current_window (wp);
+  pt = get_buffer_pt (cur_bp);
+  if (pt.n == 0 || !FUNCALL (scroll_down))
+    {
+      gotoeob ();
+      resync_redisplay ();
+    }
+  set_current_window (old_wp);
+
+  term_redisplay ();
+}
