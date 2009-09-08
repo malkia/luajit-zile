@@ -159,6 +159,7 @@ function completion_try (cp, search)
     prefix_len = math.min (prefix_len, common_prefix_length (match, v))
   end
   cp.match = string.sub (match, 1, prefix_len)
+  cp.matchsize = prefix_len
 
   local ret = COMPLETION_NONUNIQUE
   if #cp.matches == 0 then
