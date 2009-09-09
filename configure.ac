@@ -23,10 +23,10 @@ dnl Initialise autoconf and automake
 AC_INIT(Zile, 2.4.0, bug-zile@gnu.org)
 AM_INIT_AUTOMAKE([std-options check-news])
 
-dnl Checks for programs
+dnl Set up C compiler
 AC_GNU_SOURCE
 AC_PROG_CC
-AX_CFLAGS_WARN_ALL
+AX_CFLAGS_WARN_ALL_ANSI
 if test "$GCC" = "yes"; then
   CFLAGS="$CFLAGS -W -Wmissing-prototypes -Wstrict-prototypes -D_FORTIFY_SOURCE=2"
 fi
@@ -78,7 +78,7 @@ AX_LUA_LIB_VERSION(501, 502)
 AC_SUBST(LUA)
 AC_SUBST(LUA_INCLUDE)
 AC_SUBST(LUA_LIB)
-PKG_CHECK_MODULES([LUA_POSIX], [lua5.1-posix >= 5.1])
+PKG_CHECK_MODULES([LUA_LIBS], [lua5.1-posix >= 5.1 lua5.1-bitop >= 1.0.1])
 
 dnl Extra definitions for config.h
 AC_DEFINE_UNQUOTED(CONFIGURE_DATE, ["`date '+%a %b %d %Y'`"],
