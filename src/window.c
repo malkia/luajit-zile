@@ -263,6 +263,11 @@ Make the selected window fill the screen.
 +*/
 {
   Window *wp, *nextwp;
+  size_t w, h;
+
+  (void) CLUE_DO (L, "w, h = term_width (), term_height ()");
+  CLUE_GET (L, w, integer, w);
+  CLUE_GET (L, h, integer, h);
 
   for (wp = head_wp; wp != NULL; wp = nextwp)
     {
@@ -271,9 +276,9 @@ Make the selected window fill the screen.
         free_window (wp);
     }
 
-  cur_wp->fwidth = cur_wp->ewidth = term_width ();
+  cur_wp->fwidth = cur_wp->ewidth = w;
   /* Save space for minibuffer. */
-  cur_wp->fheight = term_height () - 1;
+  cur_wp->fheight = h - 1;
   /* Save space for status line. */
   cur_wp->eheight = cur_wp->fheight - 1;
   cur_wp->next = NULL;
@@ -301,12 +306,17 @@ create_scratch_window (void)
 {
   Window *wp;
   Buffer *bp = create_scratch_buffer ();
+  size_t w, h;
+
+  (void) CLUE_DO (L, "w, h = term_width (), term_height ()");
+  CLUE_GET (L, w, integer, w);
+  CLUE_GET (L, h, integer, h);
 
   wp = window_new ();
   cur_wp = head_wp = wp;
-  wp->fwidth = wp->ewidth = term_width ();
+  wp->fwidth = wp->ewidth = w;
   /* Save space for minibuffer. */
-  wp->fheight = term_height () - 1;
+  wp->fheight = h - 1;
   /* Save space for status line. */
   wp->eheight = wp->fheight - 1;
   wp->bp = cur_bp = bp;

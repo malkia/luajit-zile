@@ -260,7 +260,6 @@ void term_init (void);
 void term_close (void);
 void term_suspend (void);
 void term_resume (void);
-void term_attrset (size_t attr);
 size_t term_xgetkey (int mode, size_t timeout);
 void term_ungetkey (size_t key);
 
@@ -270,8 +269,6 @@ char *term_minibuf_read (const char *prompt, const char *value, size_t pos,
                          int cp, int hp);
 
 /* term_redisplay.c ------------------------------------------------------- */
-size_t term_width (void);
-size_t term_height (void);
 void term_set_size (size_t cols, size_t rows);
 void term_redisplay (void);
 void term_full_redisplay (void);

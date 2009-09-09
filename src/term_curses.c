@@ -43,16 +43,10 @@ term_buf_len (void)
 }
 
 void
-term_attrset (size_t attr)
-{
-  attrset (attr == FONT_REVERSE ? A_REVERSE : 0);
-}
-
-void
 term_init (void)
 {
   (void) CLUE_DO (L, "curses.initscr ()");
-  term_set_size ((size_t) COLS, (size_t) LINES);
+  (void) CLUE_DO (L, "term_set_size (curses.cols (), curses.lines ())");
   noecho ();
   nonl ();
   raw ();
@@ -342,7 +336,7 @@ term_xgetkey (int mode, size_t timeout)
 #ifdef KEY_RESIZE
       if (c == KEY_RESIZE)
         {
-          term_set_size ((size_t) COLS, (size_t) LINES);
+          (void) CLUE_DO (L, "term_set_size (curses.cols, curses.lines)");
           resize_windows ();
           continue;
         }

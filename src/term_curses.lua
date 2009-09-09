@@ -19,13 +19,11 @@
 -- Free Software Foundation, Fifth Floor, 51 Franklin Street, Boston,
 -- MA 02111-1301, USA.
 
--- static gl_list_t key_buf;
+local key_buf
 
--- size_t
--- term_buf_len (void)
--- {
---   return gl_list_size (key_buf);
--- }
+function term_buf_len ()
+  return #key_buf
+end
 
 function term_move (y, x)
   curses.stdscr ():move (y, x)
@@ -43,35 +41,32 @@ function term_clear ()
   curses.stdscr ():clear ()
 end
 
--- FIXME: Use The interface properly!
-A_ATTRIBUTES = bit.bnot (255)
 function term_addch (c)
-  curses.stdscr ():addch (bit.band (c, bit.bnot (A_ATTRIBUTES)))
+  curses.stdscr ():addch (bit.band (c, bit.bnot (curses.A_ATTRIBUTES)))
 end
 
--- void
--- term_attrset (size_t attr)
--- {
---   attrset (attr == FONT_REVERSE ? A_REVERSE : 0);
--- }
+-- FIXME: Put next two lines in a better place
+FONT_NORMAL = 0
+FONT_REVERSE = 1
+function term_attrset (attr)
+  curses.stdscr ():attrset (attr == FONT_REVERSE and curses.A_REVERSE or 0)
+end
 
 function term_beep ()
   curses.beep ()
 end
 
--- void
--- term_init (void)
--- {
---   initscr ();
---   term_set_size ((size_t) COLS, (size_t) LINES);
---   noecho ();
---   nonl ();
---   raw ();
---   meta (stdscr, true);
---   intrflush (stdscr, false);
---   keypad (stdscr, true);
---   key_buf = gl_list_create_empty (GL_ARRAY_LIST, NULL, NULL, NULL, true);
--- }
+function term_init ()
+  curses.initscr ()
+  term_set_size (curses.cols, curses.lines)
+  curses.echo (false)
+  curses.nl (false)
+  curses.raw (true)
+  stdscr ():meta (true);
+  stdscr ():intrflush (false)
+  stdscr ():keypad (true)
+  key_buf = {}
+end
 
 -- void
 -- term_close (void)

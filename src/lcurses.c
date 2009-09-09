@@ -416,6 +416,7 @@ static void register_curses_constants(lua_State *L)
     CC(A_REVERSE)       CC(A_BLINK)         CC(A_DIM)
     CC(A_BOLD)          CC(A_PROTECT)       CC(A_INVIS)
     CC(A_ALTCHARSET)    CC(A_CHARTEXT)
+    CC(A_ATTRIBUTES)
 
     /* key functions */
     CC(KEY_BREAK)       CC(KEY_DOWN)        CC(KEY_UP)
@@ -2004,7 +2005,6 @@ static const luaL_reg curseslib[] =
     { "new_chstr",      lc_new_chstr    },
 
     /* initscr */
-    { "initscr",        lc_initscr      },
     { "endwin",         lc_endwin       },
     { "isendwin",       lc_isendwin     },
     { "stdscr",         lc_stdscr       },
@@ -2112,6 +2112,11 @@ int luaopen_curses (lua_State *L)
     ** create global table with curses methods/variables/constants
     */
     luaL_register(L, "curses", curseslib);
+
+    lua_pushstring(L, "initscr");
+    lua_pushvalue(L, -2);
+    lua_pushcclosure(L, lc_initscr, 1);
+    lua_settable(L, -3);
 
     return 1;
 }

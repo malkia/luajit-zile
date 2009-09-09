@@ -30,29 +30,9 @@
 #include "config.h"
 #include "extern.h"
 
-static size_t width = 0, height = 0;
 static size_t cur_tab_width;
 static size_t cur_topline;
 static size_t point_screen_column;
-
-size_t
-term_width (void)
-{
-  return width;
-}
-
-size_t
-term_height (void)
-{
-  return height;
-}
-
-void
-term_set_size (size_t cols, size_t rows)
-{
-  width = cols;
-  height = rows;
-}
 
 static int
 make_char_printable (char **buf, int c)
@@ -70,16 +50,20 @@ outch (int c, size_t font, size_t * x)
 {
   int j, w;
   char *buf;
+  size_t tw;
 
-  if (*x >= term_width ())
+  (void) CLUE_DO (L, "w = term_width ()");
+  CLUE_GET (L, w, integer, tw);
+
+  if (*x >= tw)
     return;
 
-  term_attrset (font);
+  CLUE_SET (L, font, integer, font);
+  (void) CLUE_DO (L, "term_attrset (font)");
 
   if (c == '\t')
     {
-      for (w = cur_tab_width - *x % cur_tab_width; w > 0 && *x < term_width ();
-           w--)
+      for (w = cur_tab_width - *x % cur_tab_width; w > 0 && *x < tw; w--)
         {
           (void) CLUE_DO (L, "term_addch (string.byte (' '))");
           ++(*x);
@@ -94,7 +78,7 @@ outch (int c, size_t font, size_t * x)
   else
     {
       j = make_char_printable (&buf, c);
-      for (w = 0; w < j && *x < term_width (); ++w)
+      for (w = 0; w < j && *x < tw; ++w)
         {
           CLUE_SET (L, c, integer, buf[w]);
           (void) CLUE_DO (L, "term_addch (c)");
@@ -103,17 +87,21 @@ outch (int c, size_t font, size_t * x)
       free (buf);
     }
 
-  term_attrset (FONT_NORMAL);
+  (void) CLUE_DO (L, "term_attrset (FONT_NORMAL)");
 }
 
 static void
 draw_end_of_line (size_t line, Window * wp, size_t lineno, Region * rp,
                   int highlight, size_t x, size_t i)
 {
-  if (x >= term_width ())
+  size_t tw;
+
+  (void) CLUE_DO (L, "tw = term_width ()");
+  CLUE_GET (L, w, integer, tw);
+  if (x >= tw)
     {
       CLUE_SET (L, y, integer, line);
-      CLUE_SET (L, x, integer, term_width () - 1);
+      CLUE_SET (L, x, integer, tw - 1);
       (void) CLUE_DO (L, "term_move (y, x)");
       (void) CLUE_DO (L, "term_addch (string.byte ('$'))");
     }
@@ -308,12 +296,15 @@ make_screen_pos (Window * wp, char **buf)
 static void
 draw_status_line (size_t line, Window * wp)
 {
-  size_t i;
+  size_t i, tw;
   char *buf, *eol_type;
   Point pt = window_pt (wp);
   astr as, bs;
 
-  term_attrset (FONT_REVERSE);
+  (void) CLUE_DO (L, "tw = term_width ()");
+  CLUE_GET (L, w, integer, tw);
+
+  (void) CLUE_DO (L, "term_attrset (FONT_REVERSE)");
 
   CLUE_SET (L, y, integer, line);
   (void) CLUE_DO (L, "term_move (y, 0)");
@@ -347,10 +338,10 @@ draw_status_line (size_t line, Window * wp)
     astr_cat_cstr (as, " Isearch");
 
   astr_cat_char (as, ')');
-  term_addnstr (astr_cstr (as), MIN (term_width (), astr_len (as)));
+  term_addnstr (astr_cstr (as), MIN (tw, astr_len (as)));
   astr_delete (as);
 
-  term_attrset (FONT_NORMAL);
+  (void) CLUE_DO (L, "term_attrset (FONT_NORMAL)");
 }
 
 void
@@ -394,10 +385,13 @@ term_full_redisplay (void)
 void
 show_splash_screen (const char *splash)
 {
-  size_t i;
+  size_t i, h;
   const char *p;
 
-  for (i = 0; i < term_height () - 2; ++i)
+  (void) CLUE_DO (L, "h = term_height ()");
+  CLUE_GET (L, h, integer, h);
+
+  for (i = 0; i < h - 2; ++i)
     {
       CLUE_SET (L, y, integer, i);
       (void) CLUE_DO (L, "term_move (y, 0)");
@@ -405,7 +399,7 @@ show_splash_screen (const char *splash)
     }
 
   (void) CLUE_DO (L, "term_move (0, 0)");
-  for (i = 0, p = splash; *p != '\0' && i < term_height () - 2; ++p)
+  for (i = 0, p = splash; *p != '\0' && i < h - 2; ++p)
     if (*p == '\n')
       {
         ++i;
@@ -425,10 +419,9 @@ show_splash_screen (const char *splash)
 void
 term_tidy (void)
 {
-  CLUE_SET (L, y, integer, term_height () - 1);
-  (void) CLUE_DO (L, "term_move (y, 0)");
+  (void) CLUE_DO (L, "term_move (term_height () - 1, 0)");
   (void) CLUE_DO (L, "term_clrtoeol ()");
-  term_attrset (FONT_NORMAL);
+  (void) CLUE_DO (L, "term_attrset (FONT_NORMAL)");
   (void) CLUE_DO (L, "term_refresh ()");
 }
 

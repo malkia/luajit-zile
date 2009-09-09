@@ -203,6 +203,7 @@ main (int argc, char **argv)
   (void) luaL_dofile (L, "file.lua");
   (void) luaL_dofile (L, "lisp.lua");
   (void) luaL_dofile (L, "term_curses.lua");
+  (void) luaL_dofile (L, "term_redisplay.lua");
 
   /* Set up Lisp environment now so it's available to files and
      expressions specified on the command-line. */

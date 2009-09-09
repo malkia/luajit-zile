@@ -32,13 +32,14 @@
 void
 term_minibuf_write (const char *s)
 {
-  size_t x;
+  size_t x, w;
 
-  CLUE_SET (L, y, integer, term_height () - 1);
-  (void) CLUE_DO (L, "term_move (y, 0)");
+  (void) CLUE_DO (L, "term_move (term_height () - 1, 0)");
   (void) CLUE_DO (L, "term_clrtoeol ()");
 
-  for (x = 0; *s != '\0' && x < term_width (); s++)
+  (void) CLUE_DO (L, "w = term_width ()");
+  CLUE_GET (L, w, integer, w);
+  for (x = 0; *s != '\0' && x < w; s++)
     {
       CLUE_SET (L, c, integer, (int) (*(unsigned char *) s));
       (void) CLUE_DO (L, "term_addch (c)");
@@ -51,32 +52,35 @@ draw_minibuf_read (const char *prompt, const char *value,
                    size_t prompt_len, char *match, size_t pointo)
 {
   int margin = 1, n = 0;
+  size_t w, h;
 
   term_minibuf_write (prompt);
 
-  if (prompt_len + pointo + 1 >= term_width ())
+  (void) CLUE_DO (L, "w, h = term_width (), term_height ()");
+  CLUE_GET (L, w, integer, w);
+  CLUE_GET (L, h, integer, h);
+  if (prompt_len + pointo + 1 >= w)
     {
       margin++;
       (void) CLUE_DO (L, "term_addch (string.byte ('$'))");
-      n = pointo - pointo % (term_width () - prompt_len - 2);
+      n = pointo - pointo % (w - prompt_len - 2);
     }
 
   term_addnstr (value + n,
-                MIN (term_width () - prompt_len - margin,
+                MIN (w - prompt_len - margin,
                      strlen (value) - n));
   term_addnstr (match, strlen (match));
 
-  if (strlen (value + n) >= term_width () - prompt_len - margin)
+  if (strlen (value + n) >= w - prompt_len - margin)
     {
-      CLUE_SET (L, y, integer, term_height () - 1);
-      CLUE_SET (L, x, integer, term_width () - 1);
+      CLUE_SET (L, y, integer, h - 1);
+      CLUE_SET (L, x, integer, w - 1);
       (void) CLUE_DO (L, "term_move (y, x)");
       (void) CLUE_DO (L, "term_addch (string.byte ('$'))");
     }
 
-  CLUE_SET (L, y, integer, term_height () - 1);
-  CLUE_SET (L, x, integer, prompt_len + margin - 1 + pointo % (term_width () - prompt_len -
-                                                               margin));
+  CLUE_SET (L, y, integer, h - 1);
+  CLUE_SET (L, x, integer, prompt_len + margin - 1 + pointo % (w - prompt_len - margin));
   (void) CLUE_DO (L, "term_move (y, x)");
 
   (void) CLUE_DO (L, "term_refresh ()");
@@ -124,15 +128,13 @@ do_minibuf_read (const char *prompt, const char *value, size_t pos,
           FUNCALL (suspend_emacs);
           break;
         case KBD_RET:
-          CLUE_SET (L, y, integer, term_height () - 1);
-          (void) CLUE_DO (L, "term_move (y, 0)");
+          (void) CLUE_DO (L, "term_move (term_height () - 1, 0)");
           (void) CLUE_DO (L, "term_clrtoeol ()");
           if (saved)
             astr_delete (saved);
           return as;
         case KBD_CANCEL:
-          CLUE_SET (L, y, integer, term_height () - 1);
-          (void) CLUE_DO (L, "term_move (y, 0)");
+          (void) CLUE_DO (L, "term_move (term_height () - 1, 0)");
           (void) CLUE_DO (L, "term_clrtoeol ()");
           if (saved)
             astr_delete (saved);

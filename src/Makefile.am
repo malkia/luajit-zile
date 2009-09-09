@@ -93,7 +93,8 @@ zile_LUA =						\
 	history.lua					\
 	file.lua					\
 	lisp.lua					\
-	term_curses.lua
+	term_curses.lua					\
+	term_redisplay.lua
 
 LUA_BUILDTIME =						\
 	lib.lua						\

@@ -48,17 +48,23 @@ resize_windows (void)
 {
   Window *wp;
   int hdelta;
+  size_t h;
+  (void) CLUE_DO (L, "w = term_height ()");
+  CLUE_GET (L, h, integer, h);
 
   /* Resize windows horizontally. */
   for (wp = head_wp; wp != NULL; wp = get_window_next (wp))
     {
-      set_window_fwidth (wp, term_width ());
+      size_t w;
+      (void) CLUE_DO (L, "w = term_width ()");
+      CLUE_GET (L, w, integer, w);
+      set_window_fwidth (wp,  w);
       set_window_ewidth (wp, get_window_fwidth (wp));
     }
 
   /* Work out difference in window height; windows may be taller than
      terminal if the terminal was very short. */
-  for (hdelta = term_height () - 1, wp = head_wp;
+  for (hdelta = h - 1, wp = head_wp;
        wp != NULL; hdelta -= get_window_fheight (wp), wp = get_window_next (wp));
 
   /* Resize windows vertically. */
