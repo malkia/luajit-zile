@@ -43,11 +43,11 @@ function term_clear ()
   curses.stdscr ():clear ()
 end
 
--- void
--- term_addch (int c)
--- {
---   addch ((chtype) (c & ~A_ATTRIBUTES));
--- }
+-- FIXME: Use The interface properly!
+A_ATTRIBUTES = bit.bnot (255)
+function term_addch (c)
+  curses.stdscr ():addch (bit.band (c, bit.bnot (A_ATTRIBUTES)))
+end
 
 -- void
 -- term_attrset (size_t attr)

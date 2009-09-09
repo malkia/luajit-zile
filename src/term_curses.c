@@ -43,12 +43,6 @@ term_buf_len (void)
 }
 
 void
-term_addch (int c)
-{
-  addch ((chtype) (c & ~A_ATTRIBUTES));
-}
-
-void
 term_attrset (size_t attr)
 {
   attrset (attr == FONT_REVERSE ? A_REVERSE : 0);

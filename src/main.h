@@ -28,6 +28,7 @@
 #include <lua.h>
 #include <lauxlib.h>
 #include "lua-posix.h"
+#include "lua-bitop.h"
 #include "config.h"
 #include "xalloc.h"
 #include "size_max.h"

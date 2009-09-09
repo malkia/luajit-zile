@@ -188,6 +188,7 @@ main (int argc, char **argv)
   /* Set up Lua environment. */
   CLUE_INIT (L);
   assert (L);
+  luaopen_bit (L);
   luaopen_posix (L);
   luaopen_curses (L);
   lua_atpanic (L, at_lua_panic);

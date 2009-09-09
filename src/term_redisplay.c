@@ -77,16 +77,29 @@ outch (int c, size_t font, size_t * x)
   term_attrset (font);
 
   if (c == '\t')
-    for (w = cur_tab_width - *x % cur_tab_width; w > 0 && *x < term_width ();
-         w--)
-      term_addch (' '), ++(*x);
+    {
+      for (w = cur_tab_width - *x % cur_tab_width; w > 0 && *x < term_width ();
+           w--)
+        {
+          (void) CLUE_DO (L, "term_addch (string.byte (' '))");
+          ++(*x);
+        }
+    }
   else if (isprint (c))
-    term_addch (c), ++(*x);
+    {
+      CLUE_SET (L, c, integer, c);
+      (void) CLUE_DO (L, "term_addch (c)");
+      ++(*x);
+    }
   else
     {
       j = make_char_printable (&buf, c);
       for (w = 0; w < j && *x < term_width (); ++w)
-        term_addch (buf[w]), ++(*x);
+        {
+          CLUE_SET (L, c, integer, buf[w]);
+          (void) CLUE_DO (L, "term_addch (c)");
+          ++(*x);
+        }
       free (buf);
     }
 
@@ -102,7 +115,7 @@ draw_end_of_line (size_t line, Window * wp, size_t lineno, Region * rp,
       CLUE_SET (L, y, integer, line);
       CLUE_SET (L, x, integer, term_width () - 1);
       (void) CLUE_DO (L, "term_move (y, x)");
-      term_addch ('$');
+      (void) CLUE_DO (L, "term_addch (string.byte ('$'))");
     }
   else if (highlight)
     {
@@ -199,7 +212,7 @@ draw_window (size_t topline, Window * wp)
         {
           CLUE_SET (L, y, integer, i);
           (void) CLUE_DO (L, "term_move (y, 0)");
-          term_addch ('$');
+          (void) CLUE_DO (L, "term_addch (string.byte ('$'))");
         }
 
       lp = get_line_next (lp);
@@ -305,7 +318,7 @@ draw_status_line (size_t line, Window * wp)
   CLUE_SET (L, y, integer, line);
   (void) CLUE_DO (L, "term_move (y, 0)");
   for (i = 0; i < get_window_ewidth (wp); ++i)
-    term_addch ('-');
+    (void) CLUE_DO (L, "term_addch (string.byte ('-'))");
 
   if (get_buffer_eol (cur_bp) == coding_eol_cr)
     eol_type = "(Mac)";
@@ -400,7 +413,10 @@ show_splash_screen (const char *splash)
         (void) CLUE_DO (L, "term_move (y, 0)");
       }
     else
-      term_addch (*p);
+      {
+        CLUE_SET (L, c, integer, (int) *p);
+        (void) CLUE_DO (L, "term_addch (c)");
+      }
 }
 
 /*
@@ -433,6 +449,9 @@ void
 term_addnstr (const char *s, size_t len)
 {
   size_t i;
-  for (i = 0; i < len; i++)
-    term_addch (*s++);
+  for (i = 0; i < len; i++, s++)
+    {
+      CLUE_SET (L, c, integer, (int) *s);
+      (void) CLUE_DO (L, "term_addch (c)");
+    }
 }

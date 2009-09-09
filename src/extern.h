@@ -260,7 +260,6 @@ void term_init (void);
 void term_close (void);
 void term_suspend (void);
 void term_resume (void);
-void term_addch (int c);
 void term_attrset (size_t attr);
 size_t term_xgetkey (int mode, size_t timeout);
 void term_ungetkey (size_t key);

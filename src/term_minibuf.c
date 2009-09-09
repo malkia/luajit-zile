@@ -40,7 +40,8 @@ term_minibuf_write (const char *s)
 
   for (x = 0; *s != '\0' && x < term_width (); s++)
     {
-      term_addch (*(unsigned char *) s);
+      CLUE_SET (L, c, integer, (int) (*(unsigned char *) s));
+      (void) CLUE_DO (L, "term_addch (c)");
       ++x;
     }
 }
@@ -56,7 +57,7 @@ draw_minibuf_read (const char *prompt, const char *value,
   if (prompt_len + pointo + 1 >= term_width ())
     {
       margin++;
-      term_addch ('$');
+      (void) CLUE_DO (L, "term_addch (string.byte ('$'))");
       n = pointo - pointo % (term_width () - prompt_len - 2);
     }
 
@@ -70,7 +71,7 @@ draw_minibuf_read (const char *prompt, const char *value,
       CLUE_SET (L, y, integer, term_height () - 1);
       CLUE_SET (L, x, integer, term_width () - 1);
       (void) CLUE_DO (L, "term_move (y, x)");
-      term_addch ('$');
+      (void) CLUE_DO (L, "term_addch (string.byte ('$'))");
     }
 
   CLUE_SET (L, y, integer, term_height () - 1);
