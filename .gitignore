@@ -30,3 +30,5 @@ Makefile.in
 release-notes
 /GNUmakefile
 /maint.mk
+/useless-if-before-free
+/vc-list-files

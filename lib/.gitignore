@@ -159,3 +159,7 @@ unistd.h
 /getpagesize.c
 /memchr.c
 /memchr.valgrind
+/fdopendir.c
+/openat-safer.c
+/realloc.c
+/stddef.in.h
