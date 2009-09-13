@@ -23,7 +23,7 @@ SUBDIRS = lib src
 
 ACLOCAL_AMFLAGS = -I m4
 
-EXTRA_DIST = BUGS
+EXTRA_DIST = BUGS m4/gnulib-cache.m4
 
 dist_pkgdata_DATA = FAQ
 
