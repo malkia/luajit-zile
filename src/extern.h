@@ -312,6 +312,8 @@ void delete_window (Window * del_wp);
 Point window_pt (Window * wp);
 void completion_scroll_up (void);
 void completion_scroll_down (void);
+bool window_top_visible (Window * wp);
+bool window_bottom_visible (Window * wp);
 
 
 /*
