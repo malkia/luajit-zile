@@ -124,7 +124,7 @@ execute_function (const char *name, int uniarg)
   Macro *mp;
 
   if (func)
-    return func (uniarg, LUA_NOREF);
+    return func (uniarg, true, LUA_NOREF);
   else
     {
       mp = get_macro (name);
@@ -222,7 +222,7 @@ call_zile_command (lua_State *L)
   trybranch = luaL_ref (L, LUA_REGISTRYINDEX);
   func = get_fentry (keyword);
   if (func)
-    lua_pushvalue (L, (func->func) (1, trybranch));
+    lua_pushvalue (L, (func->func) (1, false, trybranch));
   else
     lua_pushnil (L);
   luaL_unref (L, LUA_REGISTRYINDEX, trybranch);

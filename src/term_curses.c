@@ -308,7 +308,7 @@ get_char (void)
 
   if (size > 0)
     {
-      c = (int) gl_list_get_at (key_buf, size - 1);
+      c = (ptrdiff_t) gl_list_get_at (key_buf, size - 1);
       gl_list_remove_at (key_buf, size - 1);
     }
   else
@@ -363,7 +363,7 @@ term_ungetkey (size_t key)
   size_t i, n = keytocodes (key, &codes);
 
   for (i = n; i > 0; i--)
-    gl_list_add_last (key_buf, (void *) codes[i - 1]);
+    gl_list_add_last (key_buf, (void *)(ptrdiff_t) codes[i - 1]);
 
   free (codes);
 }

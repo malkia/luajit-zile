@@ -468,7 +468,7 @@ by 4 each time.
           if (sgn > 0)
             {
               sgn = -sgn;
-              astr_cat_char (as, '-');
+              astr_cat_cstr (as, " -");
               /* The default negative arg is -1, not -4. */
               arg = 1;
               thisflag &= ~FLAG_UNIARG_EMPTY;
@@ -1103,7 +1103,7 @@ mark (int uniarg, Function func)
 {
   le ret;
   FUNCALL (set_mark_command);
-  ret = func (uniarg, 0);
+  ret = func (uniarg, true, 0);
   if (ret)
     FUNCALL (exchange_point_and_mark);
   return ret;
@@ -1166,7 +1166,7 @@ move_paragraph (int uniarg, bool (*forward) (void), bool (*backward) (void),
   if (is_empty_line ())
     FUNCALL (beginning_of_line);
   else
-    line_extremum (1, 0);
+    line_extremum (1, false, 0);
 
   return leT;
 }
