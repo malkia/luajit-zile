@@ -164,12 +164,12 @@ typedef le (*Function) (long uniarg, bool is_uniarg, le list);
 
 /* Define an interactive function. */
 #define DEFUN(zile_func, c_func) \
-  DEFUN_ARGS(zile_func, c_func, )
-#define DEFUN_ARGS(zile_func, c_func, args) \
   le F_ ## c_func (long uniarg GCC_UNUSED, bool is_uniarg GCC_UNUSED, le arglist GCC_UNUSED) \
   {                                                                     \
-  le ok = leT;                                                          \
-    args
+    le ok = leT;
+#define DEFUN_ARGS(zile_func, c_func, args) \
+  DEFUN(zile_func, c_func)                  \
+  args
 #define END_DEFUN    \
     return ok;       \
   }
