@@ -20,7 +20,7 @@
    MA 02111-1301, USA.  */
 
 #include <lua.h>
-#include "gl_list.h"
+#include "gl_xlist.h"
 
 #include "xalloc_extra.h"
 

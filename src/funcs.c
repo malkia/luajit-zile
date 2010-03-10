@@ -417,11 +417,13 @@ Repeating @kbd{C-u} without digits or minus sign multiplies the argument
 by 4 each time.
 +*/
 {
-  int i = 0, arg = 4, sgn = 1;
+  int i = 0, arg = 1, sgn = 1;
   astr as = astr_new ();
 
   /* Need to process key used to invoke universal-argument. */
   pushkey (lastkey ());
+
+  thisflag |= FLAG_UNIARG_EMPTY;
 
   for (;;)
     {

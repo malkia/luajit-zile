@@ -1,6 +1,6 @@
 /* Main types and definitions
 
-   Copyright (c) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+   Copyright (c) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
    This file is part of GNU Zile.
 
@@ -33,7 +33,7 @@
 #include "xalloc.h"
 #include "size_max.h"
 #include "minmax.h"
-#include "gl_list.h"
+#include "gl_xlist.h"
 
 #include "clue.h"
 #include "astr.h"
