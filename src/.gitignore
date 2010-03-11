@@ -1,6 +1,7 @@
 .deps
 astr
 zile
+loadlua.h
 tbl_funcs.h
 tbl_opts.h
 tbl_vars.h

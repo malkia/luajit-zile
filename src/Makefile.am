@@ -55,7 +55,6 @@ zile_BASE_SOURCES =					\
 	lcurses.c					\
 	extern.h					\
 	main.h						\
-	tbl_vars.h					\
 	list_fields.h					\
 	lists.c						\
 	lists.h						\
@@ -83,8 +82,10 @@ clue_SOURCES =						\
 zile_SOURCES =						\
 	$(zile_BASE_SOURCES)				\
 	$(clue_SOURCES)					\
+	loadlua.h					\
 	tbl_funcs.h					\
-	tbl_opts.h.in
+	tbl_opts.h.in					\
+	tbl_vars.h
 
 LUA_STD = std.lua
 
@@ -96,12 +97,17 @@ zile_LUA =						\
 	term_curses.lua					\
 	term_redisplay.lua
 
+LUA_RUNTIME =						\
+	$(LUA_STD)					\
+	$(zile_LUA)
+
 LUA_BUILDTIME =						\
 	lib.lua						\
 	texinfo.lua
 
 LUA_BUILDSCRIPTS = 					\
 	mkfuncs.lua					\
+	mkloadlua.lua					\
 	mkvars.lua
 
 PRODUCTIONSOURCES =					\
@@ -115,6 +121,11 @@ PRODUCTIONSOURCES =					\
 # FIXME: Something wrong with this causing rebuilding on every make in a loop of two steps.
 extern.h tbl_funcs.h: $(zile_FUNCTION_SOURCES) mkfuncs.lua $(zile_LUA)
 	LUA_INIT= LUA_PATH="$(srcdir)/?.lua" $(LUA) -e 'PACKAGE_NAME="$(PACKAGE_NAME)"' $(srcdir)/mkfuncs.lua $(srcdir) $(zile_FUNCTION_SOURCES)
+
+main.c:	loadlua.h
+
+loadlua.h: $(LUA_RUNTIME) mkloadlua.lua
+	LUA_INIT= LUA_PATH="$(srcdir)/?.lua" $(LUA) -e 'PACKAGE_NAME="$(PACKAGE_NAME)"' $(srcdir)/mkloadlua.lua $(LUA_RUNTIME)
 
 mkvars.stamp: tbl_vars.h.in mkvars.lua $(zile_LUA)
 	@rm -f mkvars.tmp
@@ -150,6 +161,7 @@ DISTCLEANFILES = 					\
 	zile.1
 
 MAINTAINERCLEANFILES =					\
+	loadlua.h					\
 	tbl_funcs.h					\
 	tbl_vars.h
 

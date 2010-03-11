@@ -194,16 +194,12 @@ main (int argc, char **argv)
   lua_atpanic (L, at_lua_panic);
 
   /* Load Lua files. */
-  /* FIXME: Generate this list from LUA_RUNTIME */
   /* FIXME: Load Lua into Zile via LUA_PATH prefixed with appropriate
      directory, should work at compile and install time. */
-  (void) luaL_dofile (L, "std.lua");
-  (void) luaL_dofile (L, "completion.lua");
-  (void) luaL_dofile (L, "history.lua");
-  (void) luaL_dofile (L, "file.lua");
-  (void) luaL_dofile (L, "lisp.lua");
-  (void) luaL_dofile (L, "term_curses.lua");
-  (void) luaL_dofile (L, "term_redisplay.lua");
+#define X(file)                                 \
+  (void) luaL_dofile (L, file);
+#include "loadlua.h"
+#undef X
 
   /* Set up Lisp environment now so it's available to files and
      expressions specified on the command-line. */
