@@ -1,5 +1,5 @@
 # ===========================================================================
-#                  http://autoconf-archive.cryp.to/lua.html
+#          http://www.gnu.org/software/autoconf-archive/ax_lua.html
 # ===========================================================================
 #
 # SYNOPSIS
@@ -17,8 +17,8 @@
 #
 #   AX_WITH_LUA searches for Lua interpreter and defines LUA if found.
 #
-#   AX_LUA_VERSION checks that the version of Lua is at least
-#   MIN-VERSION and less than TOO-BIG-VERSION, if given.
+#   AX_LUA_VERSION checks that the version of Lua is at least MIN-VERSION
+#   and less than TOO-BIG-VERSION, if given.
 #
 #   AX_LUA_HEADERS searches for Lua headers and defines HAVE_LUA_H and
 #   HAVE_LUALIB_H if found, and defines LUA_INCLUDE to the preprocessor
@@ -39,14 +39,8 @@
 #     --with-lua-prefix=DIR     Lua files are in DIR.
 #     --with-lua-suffix=ARG     Lua binaries and library files are
 #                               suffixed with ARG.
-#     --with-lua-includes=DIR   Lua include files are in DIR.
-#     --with-lua-libraries=DIR  Lua library files are in DIR.
 #
-# LAST MODIFICATION
-#
-#   2009-02-19
-#
-# COPYLEFT
+# LICENSE
 #
 #   Copyright (c) 2009 Reuben Thomas <rrt@sc3d.org>
 #   Copyright (c) 2009 Matthieu Moy <Matthieu.Moy@imag.fr>
@@ -74,9 +68,11 @@
 #   all other use of the material that constitutes the Autoconf Macro.
 #
 #   This special exception to the GPL applies to versions of the Autoconf
-#   Macro released by the Autoconf Macro Archive. When you make and
-#   distribute a modified version of the Autoconf Macro, you may extend this
-#   special exception to the GPL to apply to your modified version as well.
+#   Macro released by the Autoconf Archive. When you make and distribute a
+#   modified version of the Autoconf Macro, you may extend this special
+#   exception to the GPL to apply to your modified version as well.
+
+#serial 5
 
 dnl Helper function to declare extra options
 AC_DEFUN([_AX_LUA_OPTS],
@@ -85,13 +81,7 @@ AC_DEFUN([_AX_LUA_OPTS],
         [Lua files are in DIR])])
    AC_ARG_WITH([lua-suffix],
      [AS_HELP_STRING([--with-lua-suffix=ARG],
-        [Lua binary and library files are suffixed with ARG])])
-   AC_ARG_WITH([lua-includes],
-     [AS_HELP_STRING([--with-lua-includes=DIR],
-        [Lua include files are in DIR])])
-   AC_ARG_WITH([lua-libraries],
-     [AS_HELP_STRING([--with-lua-libraries=DIR],
-        [Lua library files are in DIR])])])dnl
+        [Lua binary and library files are suffixed with ARG])])])dnl
 
 AC_DEFUN([AX_WITH_LUA],
   [_AX_LUA_OPTS
@@ -120,7 +110,7 @@ AC_DEFUN([AX_LUA_VERSION],
   AC_MSG_CHECKING([Lua version is in range $1 <= v < $2])
   _AX_LUA_VERSIONS($1, $2)
   if test "x$LUA" != x; then
-    lua_text_version=$($LUA -v 2>&1 | head -n 1 | cut -d' ' -f2)
+    lua_text_version=$(LUA_INIT= $LUA -v 2>&1 | head -n 1 | cut -d' ' -f2)
     case $lua_text_version in
     5.1*)
       lua_version=501
@@ -148,9 +138,7 @@ AC_DEFUN([AX_LUA_VERSION],
 
 AC_DEFUN([AX_LUA_HEADERS],
   [_AX_LUA_OPTS
-  if test "x$with_lua_includes" != x; then
-    LUA_INCLUDE="-I$with_lua_includes"
-  elif test "x$with_lua_prefix" != x; then
+  if test "x$with_lua_prefix" != x; then
     LUA_INCLUDE="-I$with_lua_prefix/include"
   fi
   LUA_OLD_CPPFLAGS="$CPPFLAGS"
@@ -160,9 +148,7 @@ AC_DEFUN([AX_LUA_HEADERS],
 
 AC_DEFUN([AX_LUA_LIBS],
   [_AX_LUA_OPTS
-  if test "x$with_lua_libraries" != x; then
-    LUA_LIB="-L$with_lua_libraries"
-  elif test "x$with_lua_prefix" != x; then
+  if test "x$with_lua_prefix" != x; then
     LUA_LIB="-L$with_lua_prefix/lib"
   fi
   AC_CHECK_LIB([m], [exp], [lua_extra_libs="$lua_extra_libs -lm"], [])

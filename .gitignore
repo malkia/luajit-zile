@@ -33,3 +33,4 @@ release-notes
 /maint.mk
 /useless-if-before-free
 /vc-list-files
+/c++defs.h

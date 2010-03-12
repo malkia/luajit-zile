@@ -6,6 +6,7 @@ asprintf.c
 at-func.c
 basename.c
 basename-lgpl.c
+c++defs.h
 canonicalize-lgpl.c
 canonicalize.h
 chdir-long.c
@@ -120,6 +121,7 @@ version-etc-fsf.c
 version-etc.c
 version-etc.h
 wchar.in.h
+wctype.h
 wctype.in.h
 xalloc-die.c
 xalloc.h
