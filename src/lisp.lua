@@ -128,11 +128,11 @@ function lisp_read (s)
   return read ()
 end
 
-function evaluateBranch (trybranch)
-  if trybranch == nil or trybranch.data == nil then
+function evaluateBranch (branch)
+  if branch == nil or branch.data == nil then
     return nil
   end
-  return call_zile_command (trybranch.data, trybranch)
+  return call_zile_command (branch.data, branch)
 end
 
 function leEval (list)
