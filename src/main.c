@@ -1,6 +1,6 @@
 /* Program invocation, startup and shutdown
 
-   Copyright (c) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+   Copyright (c) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
    This file is part of GNU Zile.
 
@@ -194,10 +194,17 @@ main (int argc, char **argv)
   lua_atpanic (L, at_lua_panic);
 
   /* Load Lua files. */
-  /* FIXME: Load Lua into Zile via LUA_PATH prefixed with appropriate
-     directory, should work at compile and install time. */
-#define X(file)                                 \
-  (void) luaL_dofile (L, file);
+  (void) CLUE_DO (L, "package.path = \"" PATH_DATA "/?.lua;?.lua\"");
+#define X(file)                                                   \
+  if (CLUE_DO (L, "require (\"" file "\")"))                      \
+    {                                                             \
+      fprintf (stderr,                                            \
+               "%s: " PACKAGE_NAME                                \
+               " could not load Lua library `" file "'\n",        \
+               prog_name);                                        \
+      zile_exit (false);                                          \
+      (void) CLUE_DO (L, "print (package.loaded[\"" file "\"])"); \
+    }
 #include "loadlua.h"
 #undef X
 
