@@ -36,7 +36,8 @@ h:write ("/*\n" ..
 
 for i in ipairs (arg) do
   if arg[i] then
-    h:write ("X (\"" .. arg[i] .. "\")\n")
+    local f = string.gsub (arg[i], "%.lua$", "")
+    h:write ("X (\"" .. f .. "\")\n")
   end
 end
 
