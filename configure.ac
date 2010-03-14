@@ -80,6 +80,13 @@ AC_SUBST(LUA_INCLUDE)
 AC_SUBST(LUA_LIB)
 PKG_CHECK_MODULES([LUA_LIBS], [lua5.1-posix >= 5.1 lua5.1-bitop >= 1.0.1])
 
+dnl Readline support for Lua (-DLUA_USE_READLINE)
+dnl FIXME: Put this into ax_lua.m4 as AX_LUA_READLINE
+AX_LIB_READLINE
+if test -n "$ac_cv_header_readline_readline_h" -a -n "$ac_cv_header_readline_history_h"; then
+  LUA_LIBS_CFLAGS="-DLUA_USE_READLINE $LUA_LIBS_CFLAGS"
+fi
+
 dnl Extra definitions for config.h
 AC_DEFINE_UNQUOTED(CONFIGURE_DATE, ["`date '+%a %b %d %Y'`"],
                    [The date of compilation.])

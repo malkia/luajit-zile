@@ -19,7 +19,7 @@
 # Free Software Foundation, Fifth Floor, 51 Franklin Street, Boston,
 # MA 02111-1301, USA.
 
-AM_CPPFLAGS = $(LUA_INCLUDE) $(LUA_LIBS_CFLAGS) -I$(top_builddir)/lib -I$(top_srcdir)/lib -DPATH_DATA="\"$(pkgdatadir)\""
+AM_CPPFLAGS = $(LUA_INCLUDE) -I$(top_builddir)/lib -I$(top_srcdir)/lib -DPATH_DATA="\"$(pkgdatadir)\""
 AM_CFLAGS = $(LUA_LIBS_CFLAGS)
 LDADD = $(top_builddir)/lib/libgnu.a $(LIB_EACCESS) $(LIBINTL) $(CURSES_LIB) $(LUA_LIB) $(LUA_LIBS_LIBS)
 
@@ -37,6 +37,7 @@ zile_FUNCTION_SOURCES =					\
 	killring.c					\
 	line.c						\
 	lisp.c						\
+	lua.c						\
 	macro.c						\
 	redisplay.c					\
 	registers.c					\
