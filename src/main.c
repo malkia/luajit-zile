@@ -194,6 +194,7 @@ main (int argc, char **argv)
   lua_atpanic (L, at_lua_panic);
 
   /* Load Lua files. */
+  /* FIXME: Use a single absolute path for either the build or install directory. */
   (void) CLUE_DO (L, "package.path = \"" PATH_DATA "/?.lua;?.lua\"");
 #define X(file)                                                   \
   if (CLUE_DO (L, "require (\"" file "\")"))                      \
