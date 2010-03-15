@@ -136,7 +136,7 @@ Display the full documentation of a variable.
     ok = leNIL;
   else
     {
-      char *defval;
+      const char *defval;
       const char *doc = get_variable_doc (name, &defval);
       if (doc == NULL)
         ok = leNIL;

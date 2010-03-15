@@ -115,50 +115,15 @@ free_variable_list (int ref)
   lua_unref (L, ref);
 }
 
-static bool
-get_variable_entry (Buffer * bp, const char *var)
-{
-  bool found = false;
-
-  if (bp && get_buffer_vars (bp))
-    {
-      lua_rawgeti (L, LUA_REGISTRYINDEX, get_buffer_vars (bp));
-      lua_getfield (L, -1, var);
-      found = lua_istable (L, -1);
-      if (found)
-        lua_remove (L, -2);
-      else
-        lua_pop (L, 2);
-    }
-
-  if (!found)
-    {
-      lua_getglobal (L, "main_vars");
-      lua_getfield (L, -1, var);
-      found = lua_istable (L, -1);
-      if (found)
-        lua_remove (L, -2);
-      else
-        lua_pop (L, 2);
-    }
-
-  return found;
-}
-
 const char *
-get_variable_doc (const char *var, char **defval)
+get_variable_doc (const char *var, const char **defval)
 {
-  char *ret = NULL;
+  const char *ret = NULL;
 
-  if (get_variable_entry (NULL, var))
-    {
-      lua_getfield (L, -1, "defval");
-      *defval = (char *) lua_tostring (L, -1);
-      lua_pop (L, 1);
-      lua_getfield (L, -1, "doc");
-      ret = (char *) lua_tostring (L, -1);
-      lua_pop (L, 2);
-    }
+  CLUE_SET (L, var, string, var);
+  (void) CLUE_DO (L, "v = main_vars[var]; defval = v.defval; doc = v.doc");
+  CLUE_GET (L, defval, string, *defval);
+  CLUE_GET (L, doc, string, ret);
 
   return ret;
 }
@@ -166,14 +131,18 @@ get_variable_doc (const char *var, char **defval)
 const char *
 get_variable_bp (Buffer * bp, const char *var)
 {
-  char *ret = NULL;
+  const char *ret = NULL;
 
-  if (get_variable_entry (bp, var))
+  (void) CLUE_DO (L, "vars = nil");
+  if (bp && get_buffer_vars (bp))
     {
-      lua_getfield (L, -1, "val");
-      ret = (char *) lua_tostring (L, -1);
-      lua_pop (L, 2);
+      lua_rawgeti (L, LUA_REGISTRYINDEX, get_buffer_vars (bp));
+      lua_setglobal (L, "vars");
     }
+
+  CLUE_SET (L, var, string, var);
+  (void) CLUE_DO (L, "s = vars[var].val");
+  CLUE_GET (L, s, string, ret);
 
   return ret;
 }
