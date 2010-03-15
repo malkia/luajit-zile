@@ -1,6 +1,6 @@
 -- Curses terminal
 --
--- Copyright (c) 2009 Free Software Foundation, Inc.
+-- Copyright (c) 2009, 2010 Free Software Foundation, Inc.
 --
 -- This file is part of GNU Zile.
 --
