@@ -415,25 +415,13 @@ show_splash_screen (const char *splash)
 }
 
 /*
- * Tidy up the term ready to leave Zile (temporarily or permanently!).
- */
-void
-term_tidy (void)
-{
-  (void) CLUE_DO (L, "term_move (term_height () - 1, 0)");
-  (void) CLUE_DO (L, "term_clrtoeol ()");
-  (void) CLUE_DO (L, "term_attrset (FONT_NORMAL)");
-  (void) CLUE_DO (L, "term_refresh ()");
-}
-
-/*
  * Tidy and close the terminal ready to leave Zile.
  */
 void
 term_finish (void)
 {
-  term_tidy ();
-  term_close ();
+  (void) CLUE_DO (L, "term_tidy ()");
+  (void) CLUE_DO (L, "term_close ()");
 }
 
 /*

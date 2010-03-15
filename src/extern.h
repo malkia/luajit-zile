@@ -257,7 +257,6 @@ void free_search (void);
 /* term_curses.c ---------------------------------------------------------- */
 size_t term_buf_len (void);
 void term_init (void);
-void term_close (void);
 void term_suspend (void);
 void term_resume (void);
 size_t term_xgetkey (int mode, size_t timeout);
@@ -273,7 +272,6 @@ void term_set_size (size_t cols, size_t rows);
 void term_redisplay (void);
 void term_full_redisplay (void);
 void show_splash_screen (const char *splash);
-void term_tidy (void);
 void term_finish (void);
 void term_addnstr (const char *s, size_t len);
 

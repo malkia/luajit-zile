@@ -56,20 +56,6 @@ term_init (void)
   key_buf = gl_list_create_empty (GL_ARRAY_LIST, NULL, NULL, NULL, true);
 }
 
-void
-term_close (void)
-{
-  /* Clear last line. */
-  CLUE_SET (L, y, integer, LINES - 1);
-  (void) CLUE_DO (L, "term_move (y, 0)");
-  (void) CLUE_DO (L, "term_clrtoeol ()");
-  (void) CLUE_DO (L, "term_refresh ()");
-
-  /* Free memory and finish with ncurses. */
-  gl_list_free (key_buf);
-  endwin ();
-}
-
 static size_t
 codetokey (int c)
 {

@@ -68,18 +68,14 @@ function term_init ()
   key_buf = {}
 end
 
--- void
--- term_close (void)
--- {
---   /* Clear last line. */
---   term_move ((size_t) (LINES - 1), 0);
---   term_clrtoeol ();
---   term_refresh ();
-
---   /* Free memory and finish with ncurses. */
---   gl_list_free (key_buf);
---   endwin ();
--- }
+function term_close ()
+  -- Clear last line.
+  term_move (curses.lines - 1, 0)
+  term_clrtoeol ()
+  term_refresh ()
+  -- Finish with curses.
+  curses.endwin ()
+end
 
 -- static size_t
 -- codetokey (int c)

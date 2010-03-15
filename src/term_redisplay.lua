@@ -33,3 +33,11 @@ function term_set_size (cols, rows)
   width = cols
   height = rows
 end
+
+-- Tidy up the term ready to leave Zile (temporarily or permanently!).
+function term_tidy ()
+  term_move (term_height () - 1, 0)
+  term_clrtoeol ()
+  term_attrset (FONT_NORMAL)
+  term_refresh ()
+end
