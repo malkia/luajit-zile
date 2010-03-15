@@ -1,6 +1,6 @@
 /* Redisplay engine
 
-   Copyright (c) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+   Copyright (c) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
    This file is part of GNU Zile.
 
@@ -412,16 +412,6 @@ show_splash_screen (const char *splash)
         CLUE_SET (L, c, integer, (int) *p);
         (void) CLUE_DO (L, "term_addch (c)");
       }
-}
-
-/*
- * Tidy and close the terminal ready to leave Zile.
- */
-void
-term_finish (void)
-{
-  (void) CLUE_DO (L, "term_tidy ()");
-  (void) CLUE_DO (L, "term_close ()");
 }
 
 /*

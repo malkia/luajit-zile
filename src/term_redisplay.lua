@@ -1,6 +1,6 @@
 -- Redisplay engine
 --
--- Copyright (c) 2009 Free Software Foundation, Inc.
+-- Copyright (c) 2009, 2010 Free Software Foundation, Inc.
 --
 -- This file is part of GNU Zile.
 --
@@ -40,4 +40,10 @@ function term_tidy ()
   term_clrtoeol ()
   term_attrset (FONT_NORMAL)
   term_refresh ()
+end
+
+-- Tidy and close the terminal ready to leave Zile.
+function term_finish ()
+  term_tidy ()
+  term_close ()
 end

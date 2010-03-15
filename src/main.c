@@ -407,7 +407,7 @@ main (int argc, char **argv)
     }
 
   /* Tidy and close the terminal. */
-  term_finish ();
+  (void) CLUE_DO (L, "term_finish ()");
 
   free_default_bindings ();
 
