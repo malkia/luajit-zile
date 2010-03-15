@@ -183,6 +183,9 @@ bool lisp_loadfile (const char *file);
 /* lcurses.c -------------------------------------------------------------- */
 int luaopen_curses (lua_State *L);
 
+/* lua.c ------------------------------------------------------------------ */
+int lua_debug (lua_State *L);
+
 /* macro.c ---------------------------------------------------------------- */
 void cancel_kbd_macro (void);
 void add_cmd_to_macro (void);

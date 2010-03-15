@@ -2,7 +2,7 @@
 ** Lua stand-alone interpreter adapted from lua.c in Lua distribution:
 ** $Id: lua.c,v 1.160.1.2 2007/12/28 15:32:23 roberto Exp $
 **
-/******************************************************************************
+******************************************************************************
 * Copyright (C) 1994-2008 Lua.org, PUC-Rio.  All rights reserved.
 *
 * Permission is hereby granted, free of charge, to any person obtaining
@@ -37,6 +37,8 @@
 #include <lauxlib.h>
 #include <lualib.h>
 
+/* FIXME: put this in a header file. */
+int lua_debug (lua_State *L);
 
 static lua_State *globalL = NULL;
 
@@ -190,10 +192,11 @@ static void dotty (lua_State *L) {
 }
 
 
-static void pmain (lua_State *L) {
+static int pmain (lua_State *L) {
   globalL = L;
   assert(lua_stdin_is_tty());
   dotty(L);
+  return 0;
 }
 
 
