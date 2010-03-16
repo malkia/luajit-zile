@@ -239,13 +239,6 @@ init_lisp (void)
 }
 
 void
-lisp_loadstring (astr as)
-{
-  CLUE_SET (L, s, string, astr_cstr (as));
-  (void) CLUE_DO (L, "leEval (lisp_read (s))");
-}
-
-void
 init_eval (void)
 {
   (void) CLUE_DO (L, "hp = history_new ()");
