@@ -255,7 +255,7 @@ Just C-u as argument means to use the current column.
     get_buffer_pt (cur_bp).o : (unsigned long) uniarg;
   char *buf;
 
-  if (!(lastflag & FLAG_SET_UNIARG) && arglist == 0)
+  if (!(lastflag & FLAG_SET_UNIARG) && LUA_NIL (arglist))
     {
       fill_col = minibuf_read_number ("Set fill-column to (default %d): ", get_buffer_pt (cur_bp).o);
       if (fill_col == LONG_MAX)
@@ -264,7 +264,7 @@ Just C-u as argument means to use the current column.
         fill_col = get_buffer_pt (cur_bp).o;
     }
 
-  if (arglist)
+  if (!LUA_NIL (arglist))
     {
       if (!LUA_NIL (get_lists_next (arglist)))
         buf = (char *) get_lists_data (get_lists_next (arglist));
@@ -290,7 +290,7 @@ Just C-u as argument means to use the current column.
       astr_delete (as);
     }
 
-  if (arglist == 0)
+  if (LUA_NIL (arglist))
     free (buf);
 }
 END_DEFUN

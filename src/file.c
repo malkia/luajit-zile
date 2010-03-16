@@ -843,7 +843,7 @@ Interactively, confirmation is required unless you supply a prefix argument.
 +*/
 {
   ok = write_buffer (cur_bp, true,
-                     arglist && !(lastflag & FLAG_SET_UNIARG),
+                     !LUA_NIL (arglist) && !(lastflag & FLAG_SET_UNIARG),
                      NULL, "Write file: ");
 }
 END_DEFUN
