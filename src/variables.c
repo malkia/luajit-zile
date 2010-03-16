@@ -49,11 +49,16 @@ set_variable (const char *var, const char *val)
     lua_getglobal (L, "main_vars");
 
   lua_getfield (L, -1, var);
-  if (lua_istable (L, -1))
+  if (!lua_istable (L, -1))
     {
-      lua_pushstring (L, val);
-      lua_setfield (L, -2, "val");
+      lua_pop (L, 1);
+      lua_newtable (L);
+      lua_setfield (L, -2, var);
+      lua_getfield (L, -1, var);
     }
+
+  lua_pushstring (L, val);
+  lua_setfield (L, -2, "val");
 
   lua_pop (L, 2);
 }
