@@ -131,6 +131,7 @@ end
 --
 -- To format the completions for a popup, call completion_write
 -- after this function.
+-- FIXME: Matching non-unique on zero length substring
 COMPLETION_NOTMATCHED = 0
 COMPLETION_MATCHED = 1
 COMPLETION_MATCHEDNONUNIQUE = 2
