@@ -85,8 +85,7 @@ zile_SOURCES =						\
 	$(clue_SOURCES)					\
 	loadlua.h					\
 	tbl_funcs.h					\
-	tbl_opts.h.in					\
-	tbl_vars.h
+	tbl_opts.h.in
 
 LUA_STD = std.lua
 
@@ -96,7 +95,8 @@ zile_LUA =						\
 	file.lua					\
 	lisp.lua					\
 	term_curses.lua					\
-	term_redisplay.lua
+	term_redisplay.lua				\
+	tbl_vars.lua
 
 LUA_RUNTIME =						\
 	$(LUA_STD)					\
@@ -128,18 +128,9 @@ main.c:	loadlua.h
 loadlua.h: $(LUA_RUNTIME) mkloadlua.lua
 	LUA_INIT= LUA_PATH="$(srcdir)/?.lua" $(LUA) -e 'PACKAGE_NAME="$(PACKAGE_NAME)"' $(srcdir)/mkloadlua.lua $(LUA_RUNTIME)
 
-mkvars.stamp: tbl_vars.h.in mkvars.lua $(zile_LUA)
-	@rm -f mkvars.tmp
-	@touch mkvars.tmp
-	LUA_INIT= LUA_PATH="$(srcdir)/?.lua" $(LUA) -e 'PACKAGE="$(PACKAGE)"' $(srcdir)/mkvars.lua $(srcdir)/tbl_vars.h.in
+dotzile.sample: mkvars.lua dotzile-extra.el $(zile_LUA)
+	LUA_INIT= LUA_PATH="$(srcdir)/?.lua" $(LUA) -e 'PACKAGE="$(PACKAGE)"' $(srcdir)/mkvars.lua $(srcdir)/tbl_vars.lua
 	cat $(srcdir)/dotzile-extra.el >> $@
-	@mv -f mkvars.tmp $@
-tbl_vars.h dotzile.sample: mkvars.stamp
-	@if test -f $@; then :; else \
-	  rm -f mkvars.stamp; \
-	  $(MAKE) $(AM_MAKEFLAGS) mkvars.stamp; \
-	fi
-dotzile.sample: dotzile-extra.el
 
 edit = sed \
 	-e 's|@pkgdatadir[@]|$(pkgdatadir)|g'
@@ -158,13 +149,11 @@ dist_man_MANS = zile.1
 
 DISTCLEANFILES = 					\
 	dotzile.sample					\
-	mkvars.stamp					\
 	zile.1
 
 MAINTAINERCLEANFILES =					\
 	loadlua.h					\
-	tbl_funcs.h					\
-	tbl_vars.h
+	tbl_funcs.h
 
 CLOC = cloc --no3
 
@@ -396,8 +385,6 @@ LISP_TESTS_OUTPUTS =					\
 	lisp-tests/setq_nonexistent_variable.output	\
 	lisp-tests/test.input
 
-# Distribute tbl_vars.h & mkvars.stamp so that Lua is not needed for
-# building a release.
 EXTRA_DIST =						\
 	$(zile_LUA)					\
 	$(LUA_STD)					\
@@ -410,9 +397,6 @@ EXTRA_DIST =						\
 	quit.el						\
 	dotzile-extra.el				\
 	tbl_opts.h.in					\
-	tbl_vars.h.in					\
-	tbl_vars.h					\
-	mkvars.stamp					\
 	man-extras					\
 	zile.1.in					\
 	zile-help2man-wrapper

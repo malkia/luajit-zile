@@ -158,3 +158,17 @@ function evaluateNode (node)
   end
   return value
 end
+
+function setq (l)
+  local ret
+  l = l.next
+  while l and l.next do
+    ret = evaluateNode (l.next)
+    set_variable (l.data, ret.data)
+    if l.next == nil then
+      break
+    end
+    l = l.next.next
+  end
+  return ret
+end

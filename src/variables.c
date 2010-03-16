@@ -21,8 +21,6 @@
 
 #include "config.h"
 
-#include <assert.h>
-#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -30,51 +28,16 @@
 #include "main.h"
 #include "extern.h"
 
-static void
-set_variable_in_list (const char *var, const char *val,
-                      const char *defval, bool local, const char *doc)
-{
-  /* Variable list is on Lua stack. */
-  lua_newtable (L);
-
-  lua_pushstring (L, val);
-  lua_setfield (L, -2, "val");
-
-  if (defval != NULL)
-    {
-      lua_pushstring (L, defval);
-      lua_setfield (L, -2, "defval");
-    }
-
-  lua_pushboolean (L, (int) local);
-  lua_setfield (L, -2, "local");
-
-  if (doc != NULL)
-    {
-      lua_pushstring (L, doc);
-      lua_setfield (L, -2, "doc");
-    }
-
-  lua_setfield (L, -2, var);
-}
-
 void
 set_variable (const char *var, const char *val)
 {
   bool local = false;
 
-  lua_getglobal (L, "main_vars");
-  lua_getfield (L, -1, var);
-  if (lua_istable (L, -1))
-    {
-      lua_getfield (L, -1, "local");
-      local = (bool) lua_toboolean (L, -1);
-      lua_pop (L, 1);
-    }
-  lua_pop (L, 1);
+  CLUE_SET (L, var, string, var);
+  (void) CLUE_DO (L, "islocal = main_vars[var].islocal");
+  CLUE_GET (L, islocal, boolean, local);
   if (local)
     {
-      lua_pop (L, 1);
       if (get_buffer_vars (cur_bp) == 0)
         {
           lua_newtable (L);
@@ -82,9 +45,17 @@ set_variable (const char *var, const char *val)
         }
       lua_rawgeti (L, LUA_REGISTRYINDEX, get_buffer_vars (cur_bp));
     }
+  else
+    lua_getglobal (L, "main_vars");
 
-  set_variable_in_list (var, val, NULL, true, NULL);
-  lua_pop (L, 1);
+  lua_getfield (L, -1, var);
+  if (lua_istable (L, -1))
+    {
+      lua_pushstring (L, val);
+      lua_setfield (L, -2, "val");
+    }
+
+  lua_pop (L, 2);
 }
 
 static int
@@ -93,36 +64,37 @@ zlua_get_variable (lua_State *L)
     const char *var = lua_tostring (L, -1);
     const char *val = get_variable (var);
     lua_pop (L, 1);
-    lua_pushstring (L, val);
+    if (val)
+      lua_pushstring (L, val);
+    else
+      lua_pushnil (L);
     return 1;
+}
+
+static int
+zlua_set_variable (lua_State *L)
+{
+    const char *var = lua_tostring (L, -2);
+    const char *val = lua_tostring (L, -1);
+    lua_pop (L, 2);
+    set_variable (var, val);
+    return 0;
 }
 
 void
 init_variables (void)
 {
-  lua_newtable (L);
-#define X(var, defval, local, doc)              \
-  set_variable_in_list (var, defval, defval, local, doc);
-#include "tbl_vars.h"
-#undef X
-  lua_setglobal (L, "main_vars");
   lua_register (L, "get_variable", zlua_get_variable);
-}
-
-void
-free_variable_list (int ref)
-{
-  lua_unref (L, ref);
+  lua_register (L, "set_variable", zlua_set_variable);
 }
 
 const char *
-get_variable_doc (const char *var, const char **defval)
+get_variable_doc (const char *var)
 {
   const char *ret = NULL;
 
   CLUE_SET (L, var, string, var);
-  (void) CLUE_DO (L, "v = main_vars[var]; defval = v.defval; doc = v.doc");
-  CLUE_GET (L, defval, string, *defval);
+  (void) CLUE_DO (L, "v = main_vars[var]; doc = v.doc");
   CLUE_GET (L, doc, string, ret);
 
   return ret;
@@ -132,6 +104,7 @@ const char *
 get_variable_bp (Buffer * bp, const char *var)
 {
   const char *ret = NULL;
+  bool ok;
 
   (void) CLUE_DO (L, "vars = nil");
   if (bp && get_buffer_vars (bp))
@@ -141,8 +114,13 @@ get_variable_bp (Buffer * bp, const char *var)
     }
 
   CLUE_SET (L, var, string, var);
-  (void) CLUE_DO (L, "s = vars[var].val");
-  CLUE_GET (L, s, string, ret);
+  (void) CLUE_DO (L, "vars = vars or {}");
+  (void) CLUE_DO (L, "s = nil");
+  (void) CLUE_DO (L, "s = (vars[var] or main_vars[var]).val");
+  (void) CLUE_DO (L, "ok = s ~= nil");
+  CLUE_GET (L, ok, boolean, ok);
+  if (ok)
+    CLUE_GET (L, s, string, ret);
 
   return ret;
 }

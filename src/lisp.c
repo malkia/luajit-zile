@@ -299,29 +299,11 @@ The symbols sym are variables; they are literal (not evaluated).
 The values val are expressions; they are evaluated.
 +*/
 {
-  le newvalue = leNIL, current;
-  size_t argc = countNodes (arglist);
+  lua_rawgeti (L, LUA_REGISTRYINDEX, arglist);
+  lua_setglobal (L, "l");
+  (void) CLUE_DO (L, "r = setq (l)");
 
-  if (!LUA_NIL (arglist) && argc >= 2)
-    {
-      for (current = get_lists_next (arglist);
-           !LUA_NIL (current);
-           current = get_lists_next (get_lists_next (current)))
-        {
-          lua_rawgeti (L, LUA_REGISTRYINDEX, current);
-          lua_setglobal (L, "current");
-          (void) CLUE_DO (L, "newvalue = evaluateNode (current.next)");
-          lua_getglobal (L, "newvalue");
-          if (newvalue != leNIL)
-            luaL_unref (L, LUA_REGISTRYINDEX, newvalue);
-          newvalue = luaL_ref (L, LUA_REGISTRYINDEX);
-          set_variable (get_lists_data (current), get_lists_data (newvalue));
-          if (LUA_NIL (get_lists_next (current)))
-            break; /* Cope with odd-length argument lists. */
-        }
-    }
-
-  ok = newvalue;
+  /* FIXME: ok = r; */
 }
 END_DEFUN
 
