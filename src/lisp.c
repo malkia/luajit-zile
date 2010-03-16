@@ -290,23 +290,6 @@ Execute a file of Lisp code named FILE.
 }
 END_DEFUN
 
-DEFUN_NONINTERACTIVE ("setq", setq)
-/*+
-(setq [sym val]...)
-
-Set each sym to the value of its val.
-The symbols sym are variables; they are literal (not evaluated).
-The values val are expressions; they are evaluated.
-+*/
-{
-  lua_rawgeti (L, LUA_REGISTRYINDEX, arglist);
-  lua_setglobal (L, "l");
-  (void) CLUE_DO (L, "r = setq (l)");
-
-  /* FIXME: ok = r; */
-}
-END_DEFUN
-
 void
 init_eval (void)
 {

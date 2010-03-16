@@ -132,7 +132,13 @@ function evaluateBranch (branch)
   if branch == nil or branch.data == nil then
     return nil
   end
-  return call_zile_command (branch.data, branch)
+  local ret
+  if usercmd[branch.data] then
+    ret = usercmd[branch.data].func (branch)
+  else
+    ret = call_zile_command (branch.data, branch)
+  end
+  return ret
 end
 
 function leEval (list)
@@ -159,16 +165,26 @@ function evaluateNode (node)
   return value
 end
 
-function setq (l)
-  local ret
-  l = l.next
-  while l and l.next do
-    ret = evaluateNode (l.next)
-    set_variable (l.data, ret.data)
-    if l.next == nil then
-      break
+usercmd.setq = Defun {
+[[
+(setq [sym val]...)
+
+Set each sym to the value of its val.
+The symbols sym are variables; they are literal (not evaluated).
+The values val are expressions; they are evaluated.
+]],
+  false,
+  function (l)
+    local ret
+    l = l.next
+    while l and l.next do
+      ret = evaluateNode (l.next)
+      set_variable (l.data, ret.data)
+      if l.next == nil then
+        break
+      end
+      l = l.next.next
     end
-    l = l.next.next
+    return ret
   end
-  return ret
-end
+}

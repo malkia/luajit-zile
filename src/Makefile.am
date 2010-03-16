@@ -90,6 +90,7 @@ zile_SOURCES =						\
 LUA_STD = std.lua
 
 zile_LUA =						\
+	main.lua					\
 	completion.lua					\
 	history.lua					\
 	file.lua					\
