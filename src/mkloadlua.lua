@@ -23,6 +23,7 @@ prog = {
   name = "mkloadlua"
 }
 
+-- FIXME: Generate a Lua file, not a C file
 require "lib"
 
 h = io.open ("loadlua.h", "w")
