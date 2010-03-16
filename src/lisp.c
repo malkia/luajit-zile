@@ -194,18 +194,6 @@ minibuf_read_function_name (const char *fmt, ...)
   return ms;
 }
 
-static size_t
-countNodes (le branch)
-{
-  int count;
-
-  for (count = 0;
-       !LUA_NIL (branch);
-       branch = get_lists_next (branch), count++)
-    ;
-  return count;
-}
-
 static int
 call_zile_command (lua_State *L)
 {
@@ -273,18 +261,6 @@ lisp_loadfile (const char *file)
 
     return false;
 }
-
-DEFUN ("load", load)
-/*+
-Execute a file of Lisp code named FILE.
-+*/
-{
-  if (!LUA_NIL (arglist) && countNodes (arglist) >= 2)
-    ok = bool_to_lisp (lisp_loadfile (get_lists_data (get_lists_next (arglist))));
-  else
-    ok = leNIL;
-}
-END_DEFUN
 
 void
 init_eval (void)

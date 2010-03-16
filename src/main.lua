@@ -33,3 +33,10 @@ end
 function Defun_noninteractive (l)
   defun (l, false)
 end
+
+-- Zile command to Lua bindings
+
+-- Turn a boolean into a Lisp boolean
+function bool_to_lisp (b)
+  return b and "t" or "nil"
+end

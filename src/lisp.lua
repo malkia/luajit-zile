@@ -165,20 +165,35 @@ function evaluateNode (node)
   return value
 end
 
--- FIXME:
--- Defun {"load",
--- [[
--- Execute a file of Lisp code named FILE.
--- ]],
---   function (l)
---     local ok
---     if l and #l >= 2 then
---       ok = bool_to_lisp (lisp_loadfile (l.next.data))
---     else
---       ok = leNIL
---     end
---   end
--- }
+function lisp_loadstring (s)
+  leEval (lisp_read (s))
+end
+
+function lisp_loadfile (file)
+  local h = io.open (file, "r")
+
+  if h then
+    lisp_loadstring (h:read ("*a"))
+    h:close ()
+    return true
+  end
+
+  return false
+end
+
+Defun {"load",
+[[
+Execute a file of Lisp code named FILE.
+]],
+  function (l)
+    local ok
+    if l and #l >= 2 then
+      ok = bool_to_lisp (lisp_loadfile (l.next.data))
+    else
+      ok = "nil"
+    end
+  end
+}
 
 Defun_noninteractive {"setq",
 [[
