@@ -107,10 +107,7 @@ get_variable_bp (Buffer * bp, const char *var)
     }
 
   CLUE_SET (L, var, string, var);
-  (void) CLUE_DO (L, "vars = vars or {}");
-  (void) CLUE_DO (L, "s = nil");
-  (void) CLUE_DO (L, "s = (vars[var] or main_vars[var]).val");
-  (void) CLUE_DO (L, "ok = s ~= nil");
+  (void) CLUE_DO (L, "vars = vars or {}; s = nil; s = (vars[var] or main_vars[var] or {}).val; ok = s ~= nil");
   CLUE_GET (L, ok, boolean, ok);
   if (ok)
     CLUE_GET (L, s, string, ret);
