@@ -333,7 +333,8 @@ main (int argc, char **argv)
       if (as)
         {
           astr_cat_cstr (as, "/." PACKAGE);
-          lisp_loadfile (astr_cstr (as));
+          CLUE_SET (L, arg, string, astr_cstr (as));
+          (void) CLUE_DO (L, "lisp_loadfile (arg)");
           astr_delete (as);
         }
     }
@@ -360,7 +361,9 @@ main (int argc, char **argv)
             minibuf_error ("Function `%s' not defined", arg);
           break;
         case ARG_LOADFILE:
-          ok = lisp_loadfile (arg);
+          CLUE_SET (L, arg, string, arg);
+          (void) CLUE_DO (L, "ok = lisp_loadfile (arg)");
+          CLUE_GET (L, ok, boolean, ok);
           if (!ok)
             minibuf_error ("Cannot open load file: %s\n", arg);
           break;

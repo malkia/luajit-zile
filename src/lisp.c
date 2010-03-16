@@ -245,23 +245,6 @@ lisp_loadstring (astr as)
   (void) CLUE_DO (L, "leEval (lisp_read (s))");
 }
 
-bool
-lisp_loadfile (const char *file)
-{
-  FILE *fp = fopen (file, "r");
-
-  if (fp != NULL)
-    {
-      astr bs = astr_fread (fp);
-      lisp_loadstring (bs);
-      astr_delete (bs);
-      fclose (fp);
-      return true;
-    }
-
-    return false;
-}
-
 void
 init_eval (void)
 {

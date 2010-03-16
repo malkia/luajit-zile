@@ -175,7 +175,6 @@ const char *minibuf_read_function_name (const char *fmt, ...);
 void init_eval (void);
 void init_lisp (void);
 void lisp_loadstring (astr as);
-bool lisp_loadfile (const char *file);
 
 /* lcurses.c -------------------------------------------------------------- */
 int luaopen_curses (lua_State *L);
