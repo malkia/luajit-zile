@@ -3,6 +3,7 @@ astr
 zile
 loadlua.h
 tbl_funcs.h
+tbl_funcs.lua
 tbl_opts.h
 tbl_vars.h
 mkvars.stamp
