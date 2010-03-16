@@ -33,8 +33,7 @@ h:write ("; ." .. PACKAGE .. " configuration\n\n")
 -- Don't note where the contents of this file comes from or that it's
 -- auto-generated, because it's ugly in a user configuration file.
 
-local vars = {}
-dofile (arg[1])
+dofile (arg[1]) -- load variable table
 for var, val in pairs (main_vars) do
   h:write ("; " .. string.gsub (texi (val.doc), "(\n", "\n; ") .. "\n")
   h:write ("(setq " .. var .. " " .. val.val .. ")\n")
