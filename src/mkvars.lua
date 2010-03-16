@@ -37,8 +37,7 @@ local vars = {}
 dofile (arg[1])
 for var, val in pairs (main_vars) do
   h:write ("; " .. string.gsub (texi (val.doc), "(\n", "\n; ") .. "\n")
-  h:write ("; Default value is " .. val.defval .. ".\n")
-  h:write ("(setq " .. var .. " " .. val.defval .. ")\n")
+  h:write ("(setq " .. var .. " " .. val.val .. ")\n")
   h:write ("\n")
 end
 
