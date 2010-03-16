@@ -131,7 +131,6 @@ end
 --
 -- To format the completions for a popup, call completion_write
 -- after this function.
--- FIXME: Matching non-unique on zero length substring
 COMPLETION_NOTMATCHED = 0
 COMPLETION_MATCHED = 1
 COMPLETION_MATCHEDNONUNIQUE = 2
@@ -169,7 +168,7 @@ function completion_try (cp, search)
     ret = COMPLETION_MATCHED
   elseif #cp.matches > 1 then
     local len = math.min (#search, #cp.match)
-    if string.sub (cp.match, 1, len) == string.sub (search, 1, len) then
+    if len > 0 and string.sub (cp.match, 1, len) == string.sub (search, 1, len) then
       ret = COMPLETION_MATCHEDNONUNIQUE
     end
   end
