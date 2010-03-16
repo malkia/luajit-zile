@@ -89,18 +89,6 @@ init_variables (void)
 }
 
 const char *
-get_variable_doc (const char *var)
-{
-  const char *ret = NULL;
-
-  CLUE_SET (L, var, string, var);
-  (void) CLUE_DO (L, "v = main_vars[var]; doc = v.doc");
-  CLUE_GET (L, doc, string, ret);
-
-  return ret;
-}
-
-const char *
 get_variable_bp (Buffer * bp, const char *var)
 {
   const char *ret = NULL;

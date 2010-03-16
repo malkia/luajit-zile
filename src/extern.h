@@ -288,7 +288,6 @@ void undo_set_unchanged (Undo *up);
 /* variables.c ------------------------------------------------------------ */
 void init_variables (void);
 void set_variable (const char *var, const char *val);
-const char *get_variable_doc (const char *var);
 const char *get_variable_bp (Buffer * bp, const char *var);
 const char *get_variable (const char *var);
 long get_variable_number_bp (Buffer * bp, const char *var);

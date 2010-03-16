@@ -136,7 +136,12 @@ Display the full documentation of a variable.
     ok = leNIL;
   else
     {
-      const char *doc = get_variable_doc (name);
+      const char *doc;
+
+      CLUE_SET (L, var, string, name);
+      (void) CLUE_DO (L, "doc = main_vars[var].doc");
+      CLUE_GET (L, doc, string, doc);
+
       if (doc == NULL)
         ok = leNIL;
       else
