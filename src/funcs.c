@@ -1101,11 +1101,11 @@ END_DEFUN
 
 
 static le
-mark (int uniarg, Function func)
+mark (int uniarg, const char * func)
 {
   le ret;
   FUNCALL (set_mark_command);
-  ret = func (uniarg, true, 0);
+  ret = execute_function (func, uniarg, true);
   if (ret)
     FUNCALL (exchange_point_and_mark);
   return ret;
@@ -1116,7 +1116,7 @@ DEFUN ("mark-word", mark_word)
 Set mark argument words away from point.
 +*/
 {
-  ok = mark (uniarg, F_forward_word);
+  ok = mark (uniarg, "forward-word");
 }
 END_DEFUN
 
@@ -1127,7 +1127,7 @@ The place mark goes is the same place @kbd{C-M-f} would
 move to with the same argument.
 +*/
 {
-  ok = mark (uniarg, F_forward_sexp);
+  ok = mark (uniarg, "forward-sexp");
 }
 END_DEFUN
 
@@ -1149,7 +1149,7 @@ END_DEFUN
 
 static le
 move_paragraph (int uniarg, bool (*forward) (void), bool (*backward) (void),
-                     Function line_extremum)
+                const char * line_extremum)
 {
   if (uniarg < 0)
     {
@@ -1168,7 +1168,7 @@ move_paragraph (int uniarg, bool (*forward) (void), bool (*backward) (void),
   if (is_empty_line ())
     FUNCALL (beginning_of_line);
   else
-    line_extremum (1, false, 0);
+    execute_function (line_extremum, 1, false);
 
   return leT;
 }
@@ -1178,7 +1178,7 @@ DEFUN ("backward-paragraph", backward_paragraph)
 Move backward to start of paragraph.  With argument N, do it N times.
 +*/
 {
-  ok = move_paragraph (uniarg, previous_line, next_line, F_beginning_of_line);
+  ok = move_paragraph (uniarg, previous_line, next_line, "beginning-of-line");
 }
 END_DEFUN
 
@@ -1187,7 +1187,7 @@ DEFUN ("forward-paragraph", forward_paragraph)
 Move forward to end of paragraph.  With argument N, do it N times.
 +*/
 {
-  ok = move_paragraph (uniarg, next_line, previous_line, F_end_of_line);
+  ok = move_paragraph (uniarg, next_line, previous_line, "end-of-line");
 }
 END_DEFUN
 
@@ -1197,7 +1197,7 @@ Put point at beginning of this paragraph, mark at end.
 The paragraph marked is the one that contains point or follows point.
 +*/
 {
-  if (last_command () == F_mark_paragraph)
+  if (strcmp (last_command (), "mark-paragraph") == 0)
     {
       FUNCALL (exchange_point_and_mark);
       FUNCALL_ARG (forward_paragraph, uniarg);

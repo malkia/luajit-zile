@@ -204,7 +204,6 @@ main (int argc, char **argv)
                " could not load Lua library `" file "'\n",        \
                prog_name);                                        \
       zile_exit (false);                                          \
-      (void) CLUE_DO (L, "print (package.loaded[\"" file "\"])"); \
     }
 #include "loadlua.h"
 #undef X
@@ -354,9 +353,9 @@ main (int argc, char **argv)
       switch ((ptrdiff_t) gl_list_get_at (arg_type, i))
         {
         case ARG_FUNCTION:
-          ok = get_function (arg) != NULL;
+          ok = function_exists (arg);
           if (ok)
-            ok = execute_function (arg, 1) != leNIL;
+            ok = execute_function (arg, 1, true) != leNIL;
           else
             minibuf_error ("Function `%s' not defined", arg);
           break;

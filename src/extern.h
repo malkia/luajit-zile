@@ -35,15 +35,13 @@ void gotobob (void);
 void gotoeob (void);
 
 /* bind.c ----------------------------------------------------------------- */
-Function last_command (void);
-void set_this_command (Function cmd);
+const char * last_command (void);
+void set_this_command (const char * cmd);
 size_t do_binding_completion (astr as);
 gl_list_t get_key_sequence (void);
-Function get_function_by_keys (gl_list_t keys);
+const char * get_function_by_keys (gl_list_t keys);
 void process_command (void);
 void init_default_bindings (void);
-Function last_command (void);
-void set_this_command (Function cmd);
 void free_default_bindings (void);
 
 /* buffer.c --------------------------------------------------------------- */
@@ -169,11 +167,10 @@ void free_registers (void);
 extern le leNIL, leT;
 le execute_with_uniarg (bool undo, int uniarg, bool (*forward) (void),
                         bool (*backward) (void));
-le execute_function (const char *name, int uniarg);
-Function get_function (const char *name);
+le execute_function (const char *name, int uniarg, bool is_uniarg);
+bool function_exists (const char *name);
 int get_function_interactive (const char *name);
 const char *get_function_doc (const char *name);
-const char *get_function_name (Function p);
 const char *minibuf_read_function_name (const char *fmt, ...);
 void init_eval (void);
 void init_lisp (void);
@@ -317,7 +314,7 @@ bool window_bottom_visible (Window * wp);
 /*
  * Declare external Zile functions.
  */
-#define X(zile_name, c_name, interactive, doc)   \
+#define X(zile_name, c_name)                            \
   le F_ ## c_name (long uniarg, bool is_uniarg, le l);
 #include "tbl_funcs.h"
 #undef X

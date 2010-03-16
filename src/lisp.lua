@@ -133,7 +133,7 @@ function evaluateBranch (branch)
     return nil
   end
   local ret
-  if usercmd[branch.data] then
+  if usercmd[branch.data] and usercmd[branch.data].func then
     ret = usercmd[branch.data].func (branch)
   else
     ret = call_zile_command (branch.data, branch)
@@ -165,7 +165,22 @@ function evaluateNode (node)
   return value
 end
 
-usercmd.setq = Defun {
+-- FIXME:
+-- Defun {"load",
+-- [[
+-- Execute a file of Lisp code named FILE.
+-- ]],
+--   function (l)
+--     local ok
+--     if l and #l >= 2 then
+--       ok = bool_to_lisp (lisp_loadfile (l.next.data))
+--     else
+--       ok = leNIL
+--     end
+--   end
+-- }
+
+Defun_noninteractive {"setq",
 [[
 (setq [sym val]...)
 
@@ -173,7 +188,6 @@ Set each sym to the value of its val.
 The symbols sym are variables; they are literal (not evaluated).
 The values val are expressions; they are evaluated.
 ]],
-  false,
   function (l)
     local ret
     l = l.next

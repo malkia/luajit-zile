@@ -101,7 +101,8 @@ zile_LUA =						\
 
 LUA_RUNTIME =						\
 	$(LUA_STD)					\
-	$(zile_LUA)
+	$(zile_LUA)					\
+	tbl_funcs.lua
 
 LUA_BUILDTIME =						\
 	lib.lua						\
@@ -121,7 +122,7 @@ PRODUCTIONSOURCES =					\
 	*.el
 
 # FIXME: Something wrong with this causing rebuilding on every make in a loop of two steps.
-extern.h tbl_funcs.h: $(zile_FUNCTION_SOURCES) mkfuncs.lua $(zile_LUA)
+extern.h tbl_funcs.h tbl_funcs.lua: $(zile_FUNCTION_SOURCES) mkfuncs.lua $(zile_LUA)
 	LUA_INIT= LUA_PATH="$(srcdir)/?.lua" $(LUA) -e 'PACKAGE_NAME="$(PACKAGE_NAME)"' $(srcdir)/mkfuncs.lua $(srcdir) $(zile_FUNCTION_SOURCES)
 
 main.c:	loadlua.h
@@ -154,6 +155,7 @@ DISTCLEANFILES = 					\
 
 MAINTAINERCLEANFILES =					\
 	loadlua.h					\
+	tbl_vars.lua					\
 	tbl_funcs.h
 
 CLOC = cloc --no3

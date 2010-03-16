@@ -33,67 +33,69 @@
  * Zile Lisp functions.
  */
 
+/*
+ * The type of a Zile exported function.
+ * `uniarg' is the universal argument, if any, whose presence is
+ * indicated by `is_uniarg'.
+ */
+typedef le (*Function) (long uniarg, bool is_uniarg, le list);
+
 le leNIL, leT;
 
 struct fentry
 {
   const char *name;		/* The function name. */
   Function func;		/* The function pointer. */
-  bool interactive;             /* Whether function can be used interactively. */
-  const char *doc;		/* Documentation string. */
 };
 typedef struct fentry fentry;
 
 static fentry fentry_table[] = {
-#define X(zile_name, c_name, interactive, doc)   \
-  {zile_name, F_ ## c_name, interactive, doc},
+#define X(zile_name, c_name)   \
+  {zile_name, F_ ## c_name},
 #include "tbl_funcs.h"
 #undef X
 };
 
 #define fentry_table_size (sizeof (fentry_table) / sizeof (fentry_table[0]))
 
-static fentry *
-get_fentry (const char *name)
+static Function
+get_function (const char *name)
 {
   size_t i;
   assert (name);
   for (i = 0; i < fentry_table_size; ++i)
     if (!strcmp (name, fentry_table[i].name))
-      return &fentry_table[i];
+      return fentry_table[i].func;
   return NULL;
 }
 
-Function
-get_function (const char *name)
+bool
+function_exists (const char *name)
 {
-  fentry * f = get_fentry (name);
-  return f ? f->func : NULL;
+  return get_function (name) != NULL;
 }
 
 /* Return function's interactive flag, or -1 if not found. */
 int
 get_function_interactive (const char *name)
 {
-  fentry * f = get_fentry (name);
-  return f ? f->interactive : -1;
+  bool i;
+  CLUE_SET (L, name, string, name);
+  (void) CLUE_DO (L, "i = usercmd[name].interactive");
+  CLUE_GET (L, i, boolean, i);
+  return i;
+  /* FIXME: return f ? f->interactive : -1; */
 }
 
 const char *
 get_function_doc (const char *name)
 {
-  fentry * f = get_fentry (name);
-  return f ? f->doc : NULL;
-}
-
-const char *
-get_function_name (Function p)
-{
-  size_t i;
-  for (i = 0; i < fentry_table_size; ++i)
-    if (fentry_table[i].func == p)
-      return fentry_table[i].name;
-  return NULL;
+  const char *doc;
+  CLUE_SET (L, name, string, name);
+  (void) CLUE_DO (L, "doc = usercmd[name].doc");
+  CLUE_GET (L, doc, string, doc);
+  return doc;
+  /* FIXME: return f ? f->doc : NULL; */
 }
 
 le
@@ -118,13 +120,13 @@ execute_with_uniarg (bool undo, int uniarg, bool (*forward) (void), bool (*backw
 }
 
 le
-execute_function (const char *name, int uniarg)
+execute_function (const char *name, int uniarg, bool is_uniarg)
 {
   Function func = get_function (name);
   Macro *mp;
 
   if (func)
-    return func (uniarg, true, LUA_NOREF);
+    return func (uniarg, is_uniarg, LUA_NOREF);
   else
     {
       mp = get_macro (name);
@@ -159,7 +161,7 @@ Read function name, then read its arguments and call it.
   if (name == NULL)
     return false;
 
-  ok = execute_function (name, uniarg);
+  ok = execute_function (name, uniarg, true);
   free ((char *) name);
 }
 END_DEFUN
@@ -174,18 +176,12 @@ minibuf_read_function_name (const char *fmt, ...)
   va_list ap;
   char *ms;
   int cp;
-  size_t i;
 
   (void) CLUE_DO (L, "cp = completion_new ()");
   lua_getglobal (L, "cp");
   cp = luaL_ref (L, LUA_REGISTRYINDEX);
 
-  for (i = 0; i < fentry_table_size; ++i)
-    if (fentry_table[i].interactive)
-      {
-        CLUE_SET (L, s, string, fentry_table[i].name);
-        (void) CLUE_DO (L, "table.insert (cp.completions, s)");
-      }
+  (void) CLUE_DO (L, "for name, func in pairs (usercmd) do if func.interactive then table.insert (cp.completions, name) end end");
   add_macros_to_list (cp);
 
   va_start (ap, fmt);
@@ -215,14 +211,14 @@ call_zile_command (lua_State *L)
 {
   le trybranch;
   const char *keyword;
-  fentry * func;
+  Function func;
   assert (lua_isstring (L, -2));
   assert (lua_istable (L, -1));
   keyword = lua_tostring (L, -2);
   trybranch = luaL_ref (L, LUA_REGISTRYINDEX);
-  func = get_fentry (keyword);
+  func = get_function (keyword);
   if (func)
-    lua_pushvalue (L, (func->func) (1, false, trybranch));
+    lua_pushvalue (L, (func) (1, false, trybranch));
   else
     lua_pushnil (L);
   luaL_unref (L, LUA_REGISTRYINDEX, trybranch);

@@ -152,13 +152,6 @@ enum
 #define LUA_NIL(e) \
   ((e) == LUA_NOREF || (e) == LUA_REFNIL)       \
 
-/*
- * The type of a Zile exported function.
- * `uniarg' is the universal argument, if any, whose presence is
- * indicated by `is_uniarg'.
- */
-typedef le (*Function) (long uniarg, bool is_uniarg, le list);
-
 /* Turn a bool into a Lisp boolean */
 #define bool_to_lisp(b) ((b) ? leT : leNIL)
 

@@ -21,7 +21,15 @@
 
 usercmd = {} -- table of user commands
 
--- User command constructor
+-- User command constructors
+function defun (l, interactive)
+  usercmd[l[1]] = {doc = l[2], interactive = interactive, func = l[3]}
+end
+
 function Defun (l)
-  return {doc = l[1], interactive = l[2], func = l[3]}
+  defun (l, true)
+end
+
+function Defun_noninteractive (l)
+  defun (l, false)
 end

@@ -32,11 +32,21 @@ table.remove (arg, 1)
 h = io.open ("tbl_funcs.h", "w")
 assert (h)
 
+h2 = io.open ("tbl_funcs.lua", "w")
+assert (h2)
+
 h:write ("/*\n" ..
          " * Automatically generated file: DO NOT EDIT!\n" ..
          " * " .. PACKAGE_NAME .. " command to C function bindings and docstrings.\n" ..
          " * Generated from C sources.\n" ..
          " */\n" ..
+         "\n")
+
+h2:write ("--\n" ..
+         "-- Automatically generated file: DO NOT EDIT!\n" ..
+         "-- " .. PACKAGE_NAME .. " command to C function bindings and docstrings.\n" ..
+         "-- Generated from C sources.\n" ..
+         "--\n" ..
          "\n")
 
 local funcs = {}
@@ -72,13 +82,15 @@ for i in ipairs (arg) do
           die ("unterminated docstring for " .. name)
         end
 
-        h:write ("X(\"" .. name .. "\", " .. string.gsub (name, "-", "_") .. ", " ..
-               (interactive and "true" or "false") .. ", \"\\\n")
-        h:write ((string.gsub (texi (doc), "\n", "\\n\\\n"))) -- extra parentheses to get only string result
-        h:write ("\")\n")
+        h:write ("X(\"" .. name .. "\", " .. string.gsub (name, "-", "_") .. ")\n")
+
+        h2:write ("defun ({\"" .. name .. "\", ")
+        h2:write ("[[\n" .. texi (doc) .. "]]}, ")
+        h2:write ((interactive and "true" or "false") .. ")\n")
       end
     end
   end
 end
 
 h:close ()
+h2:close ()

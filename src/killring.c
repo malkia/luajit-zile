@@ -60,7 +60,7 @@ copy_or_kill_region (bool kill, Region * rp)
 {
   char *p = copy_text_block (get_region_start (rp).n, get_region_start (rp).o, get_region_size (rp));
 
-  if (last_command () != F_kill_region)
+  if (strcmp (last_command (), "kill-region") != 0)
     free_kill_ring ();
   kill_ring_push_nstring (p, get_region_size (rp));
   free (p);
@@ -73,7 +73,7 @@ copy_or_kill_region (bool kill, Region * rp)
         assert (delete_region (rp));
     }
 
-  set_this_command (F_kill_region);
+  set_this_command ("kill-region");
   deactivate_mark ();
 
   return true;
@@ -148,7 +148,7 @@ kill_line (bool whole_line)
         return false;
 
       kill_ring_push ('\n');
-      set_this_command (F_kill_region);
+      set_this_command ("kill-region");
     }
 
   undo_save (UNDO_END_SEQUENCE, get_buffer_pt (cur_bp), 0, 0);
@@ -181,7 +181,7 @@ including its terminating newline, when used at the beginning of a line
 with no argument.
 +*/
 {
-  if (last_command () != F_kill_region)
+  if (strcmp (last_command (), "kill-region") != 0)
     free_kill_ring ();
 
   INT_OR_UNIARG_INIT (arg);
@@ -242,9 +242,9 @@ Save the region as if killed, but don't kill it.
 END_DEFUN
 
 static le
-kill_text (int uniarg, Function mark_func)
+kill_text (int uniarg, const char * mark_func)
 {
-  if (last_command () != F_kill_region)
+  if (strcmp (last_command (), "kill-region") != 0)
     free_kill_ring ();
 
   if (warn_if_readonly_buffer ())
@@ -252,12 +252,12 @@ kill_text (int uniarg, Function mark_func)
 
   push_mark ();
   undo_save (UNDO_START_SEQUENCE, get_buffer_pt (cur_bp), 0, 0);
-  mark_func (uniarg, true, 0);
+  execute_function (mark_func, uniarg, true);
   FUNCALL (kill_region);
   undo_save (UNDO_END_SEQUENCE, get_buffer_pt (cur_bp), 0, 0);
   pop_mark ();
 
-  set_this_command (F_kill_region);
+  set_this_command ("kill-region");
   minibuf_write ("");		/* Erase "Set mark" message.  */
   return leT;
 }
@@ -270,7 +270,7 @@ With argument @i{arg}, do this that many times.
 +*/
 {
   INT_OR_UNIARG_INIT (arg);
-  ok = kill_text (arg, F_mark_word);
+  ok = kill_text (arg, "mark-word");
 }
 END_DEFUN
 
@@ -282,7 +282,7 @@ With argument @i{arg}, do this that many times.
 +*/
 {
   INT_OR_UNIARG_INIT (arg);
-  ok = kill_text (-arg, F_mark_word);
+  ok = kill_text (-arg, "mark-word");
 }
 END_DEFUN
 
@@ -293,7 +293,7 @@ With @i{arg}, kill that many sexps after the cursor.
 Negative arg -N means kill N sexps before the cursor.
 +*/
 {
-  ok = kill_text (uniarg, F_mark_sexp);
+  ok = kill_text (uniarg, "mark-sexp");
 }
 END_DEFUN
 

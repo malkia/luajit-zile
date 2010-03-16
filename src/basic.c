@@ -142,7 +142,7 @@ move_line (int n)
       set_buffer_pt (cur_bp, pt);
     }
 
-  if (last_command () != F_next_line && last_command () != F_previous_line)
+  if (strcmp (last_command (), "next-line") != 0 && strcmp (last_command (), "previous-line") != 0)
     set_buffer_goalc (cur_bp, get_goalc ());
   goto_goalc ();
 

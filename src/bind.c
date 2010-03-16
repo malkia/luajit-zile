@@ -40,7 +40,7 @@
 struct Binding
 {
   size_t key; /* The key code (for every level except the root). */
-  Function func; /* The function for this key (if a leaf node). */
+  const char * func; /* The function for this key (if a leaf node). */
 
   /* Branch vector, number of items, max number of items. */
   Binding *vec;
@@ -105,7 +105,7 @@ add_node (Binding tree, Binding p)
 }
 
 static void
-bind_key_vec (Binding tree, gl_list_t keys, size_t from, Function func)
+bind_key_vec (Binding tree, gl_list_t keys, size_t from, const char * func)
 {
   Binding p, s = search_node (tree, (size_t) gl_list_get_at (keys, from));
   size_t n = gl_list_size (keys) - from;
@@ -224,7 +224,7 @@ get_key_sequence (void)
   return keys;
 }
 
-Function
+const char *
 get_function_by_keys (gl_list_t keys)
 {
   Binding p;
@@ -235,7 +235,7 @@ get_function_by_keys (gl_list_t keys)
       size_t key = (size_t) gl_list_get_at (keys, 0);
       if (key & KBD_META &&
           (isdigit ((int) (key & 0xff)) || (int) (key & 0xff) == '-'))
-        return F_universal_argument;
+        return "universal-argument";
     }
 
   /* See if we've got a valid key sequence */
@@ -277,17 +277,17 @@ Whichever character you type to run this command is inserted.
 }
 END_DEFUN
 
-static Function _last_command;
-static Function _this_command;
+static const char * _last_command = "";
+static const char * _this_command = "";
 
-Function
+const char *
 last_command (void)
 {
   return _last_command;
 }
 
 void
-set_this_command (Function cmd)
+set_this_command (const char * cmd)
 {
   _this_command = cmd;
 }
@@ -296,15 +296,15 @@ void
 process_command (void)
 {
   gl_list_t keys = get_key_sequence ();
-  Function f = get_function_by_keys (keys);
+  const char * name = get_function_by_keys (keys);
 
   thisflag = lastflag & FLAG_DEFINING_MACRO;
   minibuf_clear ();
 
-  if (f != NULL)
+  if (function_exists (name))
     {
-      set_this_command (f);
-      f (last_uniarg, (lastflag & FLAG_SET_UNIARG) != 0, LUA_NOREF);
+      set_this_command (name);
+      execute_function (name, last_uniarg, (lastflag & FLAG_SET_UNIARG) != 0);
       _last_command = _this_command;
     }
   else
@@ -323,7 +323,7 @@ process_command (void)
   if (!(thisflag & FLAG_SET_UNIARG))
     last_uniarg = 1;
 
-  if (last_command () != F_undo)
+  if (strcmp (last_command (), "undo") != 0)
     set_buffer_next_undop (cur_bp, get_buffer_last_undop (cur_bp));
 
   lastflag = thisflag;
@@ -352,7 +352,7 @@ init_default_bindings (void)
       if (isprint (i))
         {
           gl_list_set_at (keys, 0, (void *) i);
-          bind_key_vec (root_bindings, keys, 0, F_self_insert_command);
+          bind_key_vec (root_bindings, keys, 0, "self-insert-command");
         }
     }
   gl_list_free (keys);
@@ -504,7 +504,6 @@ sequence.
 +*/
 {
   gl_list_t keys;
-  Function func;
 
   STR_INIT (keystr);
   if (keystr != NULL)
@@ -534,13 +533,12 @@ sequence.
   if (name == NULL)
     return leNIL;
 
-  func = get_function (name);
-  if (func == NULL) /* Possible if called non-interactively */
+  if (!function_exists (name)) /* Possible if called non-interactively */
     {
       minibuf_error ("No such function `%s'", name);
       return leNIL;
     }
-  bind_key_vec (root_bindings, keys, 0, func);
+  bind_key_vec (root_bindings, keys, 0, name);
 
   gl_list_free (keys);
   STR_FREE (keystr);
@@ -594,7 +592,7 @@ walk_bindings (Binding tree, void (*process) (astr key, Binding p, void *st),
 
 typedef struct
 {
-  Function f;
+  const char * f;
   astr bindings;
 } gather_bindings_state;
 
@@ -625,8 +623,8 @@ message in the buffer.
 
   if (name)
     {
-      g.f = get_function (name);
-      if (g.f)
+      g.f = name;
+      if (function_exists (g.f))
         {
           g.bindings = astr_new ();
           walk_bindings (root_bindings, gather_bindings, &g);
@@ -655,7 +653,7 @@ END_DEFUN
 static void
 print_binding (astr key, Binding p, void *st GCC_UNUSED)
 {
-  bprintf ("%-15s %s\n", astr_cstr (key), get_function_name (p->func));
+  bprintf ("%-15s %s\n", astr_cstr (key), p->func);
 }
 
 static void
