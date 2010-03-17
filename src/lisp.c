@@ -38,7 +38,7 @@ function_exists (const char *name)
 {
   bool exists;
   CLUE_SET (L, name, string, name);
-  (void) CLUE_DO (L, "exists = usercmd[name]");
+  (void) CLUE_DO (L, "exists = usercmd[name] ~= nil");
   CLUE_GET (L, exists, boolean, exists);
   return exists;
 }
@@ -94,36 +94,18 @@ execute_with_uniarg (bool undo, int uniarg, bool (*forward) (void), bool (*backw
  */
 typedef le (*Function) (long uniarg, bool is_uniarg, le list);
 
-struct fentry
-{
-  const char *name;		/* The function name. */
-  Function func;		/* The function pointer. */
-};
-typedef struct fentry fentry;
-
-static fentry fentry_table[] = {
-#define X(zile_name, c_name)   \
-  {zile_name, F_ ## c_name},
-#include "tbl_funcs.h"
-#undef X
-};
-
-#define fentry_table_size (sizeof (fentry_table) / sizeof (fentry_table[0]))
-
 le
 execute_function (const char *name, int uniarg, bool is_uniarg, le list)
 {
   Function func = NULL;
   Macro *mp;
-  size_t i;
 
   assert (name);
-  for (i = 0; i < fentry_table_size; ++i)
-    if (!strcmp (name, fentry_table[i].name))
-      {
-        func = fentry_table[i].func;
-        break;
-      }
+  CLUE_SET (L, name, string, name);
+  (void) CLUE_DO (L, "func = usercmd[name].func");
+  (void) CLUE_DO (L, "io.stderr:write ('exec: ' .. tostring (name) .. ' ' .. tostring(func))");
+  CLUE_GET (L, func, lightuserdata, func);
+  fprintf (stderr, "name %s func %p\n", name, func);
 
   if (func)
     return func (uniarg, is_uniarg, list);
@@ -225,4 +207,12 @@ init_lisp (void)
   lua_getglobal (L, "hp");
   functions_history = luaL_ref (L, LUA_REGISTRYINDEX);
   lua_register (L, "call_zile_command", call_zile_command);
+
+#define X(zile_name, c_name)                            \
+  lua_pushlightuserdata (L, F_ ## c_name);              \
+  lua_setglobal (L, "ptr");                             \
+  CLUE_SET (L, name, string, zile_name);                \
+  (void) CLUE_DO (L, "usercmd[name].func = ptr");
+#include "tbl_funcs.h"
+#undef X
 }

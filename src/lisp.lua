@@ -133,7 +133,7 @@ function evaluateBranch (branch)
     return nil
   end
   local ret
-  if usercmd[branch.data] and usercmd[branch.data].func then
+  if usercmd[branch.data] and type (usercmd[branch.data].func) == "function" then
     ret = usercmd[branch.data].func (branch)
   else
     ret = call_zile_command (branch.data, branch)
