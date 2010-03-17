@@ -77,103 +77,75 @@ function term_close ()
   curses.endwin ()
 end
 
--- static size_t
--- codetokey (int c)
--- {
---   switch (c)
---     {
---     case '\0':			/* C-@ */
---       return KBD_CTRL | '@';
---     case '\1':
---     case '\2':
---     case '\3':
---     case '\4':
---     case '\5':
---     case '\6':
---     case '\7':
---     case '\10':
---     case '\12':
---     case '\13':
---     case '\14':
---     case '\16':
---     case '\17':
---     case '\20':
---     case '\21':
---     case '\22':
---     case '\23':
---     case '\24':
---     case '\25':
---     case '\26':
---     case '\27':
---     case '\30':
---     case '\31':
---     case '\32':			/* C-a ... C-z */
---       return KBD_CTRL | ('a' + c - 1);
---     case '\11':
---       return KBD_TAB;
---     case '\15':
---       return KBD_RET;
---     case '\37':
---       return KBD_CTRL | (c ^ 0x40);
--- #ifdef KEY_SUSPEND
---     case KEY_SUSPEND:		/* C-z */
---       return KBD_CTRL | 'z';
--- #endif
---     case '\33':			/* META */
---       return KBD_META;
---     case KEY_PPAGE:		/* PGUP */
---       return KBD_PGUP;
---     case KEY_NPAGE:		/* PGDN */
---       return KBD_PGDN;
---     case KEY_HOME:
---       return KBD_HOME;
---     case KEY_END:
---       return KBD_END;
---     case KEY_DC:		/* DEL */
---       return KBD_DEL;
---     case KEY_BACKSPACE:		/* BS */
---     case 0177:			/* BS */
---       return KBD_BS;
---     case KEY_IC:		/* INSERT */
---       return KBD_INS;
---     case KEY_LEFT:
---       return KBD_LEFT;
---     case KEY_RIGHT:
---       return KBD_RIGHT;
---     case KEY_UP:
---       return KBD_UP;
---     case KEY_DOWN:
---       return KBD_DOWN;
---     case KEY_F (1):
---       return KBD_F1;
---     case KEY_F (2):
---       return KBD_F2;
---     case KEY_F (3):
---       return KBD_F3;
---     case KEY_F (4):
---       return KBD_F4;
---     case KEY_F (5):
---       return KBD_F5;
---     case KEY_F (6):
---       return KBD_F6;
---     case KEY_F (7):
---       return KBD_F7;
---     case KEY_F (8):
---       return KBD_F8;
---     case KEY_F (9):
---       return KBD_F9;
---     case KEY_F (10):
---       return KBD_F10;
---     case KEY_F (11):
---       return KBD_F11;
---     case KEY_F (12):
---       return KBD_F12;
---     default:
---       if (c > 0xff || c < 0)
---         return KBD_NOKEY;	/* Undefined behaviour. */
---       return c;
---     }
--- }
+function codetokey (c)
+  if c == '\0' then -- C-@
+    ret = bit.bor (KBD_CTRL, string.byte ('@'))
+  elseif (set.new {'\001', '\002', '\003', '\004', '\005', '\006', '\007', '\008',
+                   '\010', '\011', '\012', '\014', '\015', '\016', '\017', '\018',
+                   '\019', '\020', '\021', '\022', '\023', '\024', '\025', '\026'})[c] then -- C-a ... C-z
+    ret = bit.bor (KBD_CTRL, string.byte ('a') + string.byte (c) - 1)
+  elseif c == '\009' then
+    ret = KBD_TAB
+  elseif c == '\013' then
+    ret = KBD_RET
+  elseif c == '\031' then
+    ret = bit.bor (KBD_CTRL, bit.xor (c, 64))
+  elseif c == KEY_SUSPEND then -- C-z
+    ret = bit.bor (KBD_CTRL, string.byte ('z'))
+  elseif c == '\027' then -- META
+    ret = KBD_META
+  elseif c == KEY_PPAGE then -- PGUP
+    ret = KBD_PGUP
+  elseif c == KEY_NPAGE then -- PGDN
+    ret = KBD_PGDN
+  elseif c == KEY_HOME then
+    ret = KBD_HOME
+  elseif c == KEY_END then
+    ret = KBD_END
+  elseif c == KEY_DC then -- DEL
+    ret = KBD_DEL
+  elseif c == KEY_BACKSPACE or c == '\127' then -- BS
+    ret = KBD_BS
+  elseif c == KEY_IC then -- INSERT
+    ret = KBD_INS
+  elseif c == KEY_LEFT then
+    ret = KBD_LEFT
+  elseif c == KEY_RIGHT then
+    ret = KBD_RIGHT
+  elseif c == KEY_UP then
+    ret = KBD_UP
+  elseif c == KEY_DOWN then
+    ret = KBD_DOWN
+  elseif c == KEY_F1 then
+    ret = KBD_F1
+  elseif c == KEY_F2 then
+    ret = KBD_F2
+  elseif c == KEY_F3 then
+    ret = KBD_F3
+  elseif c == KEY_F4 then
+    ret = KBD_F4
+  elseif c == KEY_F5 then
+    ret = KBD_F5
+  elseif c == KEY_F6 then
+    ret = KBD_F6
+  elseif c == KEY_F7 then
+    ret = KBD_F7
+  elseif c == KEY_F8 then
+    ret = KBD_F8
+  elseif c == KEY_F9 then
+    ret = KBD_F9
+  elseif c == KEY_F10 then
+    ret = KBD_F10
+  elseif c == KEY_F11 then
+    ret = KBD_F11
+  elseif c == KEY_F12 then
+    ret = KBD_F12
+  else
+    ret = string.byte (c)
+  end
+
+  return ret
+end
 
 -- static size_t
 -- keytocodes (size_t key, int ** codevec)
@@ -185,13 +157,13 @@ end
 --   if (key == KBD_NOKEY)
 --     return 0;
 
---   if (key & KBD_META)				/* META */
+--   if (key & KBD_META)				-- META
 --     *p++ = '\33';
 --   key &= ~KBD_META;
 
 --   switch (key)
 --     {
---     case KBD_CTRL | '@':			/* C-@ */
+--     case KBD_CTRL | '@':			-- C-@
 --       *p++ = '\0';
 --       break;
 --     case KBD_CTRL | 'a':
@@ -217,7 +189,7 @@ end
 --     case KBD_CTRL | 'w':
 --     case KBD_CTRL | 'x':
 --     case KBD_CTRL | 'y':
---     case KBD_CTRL | 'z':	/* C-a ... C-z */
+--     case KBD_CTRL | 'z':	-- C-a ... C-z
 --       *p++ = (key & ~KBD_CTRL) + 1 - 'a';
 --       break;
 --     case KBD_TAB:
@@ -229,10 +201,10 @@ end
 --     case '\37':
 --       *p++ = (key & ~KBD_CTRL) ^ 0x40;
 --       break;
---     case KBD_PGUP:		/* PGUP */
+--     case KBD_PGUP:		-- PGUP
 --       *p++ = KEY_PPAGE;
 --       break;
---     case KBD_PGDN:		/* PGDN */
+--     case KBD_PGDN:		-- PGDN
 --       *p++ = KEY_NPAGE;
 --       break;
 --     case KBD_HOME:
@@ -241,13 +213,13 @@ end
 --     case KBD_END:
 --       *p++ = KEY_END;
 --       break;
---     case KBD_DEL:		/* DEL */
+--     case KBD_DEL:		-- DEL
 --       *p++ = KEY_DC;
 --       break;
---     case KBD_BS:		/* BS */
+--     case KBD_BS:		-- BS
 --       *p++ = KEY_BACKSPACE;
 --       break;
---     case KBD_INS:		/* INSERT */
+--     case KBD_INS:		-- INSERT
 --       *p++ = KEY_IC;
 --       break;
 --     case KBD_LEFT:
