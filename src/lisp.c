@@ -33,31 +33,6 @@
  * Zile Lisp functions.
  */
 
-/*
- * The type of a Zile exported function.
- * `uniarg' is the universal argument, if any, whose presence is
- * indicated by `is_uniarg'.
- */
-typedef le (*Function) (long uniarg, bool is_uniarg, le list);
-
-le leNIL, leT;
-
-struct fentry
-{
-  const char *name;		/* The function name. */
-  Function func;		/* The function pointer. */
-};
-typedef struct fentry fentry;
-
-static fentry fentry_table[] = {
-#define X(zile_name, c_name)   \
-  {zile_name, F_ ## c_name},
-#include "tbl_funcs.h"
-#undef X
-};
-
-#define fentry_table_size (sizeof (fentry_table) / sizeof (fentry_table[0]))
-
 bool
 function_exists (const char *name)
 {
@@ -111,6 +86,29 @@ execute_with_uniarg (bool undo, int uniarg, bool (*forward) (void), bool (*backw
 
   return bool_to_lisp (ret);
 }
+
+/*
+ * The type of a Zile exported function.
+ * `uniarg' is the universal argument, if any, whose presence is
+ * indicated by `is_uniarg'.
+ */
+typedef le (*Function) (long uniarg, bool is_uniarg, le list);
+
+struct fentry
+{
+  const char *name;		/* The function name. */
+  Function func;		/* The function pointer. */
+};
+typedef struct fentry fentry;
+
+static fentry fentry_table[] = {
+#define X(zile_name, c_name)   \
+  {zile_name, F_ ## c_name},
+#include "tbl_funcs.h"
+#undef X
+};
+
+#define fentry_table_size (sizeof (fentry_table) / sizeof (fentry_table[0]))
 
 le
 execute_function (const char *name, int uniarg, bool is_uniarg, le list)
@@ -212,6 +210,8 @@ call_zile_command (lua_State *L)
   luaL_unref (L, LUA_REGISTRYINDEX, trybranch);
   return 1;
 }
+
+le leNIL, leT;
 
 void
 init_lisp (void)
