@@ -356,7 +356,7 @@ main (int argc, char **argv)
         case ARG_FUNCTION:
           ok = function_exists (arg);
           if (ok)
-            ok = execute_function (arg, 1, true) != leNIL;
+            ok = execute_function (arg, 1, true, LUA_NOREF) != leNIL;
           else
             minibuf_error ("Function `%s' not defined", arg);
           break;

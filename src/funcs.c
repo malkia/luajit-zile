@@ -1106,7 +1106,7 @@ mark (int uniarg, const char * func)
 {
   le ret;
   FUNCALL (set_mark_command);
-  ret = execute_function (func, uniarg, true);
+  ret = execute_function (func, uniarg, true, LUA_NOREF);
   if (ret)
     FUNCALL (exchange_point_and_mark);
   return ret;
@@ -1169,7 +1169,7 @@ move_paragraph (int uniarg, bool (*forward) (void), bool (*backward) (void),
   if (is_empty_line ())
     FUNCALL (beginning_of_line);
   else
-    execute_function (line_extremum, 1, false);
+    execute_function (line_extremum, 1, false, LUA_NOREF);
 
   return leT;
 }

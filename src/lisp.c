@@ -58,21 +58,14 @@ static fentry fentry_table[] = {
 
 #define fentry_table_size (sizeof (fentry_table) / sizeof (fentry_table[0]))
 
-static Function
-get_function (const char *name)
-{
-  size_t i;
-  assert (name);
-  for (i = 0; i < fentry_table_size; ++i)
-    if (!strcmp (name, fentry_table[i].name))
-      return fentry_table[i].func;
-  return NULL;
-}
-
 bool
 function_exists (const char *name)
 {
-  return get_function (name) != NULL;
+  bool exists;
+  CLUE_SET (L, name, string, name);
+  (void) CLUE_DO (L, "exists = usercmd[name]");
+  CLUE_GET (L, exists, boolean, exists);
+  return exists;
 }
 
 /* Return function's interactive flag, or -1 if not found. */
@@ -120,13 +113,22 @@ execute_with_uniarg (bool undo, int uniarg, bool (*forward) (void), bool (*backw
 }
 
 le
-execute_function (const char *name, int uniarg, bool is_uniarg)
+execute_function (const char *name, int uniarg, bool is_uniarg, le list)
 {
-  Function func = get_function (name);
+  Function func = NULL;
   Macro *mp;
+  size_t i;
+
+  assert (name);
+  for (i = 0; i < fentry_table_size; ++i)
+    if (!strcmp (name, fentry_table[i].name))
+      {
+        func = fentry_table[i].func;
+        break;
+      }
 
   if (func)
-    return func (uniarg, is_uniarg, LUA_NOREF);
+    return func (uniarg, is_uniarg, list);
   else
     {
       mp = get_macro (name);
@@ -161,7 +163,7 @@ Read function name, then read its arguments and call it.
   if (name == NULL)
     return false;
 
-  ok = execute_function (name, uniarg, true);
+  ok = execute_function (name, uniarg, true, LUA_NOREF);
   free ((char *) name);
 }
 END_DEFUN
@@ -199,14 +201,12 @@ call_zile_command (lua_State *L)
 {
   le trybranch;
   const char *keyword;
-  Function func;
   assert (lua_isstring (L, -2));
   assert (lua_istable (L, -1));
   keyword = lua_tostring (L, -2);
   trybranch = luaL_ref (L, LUA_REGISTRYINDEX);
-  func = get_function (keyword);
-  if (func)
-    lua_pushvalue (L, (func) (1, false, trybranch));
+  if (function_exists (keyword))
+    lua_pushvalue (L, execute_function (keyword, 1, false, trybranch));
   else
     lua_pushnil (L);
   luaL_unref (L, LUA_REGISTRYINDEX, trybranch);

@@ -167,7 +167,7 @@ void free_registers (void);
 extern le leNIL, leT;
 le execute_with_uniarg (bool undo, int uniarg, bool (*forward) (void),
                         bool (*backward) (void));
-le execute_function (const char *name, int uniarg, bool is_uniarg);
+le execute_function (const char *name, int uniarg, bool is_uniarg, le list);
 bool function_exists (const char *name);
 int get_function_interactive (const char *name);
 const char *get_function_doc (const char *name);

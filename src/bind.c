@@ -304,7 +304,7 @@ process_command (void)
   if (function_exists (name))
     {
       set_this_command (name);
-      execute_function (name, last_uniarg, (lastflag & FLAG_SET_UNIARG) != 0);
+      execute_function (name, last_uniarg, (lastflag & FLAG_SET_UNIARG) != 0, LUA_NOREF);
       _last_command = _this_command;
     }
   else
