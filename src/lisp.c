@@ -103,9 +103,7 @@ execute_function (const char *name, int uniarg, bool is_uniarg, le list)
   assert (name);
   CLUE_SET (L, name, string, name);
   (void) CLUE_DO (L, "func = usercmd[name].func");
-  (void) CLUE_DO (L, "io.stderr:write ('exec: ' .. tostring (name) .. ' ' .. tostring(func))");
   CLUE_GET (L, func, lightuserdata, func);
-  fprintf (stderr, "name %s func %p\n", name, func);
 
   if (func)
     return func (uniarg, is_uniarg, list);
@@ -203,9 +201,9 @@ init_lisp (void)
   lua_getglobal (L, "leT");
   leT = luaL_ref (L, LUA_REGISTRYINDEX);
 
-  (void) CLUE_DO (L, "hp = history_new ()");
-  lua_getglobal (L, "hp");
+  lua_getglobal (L, "functions_history");
   functions_history = luaL_ref (L, LUA_REGISTRYINDEX);
+
   lua_register (L, "call_zile_command", call_zile_command);
 
 #define X(zile_name, c_name)                            \

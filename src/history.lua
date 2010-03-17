@@ -60,3 +60,7 @@ function next_history_element (hp)
     return ""
   end
 end
+
+-- Initialise functions history
+-- FIXME: Put this somewhere better
+functions_history = history_new ()
