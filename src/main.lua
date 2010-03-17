@@ -36,7 +36,6 @@ end
 
 -- Zile command to Lua bindings
 
--- FIXME: Use these in C
 leT = {data = "t"}
 leNIL = {data = "nil"}
 

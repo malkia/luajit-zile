@@ -213,29 +213,13 @@ call_zile_command (lua_State *L)
   return 1;
 }
 
-static le
-leNew (const char *text)
-{
-  le new;
-  lua_newtable (L);
-  new = luaL_ref (L, LUA_REGISTRYINDEX);
-
-  if (text)
-    {
-      lua_rawgeti (L, LUA_REGISTRYINDEX, new);
-      lua_pushstring (L, xstrdup (text));
-      lua_setfield (L, -2, "data");
-      lua_pop (L, 1);
-    }
-
-  return new;
-}
-
 void
 init_lisp (void)
 {
-  leNIL = leNew ("nil");
-  leT = leNew ("t");
+  lua_getglobal (L, "leNIL");
+  leNIL = luaL_ref (L, LUA_REGISTRYINDEX);
+  lua_getglobal (L, "leT");
+  leT = luaL_ref (L, LUA_REGISTRYINDEX);
 }
 
 void
