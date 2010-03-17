@@ -213,7 +213,6 @@ main (int argc, char **argv)
   init_search ();
   init_lisp ();
   init_variables ();
-  init_eval ();
 
   opterr = 0; /* Don't display errors for unknown options */
   for (;;)

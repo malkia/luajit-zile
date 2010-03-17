@@ -172,7 +172,6 @@ bool function_exists (const char *name);
 int get_function_interactive (const char *name);
 const char *get_function_doc (const char *name);
 const char *minibuf_read_function_name (const char *fmt, ...);
-void init_eval (void);
 void init_lisp (void);
 
 /* lcurses.c -------------------------------------------------------------- */

@@ -220,11 +220,7 @@ init_lisp (void)
   leNIL = luaL_ref (L, LUA_REGISTRYINDEX);
   lua_getglobal (L, "leT");
   leT = luaL_ref (L, LUA_REGISTRYINDEX);
-}
 
-void
-init_eval (void)
-{
   (void) CLUE_DO (L, "hp = history_new ()");
   lua_getglobal (L, "hp");
   functions_history = luaL_ref (L, LUA_REGISTRYINDEX);
