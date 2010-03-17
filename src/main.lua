@@ -36,7 +36,11 @@ end
 
 -- Zile command to Lua bindings
 
+-- FIXME: Use these in C
+leT = {data = "t"}
+leNIL = {data = "nil"}
+
 -- Turn a boolean into a Lisp boolean
 function bool_to_lisp (b)
-  return b and "t" or "nil"
+  return b and leT or leNIL
 end

@@ -150,7 +150,7 @@ end
 
 function evaluateNode (node)
   if node == nil then
-    return {data = "nil"}
+    return leNIL
   end
   local value
   if node.branch ~= nil then
@@ -190,7 +190,7 @@ Execute a file of Lisp code named FILE.
     if l and #l >= 2 then
       ok = bool_to_lisp (lisp_loadfile (l.next.data))
     else
-      ok = "nil"
+      ok = leNIL
     end
   end
 }
