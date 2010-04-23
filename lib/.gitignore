@@ -186,3 +186,5 @@ wchar.h
 /getdtablesize.c
 /gl_xlist.c
 /gl_xlist.h
+/cloexec.c
+/cloexec.h
