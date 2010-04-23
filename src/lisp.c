@@ -102,7 +102,7 @@ execute_function (const char *name, int uniarg, bool is_uniarg, le list)
 
   assert (name);
   CLUE_SET (L, name, string, name);
-  (void) CLUE_DO (L, "func = usercmd[name].func");
+  (void) CLUE_DO (L, "func = usercmd[name] and usercmd[name].func or nil");
   CLUE_GET (L, func, lightuserdata, func);
 
   if (func)
