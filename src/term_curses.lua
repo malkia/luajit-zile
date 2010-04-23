@@ -89,7 +89,7 @@ function codetokey (c)
   elseif c == '\013' then
     ret = KBD_RET
   elseif c == '\031' then
-    ret = bit.bor (KBD_CTRL, bit.xor (c, 64))
+    ret = bit.bor (KBD_CTRL, bit.xor (c, 0x40))
   elseif c == KEY_SUSPEND then -- C-z
     ret = bit.bor (KBD_CTRL, string.byte ('z'))
   elseif c == '\027' then -- META
