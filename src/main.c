@@ -38,7 +38,7 @@
 #include "extern.h"
 
 #define ZILE_COPYRIGHT_STRING \
-  "Copyright (C) 2009 Free Software Foundation, Inc."
+  "Copyright (C) 2010 Free Software Foundation, Inc."
 
 /* Clue declarations. */
 CLUE_DEFS(L);
