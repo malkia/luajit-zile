@@ -120,10 +120,10 @@ keytocodes (size_t key, int ** codevec)
       *p++ = '\11';
       break;
     case KBD_RET:
-      *p++ ='\15';
+      *p++ = '\15';
       break;
-    case '\37':
-      *p++ = (key & ~KBD_CTRL) ^ 0x40;
+    case KBD_CTRL | '_':
+      *p++ = '\37';
       break;
     case KBD_PGUP:		/* PGUP */
       *p++ = KEY_PPAGE;
