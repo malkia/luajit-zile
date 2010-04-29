@@ -311,7 +311,7 @@ main (int argc, char **argv)
   init_default_bindings ();
   init_minibuf ();
 
-  term_init ();
+  (void) CLUE_DO (L, "term_init ()");
 
   /* Create the `*scratch*' buffer, so that initialisation commands
      that act on a buffer have something to act on. */

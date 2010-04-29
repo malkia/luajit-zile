@@ -46,7 +46,10 @@ lastkey (void)
 size_t
 xgetkey (int mode, size_t timeout)
 {
-  _last_key = term_xgetkey (mode, timeout);
+  CLUE_SET (L, mode, integer, mode);
+  CLUE_SET (L, timeout, integer, timeout);
+  (void)CLUE_DO (L, "key = term_xgetkey (mode, timeout)");
+  CLUE_GET (L, key, integer, _last_key);
 
   if (thisflag & FLAG_DEFINING_MACRO)
     add_key_to_cmd (_last_key);
@@ -80,7 +83,8 @@ waitkey (size_t timeout)
 void
 pushkey (size_t key)
 {
-  term_ungetkey (key);
+  CLUE_SET (L, key, integer, key);
+  (void) CLUE_DO (L, "term_ungetkey (key)");
 }
 
 /*

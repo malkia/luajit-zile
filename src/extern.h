@@ -251,14 +251,6 @@ void recenter (Window * wp);
 void init_search (void);
 void free_search (void);
 
-/* term_curses.c ---------------------------------------------------------- */
-size_t term_buf_len (void);
-void term_init (void);
-void term_suspend (void);
-void term_resume (void);
-size_t term_xgetkey (int mode, size_t timeout);
-void term_ungetkey (size_t key);
-
 /* term_minibuf.c --------------------------------------------------------- */
 void term_minibuf_write (const char *fmt);
 char *term_minibuf_read (const char *prompt, const char *value, size_t pos,

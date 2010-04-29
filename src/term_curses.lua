@@ -58,13 +58,13 @@ end
 
 function term_init ()
   curses.initscr ()
-  term_set_size (curses.cols, curses.lines)
+  term_set_size (curses.cols (), curses.lines ())
   curses.echo (false)
   curses.nl (false)
   curses.raw (true)
-  stdscr ():meta (true);
-  stdscr ():intrflush (false)
-  stdscr ():keypad (true)
+  curses.stdscr ():meta (true)
+  curses.stdscr ():intrflush (false)
+  curses.stdscr ():keypad (true)
   key_buf = {}
 end
 
@@ -77,272 +77,192 @@ function term_close ()
   curses.endwin ()
 end
 
-function codetokey (c)
-  if c == '\0' then -- C-@
+local function codetokey (c)
+  if c == 0 then -- C-@
     ret = bit.bor (KBD_CTRL, string.byte ('@'))
-  elseif (set.new {'\001', '\002', '\003', '\004', '\005', '\006', '\007', '\008',
-                   '\010', '\011', '\012', '\014', '\015', '\016', '\017', '\018',
-                   '\019', '\020', '\021', '\022', '\023', '\024', '\025', '\026'})[c] then -- C-a ... C-z
-    ret = bit.bor (KBD_CTRL, string.byte ('a') + string.byte (c) - 1)
-  elseif c == '\009' then
+  elseif (set.new {1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 14, 15, 16, 17, 18,
+                   19, 20, 21, 22, 23, 24, 25, 26})[c] then -- C-a ... C-z
+    ret = bit.bor (KBD_CTRL, string.byte ('a') + c - 1)
+  elseif c == 9 then
     ret = KBD_TAB
-  elseif c == '\013' then
+  elseif c == 13 then
     ret = KBD_RET
-  elseif c == '\031' then
-    ret = bit.bor (KBD_CTRL, bit.xor (c, 0x40))
-  elseif c == KEY_SUSPEND then -- C-z
+  elseif c == 31 then
+    ret = bit.bor (KBD_CTRL, string.byte ('_'))
+  elseif c == curses.KEY_SUSPEND then -- C-z
     ret = bit.bor (KBD_CTRL, string.byte ('z'))
-  elseif c == '\027' then -- META
+  elseif c == 27 then -- META
     ret = KBD_META
-  elseif c == KEY_PPAGE then -- PGUP
+  elseif c == curses.KEY_PPAGE then -- PGUP
     ret = KBD_PGUP
-  elseif c == KEY_NPAGE then -- PGDN
+  elseif c == curses.KEY_NPAGE then -- PGDN
     ret = KBD_PGDN
-  elseif c == KEY_HOME then
+  elseif c == curses.KEY_HOME then
     ret = KBD_HOME
-  elseif c == KEY_END then
+  elseif c == curses.KEY_END then
     ret = KBD_END
-  elseif c == KEY_DC then -- DEL
+  elseif c == curses.KEY_DC then -- DEL
     ret = KBD_DEL
-  elseif c == KEY_BACKSPACE or c == '\127' then -- BS
+  elseif c == curses.KEY_BACKSPACE or c == 127 then -- BS
     ret = KBD_BS
-  elseif c == KEY_IC then -- INSERT
+  elseif c == curses.KEY_IC then -- INSERT
     ret = KBD_INS
-  elseif c == KEY_LEFT then
+  elseif c == curses.KEY_LEFT then
     ret = KBD_LEFT
-  elseif c == KEY_RIGHT then
+  elseif c == curses.KEY_RIGHT then
     ret = KBD_RIGHT
-  elseif c == KEY_UP then
+  elseif c == curses.KEY_UP then
     ret = KBD_UP
-  elseif c == KEY_DOWN then
+  elseif c == curses.KEY_DOWN then
     ret = KBD_DOWN
-  elseif c == KEY_F1 then
+  elseif c == curses.KEY_F1 then
     ret = KBD_F1
-  elseif c == KEY_F2 then
+  elseif c == curses.KEY_F2 then
     ret = KBD_F2
-  elseif c == KEY_F3 then
+  elseif c == curses.KEY_F3 then
     ret = KBD_F3
-  elseif c == KEY_F4 then
+  elseif c == curses.KEY_F4 then
     ret = KBD_F4
-  elseif c == KEY_F5 then
+  elseif c == curses.KEY_F5 then
     ret = KBD_F5
-  elseif c == KEY_F6 then
+  elseif c == curses.KEY_F6 then
     ret = KBD_F6
-  elseif c == KEY_F7 then
+  elseif c == curses.KEY_F7 then
     ret = KBD_F7
-  elseif c == KEY_F8 then
+  elseif c == curses.KEY_F8 then
     ret = KBD_F8
-  elseif c == KEY_F9 then
+  elseif c == curses.KEY_F9 then
     ret = KBD_F9
-  elseif c == KEY_F10 then
+  elseif c == curses.KEY_F10 then
     ret = KBD_F10
-  elseif c == KEY_F11 then
+  elseif c == curses.KEY_F11 then
     ret = KBD_F11
-  elseif c == KEY_F12 then
+  elseif c == curses.KEY_F12 then
     ret = KBD_F12
+  elseif c > 0xff or c < 0 then
+    ret = KBD_NOKEY -- Undefined behaviour.
   else
-    ret = string.byte (c)
+    ret = c
   end
 
   return ret
 end
 
--- static size_t
--- keytocodes (size_t key, int ** codevec)
--- {
---   int * p;
+local keytocode_map = {
+  [bit.bor (KBD_CTRL, string.byte ('@'))] = 0, -- C-@
+  [bit.bor (KBD_CTRL, string.byte ('a'))] = 1, -- C-a
+  [bit.bor (KBD_CTRL, string.byte ('b'))] = 2, -- C-b
+  [bit.bor (KBD_CTRL, string.byte ('c'))] = 3, -- C-c
+  [bit.bor (KBD_CTRL, string.byte ('d'))] = 4, -- C-d
+  [bit.bor (KBD_CTRL, string.byte ('e'))] = 5, -- C-e
+  [bit.bor (KBD_CTRL, string.byte ('f'))] = 6, -- C-f
+  [bit.bor (KBD_CTRL, string.byte ('g'))] = 7, -- C-g
+  [bit.bor (KBD_CTRL, string.byte ('h'))] = 8, -- C-h
+  [KBD_TAB] = 9,
+  [bit.bor (KBD_CTRL, string.byte ('j'))] = 10, -- C-j
+  [bit.bor (KBD_CTRL, string.byte ('k'))] = 11, -- C-k
+  [bit.bor (KBD_CTRL, string.byte ('l'))] = 12, -- C-l
+  [KBD_RET] = 13,
+  [bit.bor (KBD_CTRL, string.byte ('n'))] = 14, -- C-n
+  [bit.bor (KBD_CTRL, string.byte ('o'))] = 15, -- C-o
+  [bit.bor (KBD_CTRL, string.byte ('p'))] = 16, -- C-p
+  [bit.bor (KBD_CTRL, string.byte ('q'))] = 17, -- C-q
+  [bit.bor (KBD_CTRL, string.byte ('r'))] = 18, -- C-r
+  [bit.bor (KBD_CTRL, string.byte ('s'))] = 19, -- C-s
+  [bit.bor (KBD_CTRL, string.byte ('t'))] = 20, -- C-t
+  [bit.bor (KBD_CTRL, string.byte ('u'))] = 21, -- C-u
+  [bit.bor (KBD_CTRL, string.byte ('v'))] = 22, -- C-v
+  [bit.bor (KBD_CTRL, string.byte ('w'))] = 23, -- C-w
+  [bit.bor (KBD_CTRL, string.byte ('x'))] = 24, -- C-x
+  [bit.bor (KBD_CTRL, string.byte ('y'))] = 25, -- C-y
+  [bit.bor (KBD_CTRL, string.byte ('z'))] = 26, -- C-z
+  [bit.bor (KBD_CTRL, string.byte ('_'))] = 31, -- C-_
+  [KBD_PGUP] = curses.KEY_PPAGE,
+  [KBD_PGDN] = curses.KEY_NPAGE,
+  [KBD_HOME] = curses.KEY_HOME,
+  [KBD_END] = curses.KEY_END,
+  [KBD_DEL] = curses.KEY_DC,
+  [KBD_BS] = curses.KEY_BACKSPACE,
+  [KBD_INS] = curses.KEY_IC, -- INSERT
+  [KBD_LEFT] = curses.KEY_LEFT,
+  [KBD_RIGHT] = curses.KEY_RIGHT,
+  [KBD_UP] = curses.KEY_UP,
+  [KBD_DOWN] = curses.KEY_DOWN,
+  [KBD_F1] = curses.KEY_F1,
+  [KBD_F2] = curses.KEY_F2,
+  [KBD_F3] = curses.KEY_F3,
+  [KBD_F4] = curses.KEY_F4,
+  [KBD_F5] = curses.KEY_F5,
+  [KBD_F6] = curses.KEY_F6,
+  [KBD_F7] = curses.KEY_F7,
+  [KBD_F8] = curses.KEY_F8,
+  [KBD_F9] = curses.KEY_F9,
+  [KBD_F10] = curses.KEY_F10,
+  [KBD_F11] = curses.KEY_F11,
+  [KBD_F12] = curses.KEY_F12,
+}
 
---   p = *codevec = XCALLOC (2, int);
+local function keytocodes (key)
+  local codevec = {}
 
---   if (key == KBD_NOKEY)
---     return 0;
+  if key ~= KBD_NOKEY then
+    if bit.band (key, KBD_META) ~= 0 then
+      table.insert (codevec, 27)
+      key = bit.band (key, bit.bnot (KBD_META))
+    end
 
---   if (key & KBD_META)				-- META
---     *p++ = '\33';
---   key &= ~KBD_META;
+    if keytocode_map[key] then
+      table.insert (codevec, keytocode_map[key])
+    elseif key < 0x100 then
+      table.insert (codevec, key)
+    end
+  end
 
---   switch (key)
---     {
---     case KBD_CTRL | '@':			-- C-@
---       *p++ = '\0';
---       break;
---     case KBD_CTRL | 'a':
---     case KBD_CTRL | 'b':
---     case KBD_CTRL | 'c':
---     case KBD_CTRL | 'd':
---     case KBD_CTRL | 'e':
---     case KBD_CTRL | 'f':
---     case KBD_CTRL | 'g':
---     case KBD_CTRL | 'h':
---     case KBD_CTRL | 'j':
---     case KBD_CTRL | 'k':
---     case KBD_CTRL | 'l':
---     case KBD_CTRL | 'n':
---     case KBD_CTRL | 'o':
---     case KBD_CTRL | 'p':
---     case KBD_CTRL | 'q':
---     case KBD_CTRL | 'r':
---     case KBD_CTRL | 's':
---     case KBD_CTRL | 't':
---     case KBD_CTRL | 'u':
---     case KBD_CTRL | 'v':
---     case KBD_CTRL | 'w':
---     case KBD_CTRL | 'x':
---     case KBD_CTRL | 'y':
---     case KBD_CTRL | 'z':	-- C-a ... C-z
---       *p++ = (key & ~KBD_CTRL) + 1 - 'a';
---       break;
---     case KBD_TAB:
---       *p++ = '\11';
---       break;
---     case KBD_RET:
---       *p++ ='\15';
---       break;
---     case '\37':
---       *p++ = (key & ~KBD_CTRL) ^ 0x40;
---       break;
---     case KBD_PGUP:		-- PGUP
---       *p++ = KEY_PPAGE;
---       break;
---     case KBD_PGDN:		-- PGDN
---       *p++ = KEY_NPAGE;
---       break;
---     case KBD_HOME:
---       *p++ = KEY_HOME;
---       break;
---     case KBD_END:
---       *p++ = KEY_END;
---       break;
---     case KBD_DEL:		-- DEL
---       *p++ = KEY_DC;
---       break;
---     case KBD_BS:		-- BS
---       *p++ = KEY_BACKSPACE;
---       break;
---     case KBD_INS:		-- INSERT
---       *p++ = KEY_IC;
---       break;
---     case KBD_LEFT:
---       *p++ = KEY_LEFT;
---       break;
---     case KBD_RIGHT:
---       *p++ = KEY_RIGHT;
---       break;
---     case KBD_UP:
---       *p++ = KEY_UP;
---       break;
---     case KBD_DOWN:
---       *p++ = KEY_DOWN;
---       break;
---     case KBD_F1:
---       *p++ = KEY_F (1);
---       break;
---     case KBD_F2:
---       *p++ = KEY_F (2);
---       break;
---     case KBD_F3:
---       *p++ = KEY_F (3);
---       break;
---     case KBD_F4:
---       *p++ = KEY_F (4);
---       break;
---     case KBD_F5:
---       *p++ = KEY_F (5);
---       break;
---     case KBD_F6:
---       *p++ = KEY_F (6);
---       break;
---     case KBD_F7:
---       *p++ = KEY_F (7);
---       break;
---     case KBD_F8:
---       *p++ = KEY_F (8);
---       break;
---     case KBD_F9:
---       *p++ = KEY_F (9);
---       break;
---     case KBD_F10:
---       *p++ = KEY_F (10);
---       break;
---     case KBD_F11:
---       *p++ = KEY_F (11);
---       break;
---     case KBD_F12:
---       *p++ = KEY_F (12);
---       break;
---     default:
---       if ((key & 0xff) == key)
---         *p++ = key;
---       break;
---     }
+  return codevec
+end
 
---   return p - *codevec;
--- }
+local function get_char ()
+  local c
 
--- static int
--- get_char (void)
--- {
---   int c;
---   size_t size = term_buf_len ();
+  if #key_buf > 0 then
+    c = key_buf[#key_buf]
+    table.remove (key_buf, #key_buf)
+  else
+    c = curses.stdscr ():getch ()
+  end
 
---   if (size > 0)
---     {
---       c = (int) gl_list_get_at (key_buf, size - 1);
---       gl_list_remove_at (key_buf, size - 1);
---     }
---   else
---     c = getch ();
+  return c
+end
 
---   return c;
--- }
+function term_xgetkey (mode, timeout)
+  while true do
+    if bit.band (mode, GETKEY_DELAYED) ~= 0 then
+      curses.stdscr ():wtimeout (timeout * 100)
+    end
 
--- size_t
--- term_xgetkey (int mode, size_t timeout)
--- {
---   size_t key;
+    local c = get_char ()
+    if bit.band (mode, GETKEY_DELAYED) ~= 0 then
+      curses.stdscr ():wtimeout (-1)
+    end
 
---   for (;;)
---     {
---       int c;
+    if c == curses.KEY_RESIZE then
+      term_set_size (curses.cols, curses.lines)
+      -- FIXME: resize_windows ()
+    else
+      local key
+      if bit.band (mode, GETKEY_UNFILTERED) ~= 0 then
+        key = c
+      else
+        key = codetokey (c)
+        while key == KBD_META do
+          key = bit.bor (codetokey (get_char ()), KBD_META)
+        end
+      end
+      return key
+    end
+  end
+end
 
---       if (mode & GETKEY_DELAYED)
---         wtimeout (stdscr, (int) timeout * 100);
-
---       c = get_char ();
---       if (mode & GETKEY_DELAYED)
---         wtimeout (stdscr, -1);
-
--- #ifdef KEY_RESIZE
---       if (c == KEY_RESIZE)
---         {
---           term_set_size ((size_t) COLS, (size_t) LINES);
---           resize_windows ();
---           continue;
---         }
--- #endif
-
---       if (mode & GETKEY_UNFILTERED)
---         key = (size_t) c;
---       else
---         {
---           key = codetokey (c);
---           while (key == KBD_META)
---             key = codetokey (get_char ()) | KBD_META;
---         }
---       break;
---     }
-
---   return key;
--- }
-
--- void
--- term_ungetkey (size_t key)
--- {
---   int * codes = NULL;
---   size_t i, n = keytocodes (key, &codes);
-
---   for (i = n; i > 0; i--)
---     gl_list_add_last (key_buf, (void *) codes[i - 1]);
-
---   free (codes);
--- }
+function term_ungetkey (key)
+  key_buf = list.concat (key_buf, list.reverse (keytocodes (key)))
+end
