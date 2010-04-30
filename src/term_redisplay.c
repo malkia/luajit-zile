@@ -339,7 +339,9 @@ draw_status_line (size_t line, Window * wp)
     astr_cat_cstr (as, " Isearch");
 
   astr_cat_char (as, ')');
-  term_addnstr (astr_cstr (as), MIN (tw, astr_len (as)));
+  astr_truncate (as, MIN (tw, astr_len (as)));
+  CLUE_SET (L, as, string, astr_cstr (as));
+  (void) CLUE_DO (L, "term_addstr (as)");
   astr_delete (as);
 
   (void) CLUE_DO (L, "term_attrset (FONT_NORMAL)");
@@ -381,18 +383,4 @@ term_full_redisplay (void)
 {
   (void) CLUE_DO (L, "term_clear ()");
   term_redisplay ();
-}
-
-/*
- * Add a string to the terminal
- */
-void
-term_addnstr (const char *s, size_t len)
-{
-  size_t i;
-  for (i = 0; i < len; i++, s++)
-    {
-      CLUE_SET (L, c, integer, (int) *s);
-      (void) CLUE_DO (L, "term_addch (c)");
-    }
 }

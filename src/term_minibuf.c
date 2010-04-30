@@ -53,6 +53,7 @@ draw_minibuf_read (const char *prompt, const char *value,
 {
   int margin = 1, n = 0;
   size_t w, h;
+  astr as;
 
   term_minibuf_write (prompt);
 
@@ -66,10 +67,12 @@ draw_minibuf_read (const char *prompt, const char *value,
       n = pointo - pointo % (w - prompt_len - 2);
     }
 
-  term_addnstr (value + n,
-                MIN (w - prompt_len - margin,
-                     strlen (value) - n));
-  term_addnstr (match, strlen (match));
+  as = astr_new ();
+  astr_ncat_cstr (as, value + n, MIN (w - prompt_len - margin, strlen (value) - n));
+  CLUE_SET (L, as, string, astr_cstr (as));
+  (void) CLUE_DO (L, "term_addstr (as)");
+  CLUE_SET (L, match, string, match);
+  (void) CLUE_DO (L, "term_addstr (match)");
 
   if (strlen (value + n) >= w - prompt_len - margin)
     {

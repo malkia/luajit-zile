@@ -48,6 +48,13 @@ function term_finish ()
   term_close ()
 end
 
+-- Add a string to the terminal
+function term_addstr (s)
+  for i = 1, #s do
+    term_addch (string.byte (s, i))
+  end
+end
+
 function show_splash_screen (splash)
   local h = term_height ()
 
