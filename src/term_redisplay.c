@@ -300,6 +300,7 @@ draw_status_line (size_t line, Window * wp)
   size_t i, tw;
   char *buf, *eol_type;
   Point pt = window_pt (wp);
+  Buffer *bp = get_window_bp (wp);
   astr as, bs;
 
   (void) CLUE_DO (L, "tw = term_width ()");
@@ -322,20 +323,20 @@ draw_status_line (size_t line, Window * wp)
   CLUE_SET (L, y, integer, line);
   (void) CLUE_DO (L, "term_move (y, 0)");
   bs = astr_afmt (astr_new (), "(%d,%d)", pt.n + 1,
-                  get_goalc_bp (get_window_bp (wp), window_pt (wp)));
+                  get_goalc_bp (bp, pt));
   as = astr_afmt (astr_new (), "--%s%2s  %-15s   %s %-9s (Fundamental",
-                  eol_type, make_mode_line_flags (wp), get_buffer_name (get_window_bp (wp)),
+                  eol_type, make_mode_line_flags (wp), get_buffer_name (bp),
                   make_screen_pos (wp, &buf), astr_cstr (bs));
   free (buf);
   astr_delete (bs);
 
-  if (get_buffer_autofill (get_window_bp (wp)))
+  if (get_buffer_autofill (bp))
     astr_cat_cstr (as, " Fill");
-  if (get_buffer_overwrite (get_window_bp (wp)))
+  if (get_buffer_overwrite (bp))
     astr_cat_cstr (as, " Ovwrt");
   if (thisflag & FLAG_DEFINING_MACRO)
     astr_cat_cstr (as, " Def");
-  if (get_buffer_isearch (get_window_bp (wp)))
+  if (get_buffer_isearch (bp))
     astr_cat_cstr (as, " Isearch");
 
   astr_cat_char (as, ')');
