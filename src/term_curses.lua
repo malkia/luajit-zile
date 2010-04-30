@@ -237,12 +237,12 @@ end
 function term_xgetkey (mode, timeout)
   while true do
     if bit.band (mode, GETKEY_DELAYED) ~= 0 then
-      curses.stdscr ():wtimeout (timeout * 100)
+      curses.stdscr ():timeout (timeout * 100)
     end
 
     local c = get_char ()
     if bit.band (mode, GETKEY_DELAYED) ~= 0 then
-      curses.stdscr ():wtimeout (-1)
+      curses.stdscr ():timeout (-1)
     end
 
     if c == curses.KEY_RESIZE then
