@@ -47,3 +47,24 @@ function term_finish ()
   term_tidy ()
   term_close ()
 end
+
+function show_splash_screen (splash)
+  local h = term_height ()
+
+  for i = 0, h - 3 do
+    term_move (i, 0)
+    term_clrtoeol ()
+  end
+
+  term_move (0, 0)
+  local i, j = 1, 0
+  while i <= #splash and j < h - 2 do
+    if string.sub (splash, i, i) == '\n' then
+      j = j + 1
+      term_move (j, 0)
+    else
+      term_addch (string.byte (splash, i))
+    end
+    i = i + 1
+  end
+end

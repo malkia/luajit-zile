@@ -383,37 +383,6 @@ term_full_redisplay (void)
   term_redisplay ();
 }
 
-void
-show_splash_screen (const char *splash)
-{
-  size_t i, h;
-  const char *p;
-
-  (void) CLUE_DO (L, "h = term_height ()");
-  CLUE_GET (L, h, integer, h);
-
-  for (i = 0; i < h - 2; ++i)
-    {
-      CLUE_SET (L, y, integer, i);
-      (void) CLUE_DO (L, "term_move (y, 0)");
-      (void) CLUE_DO (L, "term_clrtoeol ()");
-    }
-
-  (void) CLUE_DO (L, "term_move (0, 0)");
-  for (i = 0, p = splash; *p != '\0' && i < h - 2; ++p)
-    if (*p == '\n')
-      {
-        ++i;
-        CLUE_SET (L, y, integer, i);
-        (void) CLUE_DO (L, "term_move (y, 0)");
-      }
-    else
-      {
-        CLUE_SET (L, c, integer, (int) *p);
-        (void) CLUE_DO (L, "term_addch (c)");
-      }
-}
-
 /*
  * Add a string to the terminal
  */

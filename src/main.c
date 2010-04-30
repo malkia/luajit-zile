@@ -80,7 +80,8 @@ about_screen (void)
   minibuf_write (about_minibuf_str);
   if (!get_variable_bool ("inhibit-splash-screen"))
     {
-      show_splash_screen (about_splash_str);
+      CLUE_SET (L, splash, string, about_splash_str);
+      (void) CLUE_DO (L, "show_splash_screen (splash)");
       (void) CLUE_DO (L, "term_refresh ()");
       waitkey (20 * 10);
     }
