@@ -48,7 +48,7 @@ xgetkey (int mode, size_t timeout)
 {
   CLUE_SET (L, mode, integer, mode);
   CLUE_SET (L, timeout, integer, timeout);
-  (void)CLUE_DO (L, "key = term_xgetkey (mode, timeout)");
+  (void) CLUE_DO (L, "key = term_xgetkey (mode, timeout)");
   CLUE_GET (L, key, integer, _last_key);
 
   if (thisflag & FLAG_DEFINING_MACRO)

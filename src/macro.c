@@ -205,8 +205,8 @@ process_keys (gl_list_t keys)
 {
   size_t i, len = gl_list_size (keys), cur;
 
-  (void)CLUE_DO (L, "cur = term_buf_len ()");
-  (void)CLUE_DO (L, "io.stderr:write ('term_buf_len ' .. tostring(cur) .. '\\n')");
+  (void) CLUE_DO (L, "cur = term_buf_len ()");
+  (void) CLUE_DO (L, "io.stderr:write ('term_buf_len ' .. tostring(cur) .. '\\n')");
   CLUE_GET (L, cur, integer, cur);
 
   for (i = 0; i < len; i++)
@@ -215,7 +215,7 @@ process_keys (gl_list_t keys)
   while (true)
     {
       size_t newcur;
-      (void)CLUE_DO (L, "newcur = term_buf_len ()");
+      (void) CLUE_DO (L, "newcur = term_buf_len ()");
       CLUE_GET (L, newcur, integer, newcur);
       if (newcur <= cur)
         break;
