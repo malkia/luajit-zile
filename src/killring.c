@@ -58,7 +58,7 @@ kill_ring_push_nstring (char *s, size_t size)
 static bool
 copy_or_kill_region (bool kill, Region * rp)
 {
-  char *p = copy_text_block (get_region_start (rp).n, get_region_start (rp).o, get_region_size (rp));
+  char *p = copy_text_block (get_region_start (rp)->n, get_region_start (rp)->o, get_region_size (rp));
 
   if (strcmp (last_command (), "kill-region") != 0)
     free_kill_ring ();
@@ -87,10 +87,10 @@ kill_to_bol (void)
   if (!bolp ())
     {
       Region * rp = region_new ();
-      Point pt = get_buffer_pt (cur_bp);
+      Point * pt = get_buffer_pt (cur_bp);
 
-      set_region_size (rp, pt.o);
-      pt.o = 0;
+      set_region_size (rp, pt->o);
+      pt->o = 0;
       set_region_start (rp, pt);
 
       ok = copy_or_kill_region (true, rp);
@@ -108,11 +108,11 @@ kill_line (bool whole_line)
 
   if (!whole_line)
     {
-      Point cur_pt = get_buffer_pt (cur_bp);
-      astr cur_line = get_line_text (cur_pt.p);
+      Point * cur_pt = get_buffer_pt (cur_bp);
+      astr cur_line = get_line_text (cur_pt->p);
       size_t i;
 
-      for (i = cur_pt.o; i < astr_len (cur_line); i++)
+      for (i = cur_pt->o; i < astr_len (cur_line); i++)
         {
           char c = astr_get (cur_line, i);
           if (!(c == ' ' || c == '\t'))
@@ -136,7 +136,7 @@ kill_line (bool whole_line)
       Region * rp = region_new ();
 
       set_region_start (rp, get_buffer_pt (cur_bp));
-      set_region_size (rp, astr_len (get_line_text (get_buffer_pt (cur_bp).p)) - get_buffer_pt (cur_bp).o);
+      set_region_size (rp, astr_len (get_line_text (get_buffer_pt (cur_bp)->p)) - get_buffer_pt (cur_bp)->o);
 
       ok = copy_or_kill_region (true, rp);
       free (rp);

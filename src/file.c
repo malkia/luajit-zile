@@ -169,7 +169,7 @@ read_from_disk (const char *filename)
   size_t eol_len = 0, total_eols = 0;
   char buf[BUFSIZ];
   FILE *fp = fopen (filename, "r");
-  Point pt;
+  Point * pt;
 
   if (fp == NULL)
     {
@@ -185,7 +185,7 @@ read_from_disk (const char *filename)
     set_buffer_readonly (cur_bp, true);
 
   pt = get_buffer_pt (cur_bp);
-  lp = pt.p;
+  lp = pt->p;
 
   /* Read first chunk and determine EOL type. */
   size = fread (buf, 1, BUFSIZ, fp);
@@ -245,8 +245,7 @@ read_from_disk (const char *filename)
   set_line_next (lp, get_buffer_lines (cur_bp));
   set_line_prev (get_buffer_lines (cur_bp), lp);
   pt = get_buffer_pt (cur_bp);
-  pt.p = get_line_next (get_buffer_lines (cur_bp));
-  set_buffer_pt (cur_bp, pt);
+  pt->p = get_line_next (get_buffer_lines (cur_bp));
 
   fclose (fp);
 }
@@ -414,9 +413,9 @@ insert_lines (size_t n, size_t end, size_t last, Line *from_lp)
 static void
 insert_buffer (Buffer * bp)
 {
-  Line *old_next = get_line_next (get_buffer_pt (bp).p);
-  astr old_cur_line = astr_cpy (astr_new (), get_line_text (get_buffer_pt (bp).p));
-  size_t old_cur_n = get_buffer_pt (bp).n, old_lines = get_buffer_last_line (bp);
+  Line *old_next = get_line_next (get_buffer_pt (bp)->p);
+  astr old_cur_line = astr_cpy (astr_new (), get_line_text (get_buffer_pt (bp)->p));
+  size_t old_cur_n = get_buffer_pt (bp)->n, old_lines = get_buffer_last_line (bp);
   size_t size = calculate_buffer_size (bp);
 
   undo_save (UNDO_REPLACE_BLOCK, get_buffer_pt (cur_bp), 0, size);

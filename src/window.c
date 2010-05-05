@@ -101,7 +101,7 @@ set_current_window (int wp)
      marker.  */
   if (get_window_saved_pt (cur_wp))
     {
-      set_buffer_pt (cur_bp, get_marker_pt (get_window_saved_pt (cur_wp)));
+      set_buffer_pt (cur_bp, point_copy (get_marker_pt (get_window_saved_pt (cur_wp))));
       free_marker (get_window_saved_pt (cur_wp));
       set_window_saved_pt (cur_wp, NULL);
     }
@@ -335,7 +335,7 @@ find_window (const char *name)
   return LUA_NOREF;
 }
 
-Point
+Point *
 window_pt (int wp)
 {
   /* The current window uses the current buffer point; all other
@@ -365,13 +365,13 @@ void
 completion_scroll_up (void)
 {
   int wp, old_wp = cur_wp;
-  Point pt;
+  Point * pt;
 
   wp = find_window ("*Completions*");
   assert (wp != LUA_NOREF);
   set_current_window (wp);
   pt = get_buffer_pt (cur_bp);
-  if (pt.n >= get_buffer_last_line (cur_bp) - get_window_eheight (cur_wp) || !FUNCALL (scroll_up))
+  if (pt->n >= get_buffer_last_line (cur_bp) - get_window_eheight (cur_wp) || !FUNCALL (scroll_up))
     gotobob ();
   set_current_window (old_wp);
 
@@ -385,13 +385,13 @@ void
 completion_scroll_down (void)
 {
   int wp, old_wp = cur_wp;
-  Point pt;
+  Point * pt;
 
   wp = find_window ("*Completions*");
   assert (wp != LUA_NOREF);
   set_current_window (wp);
   pt = get_buffer_pt (cur_bp);
-  if (pt.n == 0 || !FUNCALL (scroll_down))
+  if (pt->n == 0 || !FUNCALL (scroll_down))
     {
       gotoeob ();
       resync_redisplay ();
@@ -404,12 +404,12 @@ completion_scroll_down (void)
 bool
 window_top_visible (int wp)
 {
-  return window_pt (wp).n == get_window_topdelta (wp);
+  return window_pt (wp)->n == get_window_topdelta (wp);
 }
 
 bool
 window_bottom_visible (int wp)
 {
-  return window_pt (wp).n + (get_window_eheight (wp) - get_window_topdelta (wp)) >
+  return window_pt (wp)->n + (get_window_eheight (wp) - get_window_topdelta (wp)) >
     get_buffer_last_line (get_window_bp (wp));
 }

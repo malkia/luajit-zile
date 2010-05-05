@@ -154,10 +154,9 @@ calculate_highlight_region (int wp, Region * rp, int *highlight)
   set_region_end (rp, get_marker_pt (get_buffer_mark (get_window_bp (wp))));
   if (cmp_point (get_region_end (rp), get_region_start (rp)) < 0)
     {
-      Point pt1 = get_region_start (rp);
-      Point pt2 = get_region_end (rp);
-      set_region_start (rp, pt2);
-      set_region_end (rp, pt1);
+      Point * pt = point_copy (get_region_start (rp));
+      set_region_start (rp, get_region_end (rp));
+      set_region_end (rp, pt);
     }
 }
 
@@ -168,12 +167,12 @@ draw_window (size_t topline, int wp)
   Line * lp;
   Region * rp = region_new ();
   int highlight;
-  Point pt = window_pt (wp);
+  Point * pt = window_pt (wp);
 
   calculate_highlight_region (wp, rp, &highlight);
 
   /* Find the first line to display on the first screen line. */
-  for (lp = pt.p, lineno = pt.n, i = get_window_topdelta (wp);
+  for (lp = pt->p, lineno = pt->n, i = get_window_topdelta (wp);
        i > 0 && get_line_prev (lp) != get_buffer_lines (get_window_bp (wp));
        lp = get_line_prev (lp), --i, --lineno)
     ;
@@ -238,24 +237,24 @@ calculate_start_column (int wp)
   int rpfact, lpfact;
   char *buf;
   size_t rp, lp, p;
-  Point pt = window_pt (wp);
+  Point * pt = window_pt (wp);
 
-  rp = pt.o;
-  rpfact = pt.o / (get_window_ewidth (wp) / 3);
+  rp = pt->o;
+  rpfact = pt->o / (get_window_ewidth (wp) / 3);
 
   for (lp = rp; lp != SIZE_MAX; --lp)
     {
       for (col = 0, p = lp; p < rp; ++p)
-        if (astr_get (get_line_text (pt.p), p) == '\t')
+        if (astr_get (get_line_text (pt->p), p) == '\t')
           {
             col |= t - 1;
             ++col;
           }
-        else if (isprint ((int) astr_get (get_line_text (pt.p), p)))
+        else if (isprint ((int) astr_get (get_line_text (pt->p), p)))
           ++col;
         else
           {
-            col += make_char_printable (&buf, astr_get (get_line_text (pt.p), p));
+            col += make_char_printable (&buf, astr_get (get_line_text (pt->p), p));
             free (buf);
           }
 
@@ -289,7 +288,7 @@ make_screen_pos (int wp, char **buf)
     xasprintf (buf, "Bot");
   else
     xasprintf (buf, "%2d%%",
-               (int) ((float) window_pt (wp).n / get_buffer_last_line (get_window_bp (wp)) * 100));
+               (int) ((float) window_pt (wp)->n / get_buffer_last_line (get_window_bp (wp)) * 100));
 
   return *buf;
 }
@@ -299,7 +298,7 @@ draw_status_line (size_t line, int wp)
 {
   size_t i, tw;
   char *buf, *eol_type;
-  Point pt = window_pt (wp);
+  Point * pt = window_pt (wp);
   Buffer *bp = get_window_bp (wp);
   astr as, bs;
 
@@ -322,7 +321,7 @@ draw_status_line (size_t line, int wp)
 
   CLUE_SET (L, y, integer, line);
   (void) CLUE_DO (L, "term_move (y, 0)");
-  bs = astr_afmt (astr_new (), "(%d,%d)", pt.n + 1,
+  bs = astr_afmt (astr_new (), "(%d,%d)", pt->n + 1,
                   get_goalc_bp (bp, pt));
   as = astr_afmt (astr_new (), "--%s%2s  %-15s   %s %-9s (Fundamental",
                   eol_type, make_mode_line_flags (wp), get_buffer_name (bp),

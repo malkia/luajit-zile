@@ -186,10 +186,10 @@ re_find_substr (const char *s1, size_t s1size,
 static void
 goto_linep (Line * lp)
 {
-  Point pt;
+  Point * pt;
   set_buffer_pt (cur_bp, point_min ());
   resync_redisplay ();
-  for (pt = get_buffer_pt (cur_bp); pt.p != lp; pt = get_buffer_pt (cur_bp))
+  for (pt = get_buffer_pt (cur_bp); pt->p != lp; pt = get_buffer_pt (cur_bp))
     next_line ();
 }
 
@@ -227,11 +227,10 @@ search_forward (Line * startp, size_t starto, const char *s, int regexp)
 
       if (sp2 != NULL)
         {
-          Point pt;
+          Point * pt;
           goto_linep (lp);
           pt = get_buffer_pt (cur_bp);
-          pt.o = sp2 - astr_cstr (get_line_text (lp));
-          set_buffer_pt (cur_bp, pt);
+          pt->o = sp2 - astr_cstr (get_line_text (lp));
           return true;
         }
     }
@@ -268,11 +267,10 @@ search_backward (Line * startp, size_t starto, const char *s, int regexp)
 
       if (sp2 != NULL)
         {
-          Point pt;
+          Point * pt;
           goto_linep (lp);
           pt = get_buffer_pt (cur_bp);
-          pt.o = sp2 - astr_cstr (get_line_text (lp));
-          set_buffer_pt (cur_bp, pt);
+          pt->o = sp2 - astr_cstr (get_line_text (lp));
           return true;
         }
     }
@@ -302,7 +300,7 @@ search (Searcher searcher, bool regexp, const char *pattern, const char *search_
       free (last_search);
       last_search = xstrdup (pattern);
 
-      if (!searcher (get_buffer_pt (cur_bp).p, get_buffer_pt (cur_bp).o, pattern, regexp))
+      if (!searcher (get_buffer_pt (cur_bp)->p, get_buffer_pt (cur_bp)->o, pattern, regexp))
         {
           minibuf_error ("Search failed: \"%s\"", pattern);
           ok = leNIL;
@@ -373,10 +371,11 @@ isearch (int dir, int regexp)
   int last = true;
   astr buf = astr_new ();
   astr pattern = astr_new ();
-  Point start, cur;
+  Point * start, * cur;
   Marker *old_mark = copy_marker (get_buffer_mark (get_window_bp (cur_wp)));
 
-  start = cur = get_buffer_pt (cur_bp);
+  start = point_copy (get_buffer_pt (cur_bp));
+  cur = point_copy (start);
 
   /* I-search mode. */
   set_buffer_isearch (get_window_bp (cur_wp), true);
@@ -429,7 +428,7 @@ isearch (int dir, int regexp)
           if (astr_len (pattern) > 0)
             {
               astr_truncate (pattern, astr_len (pattern) - 1);
-              cur = start;
+              cur = point_copy (start);
               set_buffer_pt (cur_bp, start);
               thisflag |= FLAG_NEED_RESYNC;
             }
@@ -506,10 +505,10 @@ isearch (int dir, int regexp)
       if (astr_len (pattern) > 0)
         {
           if (dir == ISEARCH_FORWARD)
-            last = search_forward (cur.p, cur.o, astr_cstr (pattern), regexp);
+            last = search_forward (cur->p, cur->o, astr_cstr (pattern), regexp);
           else
             last =
-              search_backward (cur.p, cur.o, astr_cstr (pattern), regexp);
+              search_backward (cur->p, cur->o, astr_cstr (pattern), regexp);
         }
       else
         last = true;
@@ -611,9 +610,9 @@ what to do with it.
       return FUNCALL (keyboard_quit);
     }
 
-  while (search_forward (get_buffer_pt (cur_bp).p, get_buffer_pt (cur_bp).o, find, false))
+  while (search_forward (get_buffer_pt (cur_bp)->p, get_buffer_pt (cur_bp)->o, find, false))
     {
-      Point pt;
+      Point * pt;
       int c = ' ';
 
       if (!noask)
@@ -651,8 +650,8 @@ what to do with it.
       pt = get_buffer_pt (cur_bp);
       ++count;
       undo_save (UNDO_REPLACE_BLOCK,
-                 make_point (pt.n, pt.o - find_len), find_len, strlen (repl));
-      line_replace_text (pt.p, pt.o - find_len, find_len, repl, find_no_upper);
+                 make_point (pt->n, pt->o - find_len), find_len, strlen (repl));
+      line_replace_text (pt->p, pt->o - find_len, find_len, repl, find_no_upper);
 
       if (c == '.')		/* Replace and quit. */
         break;

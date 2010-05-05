@@ -21,4 +21,4 @@
 
 FIELD(Marker *, next)		/* Used to chain all markers in the buffer. */
 FIELD(Buffer *, bp)		/* Buffer that points into. */
-FIELD(Point, pt)		/* Point position. */
+FIELD(Point *, pt)		/* Point position. */

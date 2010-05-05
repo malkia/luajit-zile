@@ -70,7 +70,7 @@ Copy region into register @i{register}.
         ok = leNIL;
       else
         {
-          char *p = copy_text_block (get_region_start (rp).n, get_region_start (rp).o, get_region_size (rp));
+          char *p = copy_text_block (get_region_start (rp)->n, get_region_start (rp)->o, get_region_size (rp));
           register_free ((size_t) reg);
           regs[reg] = astr_new_cstr (p);
           free (p);

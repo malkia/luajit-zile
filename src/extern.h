@@ -25,7 +25,7 @@
 #include "xalloc_extra.h"
 
 /* basic.c ---------------------------------------------------------------- */
-size_t get_goalc_bp (Buffer * bp, Point pt);
+size_t get_goalc_bp (Buffer * bp, Point * pt);
 size_t get_goalc (void);
 bool previous_line (void);
 bool next_line (void);
@@ -205,7 +205,7 @@ extern int thisflag, lastflag, last_uniarg;
 #undef FIELD
 Marker * marker_new (void);
 void free_marker (Marker * marker);
-void move_marker (Marker * marker, Buffer * bp, Point pt);
+void move_marker (Marker * marker, Buffer * bp, Point * pt);
 Marker *copy_marker (Marker * marker);
 Marker *point_marker (void);
 Marker *point_min_marker (void);
@@ -232,15 +232,16 @@ char *minibuf_read_filename (const char *fmt, const char *value,
 void minibuf_clear (void);
 
 /* point.c ---------------------------------------------------------------- */
-Point make_point (size_t lineno, size_t offset);
-int cmp_point (Point pt1, Point pt2);
-int point_dist (Point pt1, Point pt2);
-int count_lines (Point pt1, Point pt2);
-Point point_min (void);
-Point point_max (void);
-Point line_beginning_position (int count);
-Point line_end_position (int count);
-void goto_point (Point pt);
+Point *make_point (size_t lineno, size_t offset);
+Point *point_copy (Point *pt);
+int cmp_point (Point * pt1, Point * pt2);
+int point_dist (Point * pt1, Point * pt2);
+int count_lines (Point * pt1, Point * pt2);
+Point *point_min (void);
+Point *point_max (void);
+Point *line_beginning_position (int count);
+Point *line_end_position (int count);
+void goto_point (Point * pt);
 
 /* redisplay.c ------------------------------------------------------------ */
 void resync_redisplay (void);
@@ -266,7 +267,7 @@ void show_splash_screen (const char *splash);
 extern int undo_nosave;
 void undo_start_sequence (void);
 void undo_end_sequence (void);
-void undo_save (int type, Point pt, size_t arg1, size_t arg2);
+void undo_save (int type, Point * pt, size_t arg1, size_t arg2);
 void free_undo (Undo *up);
 void undo_set_unchanged (Undo *up);
 
@@ -291,7 +292,7 @@ void free_windows (void);
 int popup_window (void);
 void set_current_window (int wp);
 void delete_window (int del_wp);
-Point window_pt (int wp);
+Point *window_pt (int wp);
 void completion_scroll_up (void);
 void completion_scroll_down (void);
 bool window_top_visible (int wp);

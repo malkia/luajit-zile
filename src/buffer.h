@@ -32,7 +32,7 @@ FIELD(char *, eol)        /* EOL string (up to 2 chars). */
 FIELD(Line *, lines)      /* The lines of text. */
 FIELD(size_t, last_line)  /* The number of the last line in the buffer. */
 FIELD(size_t, goalc)      /* Goal column for previous/next-line commands. */
-FIELD(Point, pt)          /* The point. */
+FIELD(Point *, pt)        /* The point. */
 FIELD(Marker *, mark)     /* The mark. */
 FIELD(Marker *, markers)  /* Markers list (updated whenever text is changed). */
 FIELD(Undo *, last_undop) /* Most recent undo delta. */

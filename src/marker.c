@@ -85,7 +85,7 @@ free_marker (Marker * marker)
 }
 
 void
-move_marker (Marker * marker, Buffer * bp, Point pt)
+move_marker (Marker * marker, Buffer * bp, Point * pt)
 {
   if (bp != marker->bp)
     {
@@ -120,7 +120,7 @@ Marker *
 point_marker (void)
 {
   Marker *marker = marker_new ();
-  move_marker (marker, cur_bp, get_buffer_pt (cur_bp));
+  move_marker (marker, cur_bp, point_copy (get_buffer_pt (cur_bp)));
   return marker;
 }
 
