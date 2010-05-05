@@ -1,6 +1,6 @@
 /* Useful editing functions
 
-   Copyright (c) 2004, 2008, 2009 Free Software Foundation, Inc.
+   Copyright (c) 2004, 2008, 2009, 2010 Free Software Foundation, Inc.
 
    This file is part of GNU Zile.
 
@@ -167,6 +167,6 @@ ding (void)
   if (thisflag & FLAG_DEFINING_MACRO)
     cancel_kbd_macro ();
 
-  if (get_variable_bool ("ring-bell") && cur_wp != NULL)
+  if (get_variable_bool ("ring-bell") && cur_wp != LUA_NOREF)
     (void) CLUE_DO (L, "term_beep ()");
 }

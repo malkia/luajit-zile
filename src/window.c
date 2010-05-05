@@ -1,6 +1,6 @@
 /* Window handling functions
 
-   Copyright (c) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2008, 2009 Free Software Foundation, Inc.
+   Copyright (c) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2008, 2009, 2010 Free Software Foundation, Inc.
 
    This file is part of GNU Zile.
 
@@ -33,36 +33,35 @@
 /*
  * Structure
  */
-struct Window
-{
-#define FIELD(ty, name) ty name;
-#include "window.h"
-#undef FIELD
-};
-
-#define FIELD(ty, field)                        \
-  GETTER (Window, window, ty, field)            \
-  SETTER (Window, window, ty, field)
+#define FIELD(cty, lty, field)              \
+  LUA_GETTER (window, cty, lty, field)      \
+  LUA_SETTER (window, cty, lty, field)      \
 
 #include "window.h"
 #undef FIELD
 
-static Window *
+static int
 window_new (void)
 {
-  return (Window *) XZALLOC (Window);
+  int wp;
+
+  lua_newtable (L);
+  wp = luaL_ref (L, LUA_REGISTRYINDEX);
+  set_window_next (wp, LUA_NOREF);
+
+  return wp;
 }
 
 /*
  * Free a window's allocated memory.
  */
 static void
-free_window (Window * wp)
+free_window (int wp)
 {
   if (get_window_saved_pt (wp))
     free_marker (get_window_saved_pt (wp));
 
-  free (wp);
+  luaL_unref (L, LUA_REGISTRYINDEX, wp);
 }
 
 /*
@@ -71,9 +70,9 @@ free_window (Window * wp)
 void
 free_windows (void)
 {
-  Window *wp, *next;
+  int wp, next;
 
-  for (wp = head_wp; wp != NULL; wp = next)
+  for (wp = head_wp; wp != LUA_NOREF; wp = next)
     {
       next = get_window_next (wp);
       free_window (wp);
@@ -84,7 +83,7 @@ free_windows (void)
  * Set the current window and his buffer as the current buffer.
  */
 void
-set_current_window (Window * wp)
+set_current_window (int wp)
 {
   /* Save buffer's point in a new marker.  */
   if (get_window_saved_pt (cur_wp))
@@ -114,7 +113,7 @@ Split current window into two windows, one above the other.
 Both windows display the same buffer now current.
 +*/
 {
-  Window *newwp;
+  int newwp;
 
   /* Windows smaller than 4 lines cannot be split. */
   if (get_window_fheight (cur_wp) < 4)
@@ -141,21 +140,21 @@ Both windows display the same buffer now current.
 END_DEFUN
 
 void
-delete_window (Window * del_wp)
+delete_window (int del_wp)
 {
-  Window *wp;
+  int wp;
 
   if (cur_wp == head_wp)
     wp = head_wp = get_window_next (head_wp);
   else
-    for (wp = head_wp; wp != NULL; wp = get_window_next (wp))
+    for (wp = head_wp; wp != LUA_NOREF; wp = get_window_next (wp))
       if (get_window_next (wp) == cur_wp)
         {
           set_window_next (wp, get_window_next (get_window_next (wp)));
           break;
         }
 
-  if (wp != NULL)
+  if (wp != LUA_NOREF)
     {
       set_window_fheight (wp, get_window_fheight (wp) + get_window_fheight (del_wp));
       set_window_eheight (wp, get_window_eheight (wp) + get_window_eheight (del_wp) + 1);
@@ -170,7 +169,7 @@ DEFUN ("delete-window", delete_window)
 Remove the current window from the screen.
 +*/
 {
-  if (cur_wp == head_wp && get_window_next (cur_wp) == NULL)
+  if (cur_wp == head_wp && get_window_next (cur_wp) == LUA_NOREF)
     {
       minibuf_error ("Attempt to delete sole ordinary window");
       return leNIL;
@@ -185,14 +184,14 @@ DEFUN ("enlarge-window", enlarge_window)
 Make current window one line bigger.
 +*/
 {
-  Window *wp;
+  int wp;
 
-  if (cur_wp == head_wp && get_window_next (cur_wp) == NULL)
+  if (cur_wp == head_wp && get_window_next (cur_wp) == LUA_NOREF)
     return leNIL;
 
   wp = get_window_next (cur_wp);
-  if (wp == NULL || get_window_fheight (wp) < 3)
-    for (wp = head_wp; wp != NULL; wp = get_window_next (wp))
+  if (wp == LUA_NOREF || get_window_fheight (wp) < 3)
+    for (wp = head_wp; wp != LUA_NOREF; wp = get_window_next (wp))
       if (get_window_next (wp) == cur_wp)
         {
           if (get_window_fheight (wp) < 3)
@@ -217,15 +216,15 @@ DEFUN ("shrink-window", shrink_window)
 Make current window one line smaller.
 +*/
 {
-  Window *wp;
+  int wp;
 
-  if ((cur_wp == head_wp && get_window_next (cur_wp) == NULL) || get_window_fheight (cur_wp) < 3)
+  if ((cur_wp == head_wp && get_window_next (cur_wp) == LUA_NOREF) || get_window_fheight (cur_wp) < 3)
     return leNIL;
 
   wp = get_window_next (cur_wp);
-  if (wp == NULL)
+  if (wp == LUA_NOREF)
     {
-      for (wp = head_wp; wp != NULL; wp = get_window_next (wp))
+      for (wp = head_wp; wp != LUA_NOREF; wp = get_window_next (wp))
         if (get_window_next (wp) == cur_wp)
           break;
     }
@@ -239,10 +238,10 @@ Make current window one line smaller.
 }
 END_DEFUN
 
-Window *
+int
 popup_window (void)
 {
-  if (get_window_next (head_wp) == NULL)
+  if (get_window_next (head_wp) == LUA_NOREF)
     {
       /* There is only one window on the screen, so split it. */
       FUNCALL (split_window);
@@ -250,7 +249,7 @@ popup_window (void)
     }
 
   /* Use the window after the current one. */
-  if (get_window_next (cur_wp) != NULL)
+  if (get_window_next (cur_wp) != LUA_NOREF)
     return get_window_next (cur_wp);
 
   /* Use the first window. */
@@ -262,14 +261,14 @@ DEFUN ("delete-other-windows", delete_other_windows)
 Make the selected window fill the screen.
 +*/
 {
-  Window *wp, *nextwp;
+  int wp, nextwp;
   size_t w, h;
 
   (void) CLUE_DO (L, "w, h = term_width (), term_height ()");
   CLUE_GET (L, w, integer, w);
   CLUE_GET (L, h, integer, h);
 
-  for (wp = head_wp; wp != NULL; wp = nextwp)
+  for (wp = head_wp; wp != LUA_NOREF; wp = nextwp)
     {
       nextwp = get_window_next (wp);
       if (wp != cur_wp)
@@ -282,7 +281,7 @@ Make the selected window fill the screen.
   set_window_fheight (cur_wp, h - 1);
   /* Save space for status line. */
   set_window_eheight (cur_wp, get_window_fheight (cur_wp) - 1);
-  set_window_next (cur_wp, NULL);
+  set_window_next (cur_wp, LUA_NOREF);
   head_wp = cur_wp;
 }
 END_DEFUN
@@ -294,7 +293,7 @@ All windows are arranged in a cyclic order.
 This command selects the window one step away in that order.
 +*/
 {
-  set_current_window ((get_window_next (cur_wp) != NULL) ? get_window_next (cur_wp) : head_wp);
+  set_current_window ((get_window_next (cur_wp) != LUA_NOREF) ? get_window_next (cur_wp) : head_wp);
 }
 END_DEFUN
 
@@ -305,7 +304,7 @@ END_DEFUN
 void
 create_scratch_window (void)
 {
-  Window *wp;
+  int wp;
   Buffer *bp = create_scratch_buffer ();
   size_t w, h;
 
@@ -324,25 +323,25 @@ create_scratch_window (void)
   set_window_bp (wp, cur_bp = bp);
 }
 
-Window *
+int
 find_window (const char *name)
 {
-  Window *wp;
+  int wp;
 
-  for (wp = head_wp; wp != NULL; wp = get_window_next (wp))
+  for (wp = head_wp; wp != LUA_NOREF; wp = get_window_next (wp))
     if (!strcmp (get_buffer_name (get_window_bp (wp)), name))
       return wp;
 
-  return NULL;
+  return LUA_NOREF;
 }
 
 Point
-window_pt (Window * wp)
+window_pt (int wp)
 {
   /* The current window uses the current buffer point; all other
      windows have a saved point, except that if a window has just been
      killed, it needs to use its new buffer's current point. */
-  assert (wp != NULL);
+  assert (wp != LUA_NOREF);
   if (wp == cur_wp)
     {
       assert (get_window_bp (wp) == cur_bp);
@@ -365,11 +364,11 @@ window_pt (Window * wp)
 void
 completion_scroll_up (void)
 {
-  Window *wp, *old_wp = cur_wp;
+  int wp, old_wp = cur_wp;
   Point pt;
 
   wp = find_window ("*Completions*");
-  assert (wp != NULL);
+  assert (wp != LUA_NOREF);
   set_current_window (wp);
   pt = get_buffer_pt (cur_bp);
   if (pt.n >= get_buffer_last_line (cur_bp) - get_window_eheight (cur_wp) || !FUNCALL (scroll_up))
@@ -385,11 +384,11 @@ completion_scroll_up (void)
 void
 completion_scroll_down (void)
 {
-  Window *wp, *old_wp = cur_wp;
+  int wp, old_wp = cur_wp;
   Point pt;
 
   wp = find_window ("*Completions*");
-  assert (wp != NULL);
+  assert (wp != LUA_NOREF);
   set_current_window (wp);
   pt = get_buffer_pt (cur_bp);
   if (pt.n == 0 || !FUNCALL (scroll_down))
@@ -403,13 +402,13 @@ completion_scroll_down (void)
 }
 
 bool
-window_top_visible (Window * wp)
+window_top_visible (int wp)
 {
   return window_pt (wp).n == get_window_topdelta (wp);
 }
 
 bool
-window_bottom_visible (Window * wp)
+window_bottom_visible (int wp)
 {
   return window_pt (wp).n + (get_window_eheight (wp) - get_window_topdelta (wp)) >
     get_buffer_last_line (get_window_bp (wp));

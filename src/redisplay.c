@@ -1,6 +1,6 @@
 /* Terminal independent redisplay routines
 
-   Copyright (c) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2008, 2009 Free Software Foundation, Inc.
+   Copyright (c) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2008, 2009, 2010 Free Software Foundation, Inc.
 
    This file is part of GNU Zile.
 
@@ -46,14 +46,14 @@ resync_redisplay (void)
 void
 resize_windows (void)
 {
-  Window *wp;
+  int wp;
   int hdelta;
   size_t h;
   (void) CLUE_DO (L, "w = term_height ()");
   CLUE_GET (L, h, integer, h);
 
   /* Resize windows horizontally. */
-  for (wp = head_wp; wp != NULL; wp = get_window_next (wp))
+  for (wp = head_wp; wp != LUA_NOREF; wp = get_window_next (wp))
     {
       size_t w;
       (void) CLUE_DO (L, "w = term_width ()");
@@ -65,14 +65,16 @@ resize_windows (void)
   /* Work out difference in window height; windows may be taller than
      terminal if the terminal was very short. */
   for (hdelta = h - 1, wp = head_wp;
-       wp != NULL; hdelta -= get_window_fheight (wp), wp = get_window_next (wp));
+       wp != LUA_NOREF;
+       hdelta -= get_window_fheight (wp), wp = get_window_next (wp))
+    ;
 
   /* Resize windows vertically. */
   if (hdelta > 0)
     { /* Increase windows height. */
       for (wp = head_wp; hdelta > 0; wp = get_window_next (wp))
         {
-          if (wp == NULL)
+          if (wp == LUA_NOREF)
             wp = head_wp;
           set_window_fheight (wp, get_window_fheight (wp) + 1);
           set_window_eheight (wp, get_window_eheight (wp) + 1);
@@ -85,7 +87,7 @@ resize_windows (void)
       while (decreased)
         {
           decreased = false;
-          for (wp = head_wp; wp != NULL && hdelta < 0; wp = get_window_next (wp))
+          for (wp = head_wp; wp != LUA_NOREF && hdelta < 0; wp = get_window_next (wp))
             {
               if (get_window_fheight (wp) > 2)
                 {
@@ -94,9 +96,9 @@ resize_windows (void)
                   ++hdelta;
                   decreased = true;
                 }
-              else if (cur_wp != head_wp || get_window_next (cur_wp) != NULL)
+              else if (cur_wp != head_wp || get_window_next (cur_wp) != LUA_NOREF)
                 {
-                  Window *new_wp = get_window_next (wp);
+                  int new_wp = get_window_next (wp);
                   delete_window (wp);
                   wp = new_wp;
                   decreased = true;
@@ -109,7 +111,7 @@ resize_windows (void)
 }
 
 void
-recenter (Window * wp)
+recenter (int wp)
 {
   Point pt = window_pt (wp);
 

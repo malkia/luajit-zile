@@ -91,7 +91,7 @@ outch (int c, size_t font, size_t * x)
 }
 
 static void
-draw_end_of_line (size_t line, Window * wp, size_t lineno, Region * rp,
+draw_end_of_line (size_t line, int wp, size_t lineno, Region * rp,
                   int highlight, size_t x, size_t i)
 {
   size_t tw;
@@ -118,7 +118,7 @@ draw_end_of_line (size_t line, Window * wp, size_t lineno, Region * rp,
 }
 
 static void
-draw_line (size_t line, size_t startcol, Window * wp, Line * lp,
+draw_line (size_t line, size_t startcol, int wp, Line * lp,
            size_t lineno, Region * rp, int highlight)
 {
   size_t x, i;
@@ -137,7 +137,7 @@ draw_line (size_t line, size_t startcol, Window * wp, Line * lp,
 }
 
 static void
-calculate_highlight_region (Window * wp, Region * rp, int *highlight)
+calculate_highlight_region (int wp, Region * rp, int *highlight)
 {
   if ((wp != cur_wp
        && !get_variable_bool ("highlight-nonselected-windows"))
@@ -162,7 +162,7 @@ calculate_highlight_region (Window * wp, Region * rp, int *highlight)
 }
 
 static void
-draw_window (size_t topline, Window * wp)
+draw_window (size_t topline, int wp)
 {
   size_t i, startcol, lineno;
   Line * lp;
@@ -210,7 +210,7 @@ draw_window (size_t topline, Window * wp)
 }
 
 static char *
-make_mode_line_flags (Window * wp)
+make_mode_line_flags (int wp)
 {
   static char buf[3];
 
@@ -232,7 +232,7 @@ make_mode_line_flags (Window * wp)
  * Called only for the line where is the point.
  */
 static void
-calculate_start_column (Window * wp)
+calculate_start_column (int wp)
 {
   size_t col = 0, lastcol = 0, t = tab_width (get_window_bp (wp));
   int rpfact, lpfact;
@@ -276,7 +276,7 @@ calculate_start_column (Window * wp)
 }
 
 static char *
-make_screen_pos (Window * wp, char **buf)
+make_screen_pos (int wp, char **buf)
 {
   bool tv = window_top_visible (wp);
   bool bv = window_bottom_visible (wp);
@@ -295,7 +295,7 @@ make_screen_pos (Window * wp, char **buf)
 }
 
 static void
-draw_status_line (size_t line, Window * wp)
+draw_status_line (size_t line, int wp)
 {
   size_t i, tw;
   char *buf, *eol_type;
@@ -352,13 +352,13 @@ void
 term_redisplay (void)
 {
   size_t topline;
-  Window *wp;
+  int wp;
 
   cur_topline = topline = 0;
 
   calculate_start_column (cur_wp);
 
-  for (wp = head_wp; wp != NULL; wp = get_window_next (wp))
+  for (wp = head_wp; wp != LUA_NOREF; wp = get_window_next (wp))
     {
       if (wp == cur_wp)
         cur_topline = topline;

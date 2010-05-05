@@ -114,13 +114,13 @@ print_buf (Buffer * old_bp, Buffer * bp)
 void
 write_temp_buffer (const char *name, bool show, void (*func) (va_list ap), ...)
 {
-  Window *wp, *old_wp = cur_wp;
+  int wp, old_wp = cur_wp;
   Buffer *new_bp, *old_bp = cur_bp;
   va_list ap;
 
   /* Popup a window with the buffer "name". */
   wp = find_window (name);
-  if (show && wp)
+  if (show && wp != LUA_NOREF)
     set_current_window (wp);
   else
     {
@@ -168,7 +168,7 @@ write_temp_buffer (const char *name, bool show, void (*func) (va_list ap), ...)
 static void
 write_buffers_list (va_list ap)
 {
-  Window *old_wp = va_arg (ap, Window *);
+  int old_wp = va_arg (ap, int);
   Buffer *bp;
 
   /* FIXME: Underline next line properly. */

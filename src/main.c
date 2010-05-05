@@ -47,7 +47,7 @@ CLUE_DEFS(L);
 char *prog_name = PACKAGE;
 
 /* The current window; the first window in list. */
-Window *cur_wp = NULL, *head_wp = NULL;
+int cur_wp = LUA_NOREF, head_wp = LUA_NOREF;
 /* The current buffer; the first buffer in list. */
 Buffer *cur_bp = NULL, *head_bp = NULL;
 

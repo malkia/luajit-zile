@@ -193,7 +193,7 @@ void add_macros_to_list (int l);
 /* main.c ----------------------------------------------------------------- */
 CLUE_DECLS(L);
 extern char *prog_name;
-extern Window *cur_wp, *head_wp;
+extern int cur_wp, head_wp;
 extern Buffer *cur_bp, *head_bp;
 extern int thisflag, lastflag, last_uniarg;
 
@@ -245,7 +245,7 @@ void goto_point (Point pt);
 /* redisplay.c ------------------------------------------------------------ */
 void resync_redisplay (void);
 void resize_windows (void);
-void recenter (Window * wp);
+void recenter (int wp);
 
 /* search.c --------------------------------------------------------------- */
 void init_search (void);
@@ -280,23 +280,22 @@ long get_variable_number (const char *var);
 bool get_variable_bool (const char *var);
 
 /* window.c --------------------------------------------------------------- */
-#define FIELD(ty, field)                                \
-  ty get_window_ ## field (const Window *wp);           \
-  void set_window_ ## field (Window *wp, ty field);
-  FIELD(const char *, field)
+#define FIELD(cty, lty, field)                  \
+  cty get_window_ ## field (int wp);            \
+  void set_window_ ## field (int wp, cty field);
 #include "window.h"
 #undef FIELD
 void create_scratch_window (void);
-Window *find_window (const char *name);
+int find_window (const char *name);
 void free_windows (void);
-Window *popup_window (void);
-void set_current_window (Window * wp);
-void delete_window (Window * del_wp);
-Point window_pt (Window * wp);
+int popup_window (void);
+void set_current_window (int wp);
+void delete_window (int del_wp);
+Point window_pt (int wp);
 void completion_scroll_up (void);
 void completion_scroll_down (void);
-bool window_top_visible (Window * wp);
-bool window_bottom_visible (Window * wp);
+bool window_top_visible (int wp);
+bool window_bottom_visible (int wp);
 
 
 /*

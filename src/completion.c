@@ -1,6 +1,6 @@
 /* Completion facility functions
 
-   Copyright (c) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2008, 2009 Free Software Foundation, Inc.
+   Copyright (c) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2008, 2009, 2010 Free Software Foundation, Inc.
 
    This file is part of GNU Zile.
 
@@ -60,7 +60,7 @@ popup_completion (int cp)
   lua_rawgeti (L, LUA_REGISTRYINDEX, cp);
   lua_setglobal (L, "cp");
   (void) CLUE_DO (L, "cp.poppedup = true");
-  if (get_window_next (head_wp) == NULL)
+  if (get_window_next (head_wp) == LUA_NOREF)
     (void) CLUE_DO (L, "cp.close = true");
 
   write_temp_buffer ("*Completions*", true, write_completion, cp, get_window_ewidth (cur_wp));

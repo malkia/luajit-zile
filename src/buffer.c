@@ -1,6 +1,6 @@
 /* Buffer-oriented functions
 
-   Copyright (c) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2008, 2009 Free Software Foundation, Inc.
+   Copyright (c) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2008, 2009, 2010 Free Software Foundation, Inc.
 
    This file is part of GNU Zile.
 
@@ -548,14 +548,14 @@ kill_buffer (Buffer * kill_bp)
 
   if (next_bp == kill_bp) /* Only one buffer. */
     {
-      Window *wp, *next_wp;
+      int wp, next_wp;
 
       assert (cur_bp == kill_bp);
       free_buffer (cur_bp);
       head_bp = NULL;
 
       /* Close all the windows that display this buffer. */
-      for (wp = head_wp; wp != NULL; wp = next_wp)
+      for (wp = head_wp; wp != LUA_NOREF; wp = next_wp)
         {
           next_wp = get_window_next (wp);
           if (get_window_bp (wp) == cur_bp)
@@ -567,10 +567,10 @@ kill_buffer (Buffer * kill_bp)
   else
     {
       Buffer *bp;
-      Window *wp;
+      int wp;
 
       /* Search for windows displaying the buffer to kill. */
-      for (wp = head_wp; wp != NULL; wp = get_window_next (wp))
+      for (wp = head_wp; wp != LUA_NOREF; wp = get_window_next (wp))
         if (get_window_bp (wp) == kill_bp)
           {
             set_window_bp (wp, next_bp);

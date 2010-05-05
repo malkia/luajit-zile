@@ -1,6 +1,6 @@
 /* Minibuffer handling
 
-   Copyright (c) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2008, 2009 Free Software Foundation, Inc.
+   Copyright (c) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2008, 2009, 2010 Free Software Foundation, Inc.
 
    This file is part of GNU Zile.
 
@@ -326,7 +326,7 @@ char *
 term_minibuf_read (const char *prompt, const char *value, size_t pos,
                    int cp, int hp)
 {
-  Window *wp, *old_wp = cur_wp;
+  int wp, old_wp = cur_wp;
   char *s = NULL;
   astr as;
 
@@ -345,7 +345,7 @@ term_minibuf_read (const char *prompt, const char *value, size_t pos,
     }
 
   if (!LUA_NIL (cp) && get_completion_poppedup (cp)
-      && (wp = find_window ("*Completions*")) != NULL)
+      && (wp = find_window ("*Completions*")) != LUA_NOREF)
     {
       set_current_window (wp);
       if (get_completion_close (cp))

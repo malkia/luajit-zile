@@ -58,7 +58,7 @@ minibuf_vwrite (const char *fmt, va_list ap)
 
   xvasprintf (&minibuf_contents, fmt, ap);
 
-  if (cur_wp)
+  if (cur_wp != LUA_NOREF)
     {
       term_minibuf_write (minibuf_contents);
 
