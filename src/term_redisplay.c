@@ -172,7 +172,7 @@ draw_window (size_t topline, int wp)
   calculate_highlight_region (wp, rp, &highlight);
 
   /* Find the first line to display on the first screen line. */
-  for (lp = pt->p, lineno = pt->n, i = get_window_topdelta (wp);
+  for (lp = get_point_p (pt), lineno = get_point_n (pt), i = get_window_topdelta (wp);
        i > 0 && get_line_prev (lp) != get_buffer_lines (get_window_bp (wp));
        lp = get_line_prev (lp), --i, --lineno)
     ;
@@ -239,22 +239,22 @@ calculate_start_column (int wp)
   size_t rp, lp, p;
   Point * pt = window_pt (wp);
 
-  rp = pt->o;
-  rpfact = pt->o / (get_window_ewidth (wp) / 3);
+  rp = get_point_o (pt);
+  rpfact = get_point_o (pt) / (get_window_ewidth (wp) / 3);
 
   for (lp = rp; lp != SIZE_MAX; --lp)
     {
       for (col = 0, p = lp; p < rp; ++p)
-        if (astr_get (get_line_text (pt->p), p) == '\t')
+        if (astr_get (get_line_text (get_point_p (pt)), p) == '\t')
           {
             col |= t - 1;
             ++col;
           }
-        else if (isprint ((int) astr_get (get_line_text (pt->p), p)))
+        else if (isprint ((int) astr_get (get_line_text (get_point_p (pt)), p)))
           ++col;
         else
           {
-            col += make_char_printable (&buf, astr_get (get_line_text (pt->p), p));
+            col += make_char_printable (&buf, astr_get (get_line_text (get_point_p (pt)), p));
             free (buf);
           }
 
@@ -288,7 +288,7 @@ make_screen_pos (int wp, char **buf)
     xasprintf (buf, "Bot");
   else
     xasprintf (buf, "%2d%%",
-               (int) ((float) window_pt (wp)->n / get_buffer_last_line (get_window_bp (wp)) * 100));
+               (int) ((float) get_point_n (window_pt (wp)) / get_buffer_last_line (get_window_bp (wp)) * 100));
 
   return *buf;
 }
@@ -321,7 +321,7 @@ draw_status_line (size_t line, int wp)
 
   CLUE_SET (L, y, integer, line);
   (void) CLUE_DO (L, "term_move (y, 0)");
-  bs = astr_afmt (astr_new (), "(%d,%d)", pt->n + 1,
+  bs = astr_afmt (astr_new (), "(%d,%d)", get_point_n (pt) + 1,
                   get_goalc_bp (bp, pt));
   as = astr_afmt (astr_new (), "--%s%2s  %-15s   %s %-9s (Fundamental",
                   eol_type, make_mode_line_flags (wp), get_buffer_name (bp),

@@ -189,7 +189,7 @@ goto_linep (Line * lp)
   Point * pt;
   set_buffer_pt (cur_bp, point_min ());
   resync_redisplay ();
-  for (pt = get_buffer_pt (cur_bp); pt->p != lp; pt = get_buffer_pt (cur_bp))
+  for (pt = get_buffer_pt (cur_bp); get_point_p (pt) != lp; pt = get_buffer_pt (cur_bp))
     next_line ();
 }
 
@@ -230,7 +230,7 @@ search_forward (Line * startp, size_t starto, const char *s, int regexp)
           Point * pt;
           goto_linep (lp);
           pt = get_buffer_pt (cur_bp);
-          pt->o = sp2 - astr_cstr (get_line_text (lp));
+          set_point_o (pt, sp2 - astr_cstr (get_line_text (lp)));
           return true;
         }
     }
@@ -270,7 +270,7 @@ search_backward (Line * startp, size_t starto, const char *s, int regexp)
           Point * pt;
           goto_linep (lp);
           pt = get_buffer_pt (cur_bp);
-          pt->o = sp2 - astr_cstr (get_line_text (lp));
+          set_point_o (pt, sp2 - astr_cstr (get_line_text (lp)));
           return true;
         }
     }
@@ -300,7 +300,7 @@ search (Searcher searcher, bool regexp, const char *pattern, const char *search_
       free (last_search);
       last_search = xstrdup (pattern);
 
-      if (!searcher (get_buffer_pt (cur_bp)->p, get_buffer_pt (cur_bp)->o, pattern, regexp))
+      if (!searcher (get_point_p (get_buffer_pt (cur_bp)), get_point_o (get_buffer_pt (cur_bp)), pattern, regexp))
         {
           minibuf_error ("Search failed: \"%s\"", pattern);
           ok = leNIL;
@@ -505,10 +505,9 @@ isearch (int dir, int regexp)
       if (astr_len (pattern) > 0)
         {
           if (dir == ISEARCH_FORWARD)
-            last = search_forward (cur->p, cur->o, astr_cstr (pattern), regexp);
+            last = search_forward (get_point_p (cur), get_point_o (cur), astr_cstr (pattern), regexp);
           else
-            last =
-              search_backward (cur->p, cur->o, astr_cstr (pattern), regexp);
+            last = search_backward (get_point_p (cur), get_point_o (cur), astr_cstr (pattern), regexp);
         }
       else
         last = true;
@@ -610,7 +609,7 @@ what to do with it.
       return FUNCALL (keyboard_quit);
     }
 
-  while (search_forward (get_buffer_pt (cur_bp)->p, get_buffer_pt (cur_bp)->o, find, false))
+  while (search_forward (get_point_p (get_buffer_pt (cur_bp)), get_point_o (get_buffer_pt (cur_bp)), find, false))
     {
       Point * pt;
       int c = ' ';
@@ -650,8 +649,8 @@ what to do with it.
       pt = get_buffer_pt (cur_bp);
       ++count;
       undo_save (UNDO_REPLACE_BLOCK,
-                 make_point (pt->n, pt->o - find_len), find_len, strlen (repl));
-      line_replace_text (pt->p, pt->o - find_len, find_len, repl, find_no_upper);
+                 make_point (get_point_n (pt), get_point_o (pt) - find_len), find_len, strlen (repl));
+      line_replace_text (get_point_p (pt), get_point_o (pt) - find_len, find_len, repl, find_no_upper);
 
       if (c == '.')		/* Replace and quit. */
         break;

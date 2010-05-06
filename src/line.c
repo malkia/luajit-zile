@@ -123,17 +123,17 @@ adjust_markers (Line * newlp, Line * oldlp, size_t pointo, int dir, ptrdiff_t de
   assert (dir >= -1 && dir <= 1);
 
   for (m = get_buffer_markers (cur_bp); m != NULL; m = get_marker_next (m))
-    if (get_marker_pt (m)->p == oldlp && (dir == -1 || get_marker_pt (m)->o > pointo))
+    if (get_point_p (get_marker_pt (m)) == oldlp && (dir == -1 || get_point_o (get_marker_pt (m)) > pointo))
       {
         Point * pt = get_marker_pt (m);
-        pt->p = newlp;
-        pt->o += delta - (pointo * dir);
-        pt->n += dir;
+        set_point_p (pt, newlp);
+        set_point_o (pt, get_point_o (pt) + delta - (pointo * dir));
+        set_point_n (pt, get_point_n (pt) + dir);
       }
-    else if (get_marker_pt (m)->n > get_buffer_pt (cur_bp)->n)
+    else if (get_point_n (get_marker_pt (m)) > get_point_n (get_buffer_pt (cur_bp)))
       {
         Point * pt = get_marker_pt (m);
-        pt->n += dir;
+        set_point_n (pt, get_point_n (pt) + dir);
       }
 
   /* This marker has been updated to new position. */
@@ -152,7 +152,7 @@ intercalate_char (int c)
     return false;
 
   undo_save (UNDO_REPLACE_BLOCK, get_buffer_pt (cur_bp), 0, 1);
-  astr_insert_char (get_buffer_pt (cur_bp)->p->text, get_buffer_pt (cur_bp)->o, c);
+  astr_insert_char (get_point_p (get_buffer_pt (cur_bp))->text, get_point_o (get_buffer_pt (cur_bp)), c);
   set_buffer_modified (cur_bp, true);
 
   return true;
@@ -177,17 +177,17 @@ insert_char (int c)
          && isn't a \t
          || tab width isn't correct
          || current char is a \t && we are in the tab limit.  */
-      if ((pt->o < astr_len (pt->p->text))
+      if ((get_point_o (pt) < astr_len (get_point_p (pt)->text))
           &&
-          ((astr_get (pt->p->text, pt->o) != '\t')
+          ((astr_get (get_point_p (pt)->text, get_point_o (pt)) != '\t')
            ||
-           ((astr_get (pt->p->text, pt->o) == '\t') && ((get_goalc () % t) == t))))
+           ((astr_get (get_point_p (pt)->text, get_point_o (pt)) == '\t') && ((get_goalc () % t) == t))))
         {
           /* Replace the character.  */
           char ch = (char) c;
           undo_save (UNDO_REPLACE_BLOCK, pt, 1, 1);
-          astr_nreplace_cstr (pt->p->text, pt->o, 1, &ch, 1);
-          ++pt->o;
+          astr_nreplace_cstr (get_point_p (pt)->text, get_point_o (pt), 1, &ch, 1);
+          set_point_o (pt, get_point_o (pt) + 1);
           set_buffer_modified (cur_bp, true);
 
           return true;
@@ -200,7 +200,7 @@ insert_char (int c)
 
   intercalate_char (c);
   forward_char ();
-  adjust_markers (get_buffer_pt (cur_bp)->p, get_buffer_pt (cur_bp)->p, get_buffer_pt (cur_bp)->o, 0, 1);
+  adjust_markers (get_point_p (get_buffer_pt (cur_bp)), get_point_p (get_buffer_pt (cur_bp)), get_point_o (get_buffer_pt (cur_bp)), 0, 1);
 
   return true;
 }
@@ -273,12 +273,12 @@ intercalate_newline (void)
   undo_save (UNDO_REPLACE_BLOCK, get_buffer_pt (cur_bp), 0, 1);
 
   /* Move the text after the point into a new line. */
-  line_insert (get_buffer_pt (cur_bp)->p,
-               astr_substr (get_buffer_pt (cur_bp)->p->text, get_buffer_pt (cur_bp)->o,
-                            astr_len (get_buffer_pt (cur_bp)->p->text) - get_buffer_pt (cur_bp)->o));
+  line_insert (get_point_p (get_buffer_pt (cur_bp)),
+               astr_substr (get_point_p (get_buffer_pt (cur_bp))->text, get_point_o (get_buffer_pt (cur_bp)),
+                            astr_len (get_point_p (get_buffer_pt (cur_bp))->text) - get_point_o (get_buffer_pt (cur_bp))));
   set_buffer_last_line (cur_bp, get_buffer_last_line (cur_bp) + 1);
-  astr_truncate (get_buffer_pt (cur_bp)->p->text, get_buffer_pt (cur_bp)->o);
-  adjust_markers (get_buffer_pt (cur_bp)->p->next, get_buffer_pt (cur_bp)->p, get_buffer_pt (cur_bp)->o, 1, 0);
+  astr_truncate (get_point_p (get_buffer_pt (cur_bp))->text, get_point_o (get_buffer_pt (cur_bp)));
+  adjust_markers (get_point_p (get_buffer_pt (cur_bp))->next, get_point_p (get_buffer_pt (cur_bp)), get_point_o (get_buffer_pt (cur_bp)), 1, 0);
 
   set_buffer_modified (cur_bp, true);
   thisflag |= FLAG_NEED_RESYNC;
@@ -367,17 +367,17 @@ fill_break_line (void)
       Marker *m = point_marker ();
 
       /* Move cursor back to fill column */
-      old_col = get_buffer_pt (cur_bp)->o;
+      old_col = get_point_o (get_buffer_pt (cur_bp));
       while (get_goalc () > fillcol + 1)
         {
           Point * pt = get_buffer_pt (cur_bp);
-          pt->o--;
+          set_point_o (pt, get_point_o (pt) - 1);
         }
 
       /* Find break point moving left from fill-column. */
-      for (i = get_buffer_pt (cur_bp)->o; i > 0; i--)
+      for (i = get_point_o (get_buffer_pt (cur_bp)); i > 0; i--)
         {
-          int c = astr_get (get_buffer_pt (cur_bp)->p->text, i - 1);
+          int c = astr_get (get_point_p (get_buffer_pt (cur_bp))->text, i - 1);
           if (isspace (c))
             {
               break_col = i;
@@ -389,11 +389,11 @@ fill_break_line (void)
          possible moving right. */
       if (break_col == 0)
         {
-          for (i = get_buffer_pt (cur_bp)->o + 1;
-               i < astr_len (get_buffer_pt (cur_bp)->p->text);
+          for (i = get_point_o (get_buffer_pt (cur_bp)) + 1;
+               i < astr_len (get_point_p (get_buffer_pt (cur_bp))->text);
                i++)
             {
-              int c = astr_get (get_buffer_pt (cur_bp)->p->text, i - 1);
+              int c = astr_get (get_point_p (get_buffer_pt (cur_bp))->text, i - 1);
               if (isspace (c))
                 {
                   break_col = i;
@@ -405,7 +405,7 @@ fill_break_line (void)
       if (break_col >= 1) /* Break line. */
         {
           Point * pt = get_buffer_pt (cur_bp);
-          pt->o = break_col;
+          set_point_o (pt, break_col);
           FUNCALL (delete_horizontal_space);
           insert_newline ();
           set_buffer_pt (cur_bp, point_copy (get_marker_pt (m)));
@@ -414,7 +414,7 @@ fill_break_line (void)
       else /* Undo fiddling with point. */
         {
           Point * pt = get_buffer_pt (cur_bp);
-          pt->o = old_col;
+          set_point_o (pt, old_col);
         }
 
       free_marker (m);
@@ -516,21 +516,21 @@ delete_char (void)
 
   if (eolp ())
     {
-      size_t oldlen = astr_len (get_buffer_pt (cur_bp)->p->text);
-      Line *oldlp = get_buffer_pt (cur_bp)->p->next;
+      size_t oldlen = astr_len (get_point_p (get_buffer_pt (cur_bp))->text);
+      Line *oldlp = get_point_p (get_buffer_pt (cur_bp))->next;
 
       /* Join the lines. */
-      astr_cat (get_buffer_pt (cur_bp)->p->text, oldlp->text);
+      astr_cat (get_point_p (get_buffer_pt (cur_bp))->text, oldlp->text);
       line_remove (oldlp);
 
-      adjust_markers (get_buffer_pt (cur_bp)->p, oldlp, oldlen, -1, 0);
+      adjust_markers (get_point_p (get_buffer_pt (cur_bp)), oldlp, oldlen, -1, 0);
       set_buffer_last_line (cur_bp, get_buffer_last_line (cur_bp) - 1);
       thisflag |= FLAG_NEED_RESYNC;
     }
   else
     {
-      astr_remove (get_buffer_pt (cur_bp)->p->text, get_buffer_pt (cur_bp)->o, 1);
-      adjust_markers (get_buffer_pt (cur_bp)->p, get_buffer_pt (cur_bp)->p, get_buffer_pt (cur_bp)->o, 0, -1);
+      astr_remove (get_point_p (get_buffer_pt (cur_bp))->text, get_point_o (get_buffer_pt (cur_bp)), 1);
+      adjust_markers (get_point_p (get_buffer_pt (cur_bp)), get_point_p (get_buffer_pt (cur_bp)), get_point_o (get_buffer_pt (cur_bp)), 0, -1);
     }
 
   set_buffer_modified (cur_bp, true);
@@ -669,7 +669,7 @@ does nothing.
   deactivate_mark ();
 
   /* If we're on first line, set target to 0. */
-  if (get_buffer_pt (cur_bp)->p->prev == get_buffer_lines (cur_bp))
+  if (get_point_p (get_buffer_pt (cur_bp))->prev == get_buffer_lines (cur_bp))
     target_goalc = 0;
   else
     { /* Find goalc in previous non-blank line. */

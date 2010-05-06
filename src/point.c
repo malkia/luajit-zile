@@ -24,16 +24,42 @@
 #include "main.h"
 #include "extern.h"
 
+
+/*
+ * Structure
+ */
+
+struct Point
+{
+#define FIELD(ty, name) ty name;
+#include "point.h"
+#undef FIELD
+};
+
+#define FIELD(ty, field)                       \
+  GETTER (Point, point, ty, field)             \
+  SETTER (Point, point, ty, field)
+
+#include "point.h"
+#undef FIELD
+
+
+Point *
+point_new (void)
+{
+  return XZALLOC (Point);
+}
+
 Point *
 make_point (size_t lineno, size_t offset)
 {
   Point * pt = XZALLOC (Point);
-  pt->p = get_line_next (get_buffer_lines (cur_bp));
-  pt->n = lineno;
-  pt->o = offset;
+  set_point_p (pt, get_line_next (get_buffer_lines (cur_bp)));
+  set_point_n (pt, lineno);
+  set_point_o (pt, offset);
   while (lineno > 0)
     {
-      pt->p = get_line_next (pt->p);
+      set_point_p (pt, get_line_next (get_point_p (pt)));
       lineno--;
     }
   return pt;
@@ -50,12 +76,12 @@ point_copy (Point *pt)
 int
 cmp_point (Point * pt1, Point * pt2)
 {
-  if (pt1->n < pt2->n)
+  if (get_point_n (pt1) < get_point_n (pt2))
     return -1;
-  else if (pt1->n > pt2->n)
+  else if (get_point_n (pt1) > get_point_n (pt2))
     return +1;
   else
-    return ((pt1->o < pt2->o) ? -1 : (pt1->o > pt2->o) ? +1 : 0);
+    return ((get_point_o (pt1) < get_point_o (pt2)) ? -1 : (get_point_o (pt1) > get_point_o (pt2)) ? +1 : 0);
 }
 
 int
@@ -71,16 +97,16 @@ point_dist (Point * pt1, Point * pt2)
      *pt2 = *pt0;
    }
 
-  for (lp = pt1->p;; lp = get_line_next (lp))
+  for (lp = get_point_p (pt1);; lp = get_line_next (lp))
     {
       size += astr_len (get_line_text (lp));
 
-      if (lp == pt1->p)
-        size -= pt1->o;
+      if (lp == get_point_p (pt1))
+        size -= get_point_o (pt1);
 
-      if (lp == pt2->p)
+      if (lp == get_point_p (pt2))
         {
-          size -= astr_len (get_line_text (lp)) - pt2->o;
+          size -= astr_len (get_line_text (lp)) - get_point_o (pt2);
           break;
         }
       else
@@ -93,16 +119,16 @@ point_dist (Point * pt1, Point * pt2)
 int
 count_lines (Point * pt1, Point * pt2)
 {
-  return abs (pt2->n - pt1->n);
+  return abs (get_point_n (pt2) - get_point_n (pt1));
 }
 
 Point *
 point_min (void)
 {
   Point * pt = XZALLOC (Point);
-  pt->p = get_line_next (get_buffer_lines (cur_bp));
-  pt->n = 0;
-  pt->o = 0;
+  set_point_p (pt, get_line_next (get_buffer_lines (cur_bp)));
+  set_point_n (pt, 0);
+  set_point_o (pt, 0);
   return pt;
 }
 
@@ -110,9 +136,9 @@ Point *
 point_max (void)
 {
   Point * pt = XZALLOC (Point);
-  pt->p = get_line_prev (get_buffer_lines (cur_bp));
-  pt->n = get_buffer_last_line (cur_bp);
-  pt->o = astr_len (get_line_text (get_line_prev (get_buffer_lines (cur_bp))));
+  set_point_p (pt, get_line_prev (get_buffer_lines (cur_bp)));
+  set_point_n (pt, get_buffer_last_line (cur_bp));
+  set_point_o (pt, astr_len (get_line_text (get_line_prev (get_buffer_lines (cur_bp)))));
   return pt;
 }
 
@@ -124,13 +150,19 @@ line_beginning_position (int count)
   /* Copy current point position without offset (beginning of
    * line). */
   pt = point_copy (get_buffer_pt (cur_bp));
-  pt->o = 0;
+  set_point_o (pt, 0);
 
   count--;
-  for (; count < 0 && get_line_prev (pt->p) != get_buffer_lines (cur_bp); pt->n--, count++)
-    pt->p = get_line_prev (pt->p);
-  for (; count > 0 && get_line_next (pt->p) != get_buffer_lines (cur_bp); pt->n++, count--)
-    pt->p = get_line_next (pt->p);
+  for (; count < 0 && get_line_prev (get_point_p (pt)) != get_buffer_lines (cur_bp); count++)
+    {
+      set_point_p (pt, get_line_prev (get_point_p (pt)));
+      set_point_n (pt, get_point_n (pt) - 1);
+    }
+  for (; count > 0 && get_line_next (get_point_p (pt)) != get_buffer_lines (cur_bp); count--)
+    {
+      set_point_p (pt, get_line_next (get_point_p (pt)));
+      set_point_n (pt, get_point_n (pt) + 1);
+    }
 
   return pt;
 }
@@ -139,28 +171,28 @@ Point *
 line_end_position (int count)
 {
   Point * pt = point_copy (line_beginning_position (count));
-  pt->o = astr_len (get_line_text (pt->p));
+  set_point_o (pt, astr_len (get_line_text (get_point_p (pt))));
   return pt;
 }
 
 void
 goto_point (Point * pt)
 {
-  if (get_buffer_pt (cur_bp)->n > pt->n)
+  if (get_buffer_pt (cur_bp)->n > get_point_n (pt))
     do
       FUNCALL (previous_line);
-    while (get_buffer_pt (cur_bp)->n > pt->n);
-  else if (get_buffer_pt (cur_bp)->n < pt->n)
+    while (get_buffer_pt (cur_bp)->n > get_point_n (pt));
+  else if (get_buffer_pt (cur_bp)->n < get_point_n (pt))
     do
       FUNCALL (next_line);
-    while (get_buffer_pt (cur_bp)->n < pt->n);
+    while (get_buffer_pt (cur_bp)->n < get_point_n (pt));
 
-  if (get_buffer_pt (cur_bp)->o > pt->o)
+  if (get_buffer_pt (cur_bp)->o > get_point_o (pt))
     do
       FUNCALL (backward_char);
-    while (get_buffer_pt (cur_bp)->o > pt->o);
-  else if (get_buffer_pt (cur_bp)->o < pt->o)
+    while (get_buffer_pt (cur_bp)->o > get_point_o (pt));
+  else if (get_buffer_pt (cur_bp)->o < get_point_o (pt))
     do
       FUNCALL (forward_char);
-    while (get_buffer_pt (cur_bp)->o < pt->o);
+    while (get_buffer_pt (cur_bp)->o < get_point_o (pt));
 }

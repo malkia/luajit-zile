@@ -46,7 +46,7 @@ push_mark (void)
     { /* Save an invalid mark.  */
       Marker *m = point_min_marker ();
       Point * pt = get_marker_pt (m);
-      pt->p = NULL;
+      set_point_p (pt, NULL);
       gl_list_add_last (mark_ring, m);
     }
 }
@@ -82,7 +82,7 @@ bool
 is_empty_line (void)
 {
   Point * pt = get_buffer_pt (cur_bp);
-  return astr_len (get_line_text (pt->p)) == 0;
+  return astr_len (get_line_text (get_point_p (pt))) == 0;
 }
 
 bool
@@ -90,8 +90,8 @@ is_blank_line (void)
 {
   Point * pt = get_buffer_pt (cur_bp);
   size_t c;
-  for (c = 0; c < astr_len (get_line_text (pt->p)); c++)
-    if (!isspace ((int) astr_get (get_line_text (pt->p), c)))
+  for (c = 0; c < astr_len (get_line_text (get_point_p (pt))); c++)
+    if (!isspace ((int) astr_get (get_line_text (get_point_p (pt)), c)))
       return false;
   return true;
 }
@@ -107,7 +107,7 @@ following_char (void)
   else
     {
       Point * pt = get_buffer_pt (cur_bp);
-      return astr_get (get_line_text (pt->p), pt->o);
+      return astr_get (get_line_text (get_point_p (pt)), get_point_o (pt));
     }
 }
 
@@ -122,7 +122,7 @@ preceding_char (void)
   else
     {
       Point * pt = get_buffer_pt (cur_bp);
-      return astr_get (get_line_text (pt->p), pt->o - 1);
+      return astr_get (get_line_text (get_point_p (pt)), get_point_o (pt) - 1);
     }
 }
 
@@ -131,7 +131,7 @@ bool
 bobp (void)
 {
   Point * pt = get_buffer_pt (cur_bp);
-  return (get_line_prev (pt->p) == get_buffer_lines (cur_bp) && pt->o == 0);
+  return (get_line_prev (get_point_p (pt)) == get_buffer_lines (cur_bp) && get_point_o (pt) == 0);
 }
 
 /* Return true if point is at the end of the buffer. */
@@ -139,8 +139,8 @@ bool
 eobp (void)
 {
   Point * pt = get_buffer_pt (cur_bp);
-  return (get_line_next (pt->p) == get_buffer_lines (cur_bp) &&
-          pt->o == astr_len (get_line_text (pt->p)));
+  return (get_line_next (get_point_p (pt)) == get_buffer_lines (cur_bp) &&
+          get_point_o (pt) == astr_len (get_line_text (get_point_p (pt))));
 }
 
 /* Return true if point is at the beginning of a line. */
@@ -148,7 +148,7 @@ bool
 bolp (void)
 {
   Point * pt = get_buffer_pt (cur_bp);
-  return pt->o == 0;
+  return get_point_o (pt) == 0;
 }
 
 /* Return true if point is at the end of a line. */
@@ -156,7 +156,7 @@ bool
 eolp (void)
 {
   Point * pt = get_buffer_pt (cur_bp);
-  return pt->o == astr_len (get_line_text (pt->p));
+  return get_point_o (pt) == astr_len (get_line_text (get_point_p (pt)));
 }
 
 /* Signal an error, and abort any ongoing macro definition. */

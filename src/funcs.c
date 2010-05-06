@@ -252,16 +252,16 @@ Just C-u as argument means to use the current column.
 +*/
 {
   long fill_col = (lastflag & FLAG_UNIARG_EMPTY) ?
-    get_buffer_pt (cur_bp)->o : (unsigned long) uniarg;
+    get_point_o (get_buffer_pt (cur_bp)) : (unsigned long) uniarg;
   char *buf;
 
   if (!(lastflag & FLAG_SET_UNIARG) && LUA_NIL (arglist))
     {
-      fill_col = minibuf_read_number ("Set fill-column to (default %d): ", get_buffer_pt (cur_bp)->o);
+      fill_col = minibuf_read_number ("Set fill-column to (default %d): ", get_point_o (get_buffer_pt (cur_bp)));
       if (fill_col == LONG_MAX)
         return leNIL;
       else if (fill_col == LONG_MAX - 1)
-        fill_col = get_buffer_pt (cur_bp)->o;
+        fill_col = get_point_o (get_buffer_pt (cur_bp));
     }
 
   if (!LUA_NIL (arglist))
@@ -619,27 +619,28 @@ edit_tab_region (int action)
       size_t lineno;
 
       undo_save (UNDO_START_SEQUENCE, get_marker_pt (m), 0, 0);
-      for (lp = get_region_start (rp)->p, lineno = get_region_start (rp)->n;; lp = get_line_next (lp), ++lineno)
+      for (lp = get_point_p (get_region_start (rp)), lineno = get_point_n (get_region_start (rp));;
+           lp = get_line_next (lp), ++lineno)
         {
           /* First line.  */
-          if (lineno == get_region_start (rp)->n)
+          if (lineno == get_point_n (get_region_start (rp)))
             {
               /* Region on a sole line. */
-              if (lineno == get_region_end (rp)->n)
-                edit_tab_line (lp, lineno, get_region_start (rp)->o, get_region_size (rp), action);
+              if (lineno == get_point_n (get_region_end (rp)))
+                edit_tab_line (lp, lineno, get_point_o (get_region_start (rp)), get_region_size (rp), action);
               /* Region is multi-line. */
               else
-                edit_tab_line (lp, lineno, get_region_start (rp)->o,
-                               astr_len (get_line_text (lp)) - get_region_start (rp)->o, action);
+                edit_tab_line (lp, lineno, get_point_o (get_region_start (rp)),
+                               astr_len (get_line_text (lp)) - get_point_o (get_region_start (rp)), action);
             }
           /* Last line of multi-line region. */
-          else if (lineno == get_region_end (rp)->n)
-            edit_tab_line (lp, lineno, 0, get_region_end (rp)->o, action);
+          else if (lineno == get_point_n (get_region_end (rp)))
+            edit_tab_line (lp, lineno, 0, get_point_o (get_region_end (rp)), action);
           /* Middle line of multi-line region. */
           else
             edit_tab_line (lp, lineno, 0, astr_len (get_line_text (lp)), action);
           /* Done?  */
-          if (lineno == get_region_end (rp)->n)
+          if (lineno == get_point_n (get_region_end (rp)))
             break;
         }
       set_buffer_pt (cur_bp, point_copy (get_marker_pt (m)));
@@ -712,7 +713,7 @@ move_word (int dir, int (*next_char) (void), bool (*move_char) (void), bool (*at
           else
             gotword = true;
           pt = get_buffer_pt (cur_bp);
-          pt->o += dir;
+          set_point_o (pt, get_point_o (pt) + dir);
         }
       if (gotword)
         return true;
@@ -769,14 +770,14 @@ END_DEFUN
                                ISCLOSEBRACKETCHAR (c))
 #define PRECEDINGQUOTEDQUOTE(c)                                         \
   (c == '\\'                                                            \
-   && get_buffer_pt (cur_bp)->o + 1 < astr_len (get_line_text (get_buffer_pt (cur_bp)->p)) \
-   && ((astr_get (get_line_text (get_buffer_pt (cur_bp)->p), get_buffer_pt (cur_bp)->o + 1) == '\"') || \
-       (astr_get (get_line_text (get_buffer_pt (cur_bp)->p), get_buffer_pt (cur_bp)->o + 1) == '\'')))
+   && get_point_o (get_buffer_pt (cur_bp)) + 1 < astr_len (get_line_text (get_point_p (get_buffer_pt (cur_bp)))) \
+   && ((astr_get (get_line_text (get_point_p (get_buffer_pt (cur_bp))), get_point_o (get_buffer_pt (cur_bp)) + 1) == '\"') || \
+       (astr_get (get_line_text (get_point_p (get_buffer_pt (cur_bp))), get_point_o (get_buffer_pt (cur_bp)) + 1) == '\'')))
 #define FOLLOWINGQUOTEDQUOTE(c)                                         \
   (c == '\\'                                                            \
-   && get_buffer_pt (cur_bp)->o + 1 < astr_len (get_line_text (get_buffer_pt (cur_bp)->p)) \
-   && ((astr_get (get_line_text (get_buffer_pt (cur_bp)->p), get_buffer_pt (cur_bp)->o + 1) == '\"') || \
-       (astr_get (get_line_text (get_buffer_pt (cur_bp)->p), get_buffer_pt (cur_bp)->o + 1) == '\'')))
+   && get_point_o (get_buffer_pt (cur_bp)) + 1 < astr_len (get_line_text (get_point_p (get_buffer_pt (cur_bp)))) \
+   && ((astr_get (get_line_text (get_point_p (get_buffer_pt (cur_bp))), get_point_o (get_buffer_pt (cur_bp)) + 1) == '\"') || \
+       (astr_get (get_line_text (get_point_p (get_buffer_pt (cur_bp))), get_point_o (get_buffer_pt (cur_bp)) + 1) == '\'')))
 
 static int
 move_sexp (int dir)
@@ -798,7 +799,7 @@ move_sexp (int dir)
           if (dir > 0 ? PRECEDINGQUOTEDQUOTE (c) : FOLLOWINGQUOTEDQUOTE (c))
             {
               pt = get_buffer_pt (cur_bp);
-              pt->o += dir;
+              set_point_o (pt, get_point_o (pt) + dir);
               c = 'a';		/* Treat ' and " like word chars. */
             }
 
@@ -835,7 +836,7 @@ move_sexp (int dir)
             }
 
           pt = get_buffer_pt (cur_bp);
-          pt->o += dir;
+          set_point_o (pt, get_point_o (pt) + dir);
 
           if (!ISSEXPCHAR (c))
             {
@@ -844,7 +845,7 @@ move_sexp (int dir)
                   if (!ISSEXPSEPARATOR (c))
                     {
                       pt = get_buffer_pt (cur_bp);
-                      pt->o -= dir;
+                      set_point_o (pt, get_point_o (pt) - dir);
                     }
                   return true;
                 }
@@ -861,7 +862,7 @@ move_sexp (int dir)
           break;
         }
       pt = get_buffer_pt (cur_bp);
-      pt->o = dir > 0 ? 0 : astr_len (get_line_text (pt->p));
+      set_point_o (pt, dir > 0 ? 0 : astr_len (get_line_text (get_point_p (pt))));
     }
   return false;
 }
@@ -912,7 +913,7 @@ astr_append_region (astr s)
   activate_mark ();
   calculate_the_region (rp);
 
-  t = copy_text_block (get_region_start (rp)->n, get_region_start (rp)->o, get_region_size (rp));
+  t = copy_text_block (get_point_n (get_region_start (rp)), get_point_o (get_region_start (rp)), get_region_size (rp));
   astr_ncat_cstr (s, t, get_region_size (rp));
   free (t);
 
@@ -929,7 +930,7 @@ transpose_subr (bool (*forward_func) (void), bool (*backward_func) (void))
   if (forward_func == forward_char && eolp ())
     backward_func ();
   /* For transpose-lines. */
-  if (forward_func == next_line && get_buffer_pt (cur_bp)->n == 0)
+  if (forward_func == next_line && get_point_n (get_buffer_pt (cur_bp)) == 0)
     forward_func ();
 
   /* Backward. */
@@ -1219,12 +1220,12 @@ Fill paragraph at or after point.
   undo_save (UNDO_START_SEQUENCE, get_buffer_pt (cur_bp), 0, 0);
 
   FUNCALL (forward_paragraph);
-  end = get_buffer_pt (cur_bp)->n;
+  end = get_point_n (get_buffer_pt (cur_bp));
   if (is_empty_line ())
     end--;
 
   FUNCALL (backward_paragraph);
-  start = get_buffer_pt (cur_bp)->n;
+  start = get_point_n (get_buffer_pt (cur_bp));
   if (is_empty_line ())
     { /* Move to next line if between two paragraphs. */
       next_line ();
@@ -1262,9 +1263,9 @@ setcase_word (int rcase)
       return false;
 
   as = astr_new ();
-  for (i = get_buffer_pt (cur_bp)->o;
-       i < astr_len (get_line_text (get_buffer_pt (cur_bp)->p)) &&
-         ISWORDCHAR ((int) (c = astr_get (get_line_text (get_buffer_pt (cur_bp)->p), i)));
+  for (i = get_point_o (get_buffer_pt (cur_bp));
+       i < astr_len (get_line_text (get_point_p (get_buffer_pt (cur_bp)))) &&
+         ISWORDCHAR ((int) (c = astr_get (get_line_text (get_point_p (get_buffer_pt (cur_bp))), i)));
        i++)
     astr_cat_char (as, c);
 
@@ -1272,7 +1273,7 @@ setcase_word (int rcase)
     {
       undo_save (UNDO_REPLACE_BLOCK, get_buffer_pt (cur_bp), astr_len (as), astr_len (as));
       astr_recase (as, rcase);
-      astr_nreplace_cstr (get_line_text (get_buffer_pt (cur_bp)->p), get_buffer_pt (cur_bp)->o, astr_len (as),
+      astr_nreplace_cstr (get_line_text (get_point_p (get_buffer_pt (cur_bp))), get_point_o (get_buffer_pt (cur_bp)), astr_len (as),
                           astr_cstr (as), astr_len (as));
     }
   astr_delete (as);
@@ -1356,8 +1357,8 @@ setcase_region (enum casing rcase)
   size = get_region_size (rp);
   undo_save (UNDO_REPLACE_BLOCK, get_region_start (rp), size, get_region_size (rp));
 
-  lp = get_region_start (rp)->p;
-  i = get_region_start (rp)->o;
+  lp = get_point_p (get_region_start (rp));
+  i = get_point_o (get_region_start (rp));
   while (size--)
     {
       if (i < astr_len (get_line_text (lp)))
@@ -1553,7 +1554,7 @@ The output is available in that buffer in both cases.
             }
           else
             {
-              char *p = copy_text_block (get_region_start (rp)->n, get_region_start (rp)->o, get_region_size (rp));
+              char *p = copy_text_block (get_point_n (get_region_start (rp)), get_point_o (get_region_start (rp)), get_region_size (rp));
               ssize_t written = write (fd, p, get_region_size (rp));
 
               free (p);
@@ -1652,7 +1653,7 @@ On nonblank line, delete any immediately following blank lines.
       while (is_blank_line ());
       if (forward)
         FUNCALL (forward_line);
-      if (get_buffer_pt (cur_bp)->p != get_marker_pt (m)->p)
+      if (get_point_p (get_buffer_pt (cur_bp)) != get_point_p (get_marker_pt (m)))
         {
           if (!seq_started)
             {

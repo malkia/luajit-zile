@@ -371,7 +371,7 @@ completion_scroll_up (void)
   assert (wp != LUA_NOREF);
   set_current_window (wp);
   pt = get_buffer_pt (cur_bp);
-  if (pt->n >= get_buffer_last_line (cur_bp) - get_window_eheight (cur_wp) || !FUNCALL (scroll_up))
+  if (get_point_n (pt) >= get_buffer_last_line (cur_bp) - get_window_eheight (cur_wp) || !FUNCALL (scroll_up))
     gotobob ();
   set_current_window (old_wp);
 
@@ -391,7 +391,7 @@ completion_scroll_down (void)
   assert (wp != LUA_NOREF);
   set_current_window (wp);
   pt = get_buffer_pt (cur_bp);
-  if (pt->n == 0 || !FUNCALL (scroll_down))
+  if (get_point_n (pt) == 0 || !FUNCALL (scroll_down))
     {
       gotoeob ();
       resync_redisplay ();
@@ -404,12 +404,12 @@ completion_scroll_down (void)
 bool
 window_top_visible (int wp)
 {
-  return window_pt (wp)->n == get_window_topdelta (wp);
+  return get_point_n (window_pt (wp)) == get_window_topdelta (wp);
 }
 
 bool
 window_bottom_visible (int wp)
 {
-  return window_pt (wp)->n + (get_window_eheight (wp) - get_window_topdelta (wp)) >
+  return get_point_n (window_pt (wp)) + (get_window_eheight (wp) - get_window_topdelta (wp)) >
     get_buffer_last_line (get_window_bp (wp));
 }

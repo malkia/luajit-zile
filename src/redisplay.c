@@ -28,19 +28,19 @@
 void
 resync_redisplay (void)
 {
-  int delta = get_buffer_pt (cur_bp)->n - get_window_lastpointn (cur_wp);
+  int delta = get_point_n (get_buffer_pt (cur_bp)) - get_window_lastpointn (cur_wp);
 
   if (delta)
     {
       if ((delta > 0 && get_window_topdelta (cur_wp) + delta < get_window_eheight (cur_wp)) ||
           (delta < 0 && get_window_topdelta (cur_wp) >= (size_t) (-delta)))
         set_window_topdelta (cur_wp, get_window_topdelta (cur_wp) + delta);
-      else if (get_buffer_pt (cur_bp)->n > get_window_eheight (cur_wp) / 2)
+      else if (get_point_n (get_buffer_pt (cur_bp)) > get_window_eheight (cur_wp) / 2)
         set_window_topdelta (cur_wp, get_window_eheight (cur_wp) / 2);
       else
-        set_window_topdelta (cur_wp, get_buffer_pt (cur_bp)->n);
+        set_window_topdelta (cur_wp, get_point_n (get_buffer_pt (cur_bp)));
     }
-  set_window_lastpointn (cur_wp, get_buffer_pt (cur_bp)->n);
+  set_window_lastpointn (cur_wp, get_point_n (get_buffer_pt (cur_bp)));
 }
 
 void
@@ -115,10 +115,10 @@ recenter (int wp)
 {
   Point * pt = window_pt (wp);
 
-  if (pt->n > get_window_eheight (wp) / 2)
+  if (get_point_n (pt) > get_window_eheight (wp) / 2)
     set_window_topdelta (wp, get_window_eheight (wp) / 2);
   else
-    set_window_topdelta (wp, pt->n);
+    set_window_topdelta (wp, get_point_n (pt));
 }
 
 DEFUN ("recenter", recenter)

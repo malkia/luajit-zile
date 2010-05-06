@@ -53,16 +53,7 @@ typedef struct Undo Undo;
 typedef struct Macro Macro;
 typedef struct Binding *Binding;
 typedef struct Buffer Buffer;
-
-/* FIXME: Types which should really be opaque. */
 typedef struct Point Point;
-
-struct Point
-{
-  Line *p;			/* Line pointer. */
-  size_t n;			/* Line number. */
-  size_t o;			/* Offset. */
-};
 
 /* Undo delta types. */
 enum
@@ -86,16 +77,16 @@ enum
 
 #define GETTER(Obj, name, ty, field)            \
   ty                                            \
-  get_ ## name ## _ ## field (const Obj *p)     \
+  get_ ## name ## _ ## field (const Obj *_p)    \
   {                                             \
-    return p->field;                            \
+    return _p->field;                           \
   }                                             \
 
-#define SETTER(Obj, name, ty, field)            \
-  void                                          \
-  set_ ## name ## _ ## field (Obj *p, ty field) \
-  {                                             \
-    p->field = field;                           \
+#define SETTER(Obj, name, ty, field)                    \
+  void                                                  \
+  set_ ## name ## _ ## field (Obj *_p, ty field)        \
+  {                                                     \
+    _p->field = field;                                  \
   }
 
 #define STR_SETTER(Obj, name, field)                            \

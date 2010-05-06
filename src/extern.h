@@ -232,6 +232,12 @@ char *minibuf_read_filename (const char *fmt, const char *value,
 void minibuf_clear (void);
 
 /* point.c ---------------------------------------------------------------- */
+#define FIELD(ty, field)                                \
+  ty get_point_ ## field (const Point * pt);            \
+  void set_point_ ## field (Point * pt, ty field);
+#include "point.h"
+#undef FIELD
+Point *point_new (void);
 Point *make_point (size_t lineno, size_t offset);
 Point *point_copy (Point *pt);
 int cmp_point (Point * pt1, Point * pt2);

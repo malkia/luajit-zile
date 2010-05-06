@@ -82,19 +82,19 @@ buffer_new (void)
   Buffer *bp = (Buffer *) XZALLOC (Buffer);
 
   /* Allocate Point. */
-  bp->pt = XZALLOC (Point);
+  bp->pt = point_new ();
 
   /* Allocate a line. */
-  bp->pt->p = line_new ();
-  set_line_text (bp->pt->p, astr_new ());
+  set_point_p (bp->pt, line_new ());
+  set_line_text (get_point_p (bp->pt), astr_new ());
 
   /* Allocate the limit marker. */
   bp->lines = line_new ();
 
-  set_line_prev (bp->lines, bp->pt->p);
-  set_line_next (bp->lines, bp->pt->p);
-  set_line_prev (bp->pt->p, bp->lines);
-  set_line_next (bp->pt->p, bp->lines);
+  set_line_prev (bp->lines, get_point_p (bp->pt));
+  set_line_next (bp->lines, get_point_p (bp->pt));
+  set_line_prev (get_point_p (bp->pt), bp->lines);
+  set_line_next (get_point_p (bp->pt), bp->lines);
 
   /* Set default EOL string. */
   bp->eol = coding_eol_lf;
@@ -369,21 +369,21 @@ delete_region (const Region * rp)
 bool
 in_region (size_t lineno, size_t x, Region * rp)
 {
-  if (lineno >= rp->start->n && lineno <= rp->end->n)
+  if (lineno >= get_point_n (rp->start) && lineno <= get_point_n (rp->end))
     {
-      if (rp->start->n == rp->end->n)
+      if (get_point_n (rp->start) == get_point_n (rp->end))
         {
-          if (x >= rp->start->o && x < rp->end->o)
+          if (x >= get_point_o (rp->start) && x < get_point_o (rp->end))
             return true;
         }
-      else if (lineno == rp->start->n)
+      else if (lineno == get_point_n (rp->start))
         {
-          if (x >= rp->start->o)
+          if (x >= get_point_o (rp->start))
             return true;
         }
-      else if (lineno == rp->end->n)
+      else if (lineno == get_point_n (rp->end))
         {
-          if (x < rp->end->o)
+          if (x < get_point_o (rp->end))
             return true;
         }
       else
@@ -490,8 +490,8 @@ copy_text_block (size_t startn, size_t starto, size_t size)
   max_size = 10;
   dp = buf = (char *) xzalloc (max_size);
 
-  lp = cur_bp->pt->p;
-  n = cur_bp->pt->n;
+  lp = get_point_p (cur_bp->pt);
+  n = get_point_n (cur_bp->pt);
   if (n > startn)
     do
       lp = get_line_prev (lp);
