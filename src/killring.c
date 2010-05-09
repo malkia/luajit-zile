@@ -1,6 +1,6 @@
 /* Kill ring facility functions
 
-   Copyright (c) 2008, 2009 Free Software Foundation, Inc.
+   Copyright (c) 2001, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
    This file is part of GNU Zile.
 
@@ -40,15 +40,7 @@ free_kill_ring (void)
 }
 
 static void
-kill_ring_push (int c)
-{
-  if (kill_ring_text == NULL)
-    kill_ring_text = astr_new ();
-  astr_cat_char (kill_ring_text, c);
-}
-
-static void
-kill_ring_push_nstring (char *s, size_t size)
+kill_ring_push (const char *s, size_t size)
 {
   if (kill_ring_text == NULL)
     kill_ring_text = astr_new ();
@@ -58,12 +50,12 @@ kill_ring_push_nstring (char *s, size_t size)
 static bool
 copy_or_kill_region (bool kill, Region * rp)
 {
-  char *p = copy_text_block (get_point_n (get_region_start (rp)), get_point_o (get_region_start (rp)), get_region_size (rp));
+  astr as = copy_text_block (get_region_start (rp), get_region_size (rp));
 
   if (strcmp (last_command (), "kill-region") != 0)
     free_kill_ring ();
-  kill_ring_push_nstring (p, get_region_size (rp));
-  free (p);
+  kill_ring_push (astr_cstr (as), get_region_size (rp));
+  astr_delete (as);
 
   if (kill)
     {
@@ -147,7 +139,7 @@ kill_line (bool whole_line)
       if (!FUNCALL (delete_char))
         return false;
 
-      kill_ring_push ('\n');
+      kill_ring_push ("\n", 1);
       set_this_command ("kill-region");
     }
 

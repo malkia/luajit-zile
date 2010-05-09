@@ -84,44 +84,6 @@ cmp_point (Point * pt1, Point * pt2)
     return ((get_point_o (pt1) < get_point_o (pt2)) ? -1 : (get_point_o (pt1) > get_point_o (pt2)) ? +1 : 0);
 }
 
-int
-point_dist (Point * pt1, Point * pt2)
-{
-  int size = 0;
-  Line *lp;
-
-  if (cmp_point (pt1, pt2) > 0)
-   {
-     Point * pt0 = point_copy (pt1);
-     *pt1 = *pt2;
-     *pt2 = *pt0;
-   }
-
-  for (lp = get_point_p (pt1);; lp = get_line_next (lp))
-    {
-      size += astr_len (get_line_text (lp));
-
-      if (lp == get_point_p (pt1))
-        size -= get_point_o (pt1);
-
-      if (lp == get_point_p (pt2))
-        {
-          size -= astr_len (get_line_text (lp)) - get_point_o (pt2);
-          break;
-        }
-      else
-        size++;
-    }
-
-  return size;
-}
-
-int
-count_lines (Point * pt1, Point * pt2)
-{
-  return abs (get_point_n (pt2) - get_point_n (pt1));
-}
-
 Point *
 point_min (void)
 {

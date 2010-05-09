@@ -411,18 +411,5 @@ main (int argc, char **argv)
   /* Tidy and close the terminal. */
   (void) CLUE_DO (L, "term_finish ()");
 
-  free_default_bindings ();
-
-  /* Free all the memory allocated. */
-  free_search ();
-  free_kill_ring ();
-  free_registers ();
-  free_macros ();
-  free_windows ();
-  free_buffers ();
-  free_minibuf ();
-  free (prog_name);
-  CLUE_CLOSE(L);
-
   return 0;
 }

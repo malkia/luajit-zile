@@ -42,7 +42,6 @@ gl_list_t get_key_sequence (void);
 const char * get_function_by_keys (gl_list_t keys);
 void process_command (void);
 void init_default_bindings (void);
-void free_default_bindings (void);
 
 /* buffer.c --------------------------------------------------------------- */
 #define FIELD(ty, field)                                \
@@ -59,7 +58,6 @@ void free_default_bindings (void);
 #include "region.h"
 #undef FIELD
 void free_buffer (Buffer * bp);
-void free_buffers (void);
 void init_buffer (Buffer * bp);
 Buffer * buffer_new (void);
 const char *get_buffer_filename_or_name (Buffer * bp);
@@ -77,7 +75,7 @@ int transient_mark_mode (void);
 void activate_mark (void);
 void deactivate_mark (void);
 size_t tab_width (Buffer * bp);
-char *copy_text_block (size_t startn, size_t starto, size_t size);
+astr copy_text_block (Point * pt, size_t size);
 Buffer *create_scratch_buffer (void);
 void kill_buffer (Buffer * kill_bp);
 bool check_modified_buffer (Buffer * bp);
@@ -130,7 +128,6 @@ size_t xgetkey (int mode, size_t timeout);
 size_t getkey (void);
 void waitkey (size_t delay);
 void init_getkey (void);
-void free_getkey (void);
 
 /* keycode.c -------------------------------------------------------------- */
 astr chordtostr (size_t key);
@@ -161,7 +158,6 @@ void insert_nstring (const char *s, size_t len);
 void insert_astr (astr as);
 void bprintf (const char *fmt, ...);
 bool delete_char (void);
-void free_registers (void);
 
 /* lisp.c ----------------------------------------------------------------- */
 extern le leNIL, leT;
@@ -186,7 +182,6 @@ void add_cmd_to_macro (void);
 void add_key_to_cmd (size_t key);
 void remove_key_from_cmd (void);
 void call_macro (Macro * mp);
-void free_macros (void);
 Macro *get_macro (const char *name);
 void add_macros_to_list (int l);
 
@@ -208,12 +203,10 @@ void free_marker (Marker * marker);
 void move_marker (Marker * marker, Buffer * bp, Point * pt);
 Marker *copy_marker (Marker * marker);
 Marker *point_marker (void);
-Marker *point_min_marker (void);
 
 /* minibuf.c -------------------------------------------------------------- */
 extern char *minibuf_contents;
 void init_minibuf (void);
-void free_minibuf (void);
 void minibuf_error (const char *fmt, ...);
 void minibuf_write (const char *fmt, ...);
 char *minibuf_read (const char *fmt, const char *value, ...);
@@ -256,7 +249,6 @@ void recenter (int wp);
 
 /* search.c --------------------------------------------------------------- */
 void init_search (void);
-void free_search (void);
 
 /* term_minibuf.c --------------------------------------------------------- */
 void term_minibuf_write (const char *fmt);
@@ -294,7 +286,6 @@ bool get_variable_bool (const char *var);
 #undef FIELD
 void create_scratch_window (void);
 int find_window (const char *name);
-void free_windows (void);
 int popup_window (void);
 void set_current_window (int wp);
 void delete_window (int del_wp);

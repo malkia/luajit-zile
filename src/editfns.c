@@ -44,9 +44,9 @@ push_mark (void)
     gl_list_add_last (mark_ring, copy_marker (get_buffer_mark (cur_bp)));
   else
     { /* Save an invalid mark.  */
-      Marker *m = point_min_marker ();
-      Point * pt = get_marker_pt (m);
-      set_point_p (pt, NULL);
+      Marker *m = marker_new ();
+      move_marker (m, cur_bp, point_min ());
+      set_point_p (get_marker_pt (m), NULL);
       gl_list_add_last (mark_ring, m);
     }
 }

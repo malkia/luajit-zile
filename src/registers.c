@@ -1,6 +1,6 @@
 /* Registers facility functions
 
-   Copyright (c) 2008, 2009 Free Software Foundation, Inc.
+   Copyright (c) 2001, 2003, 2004, 2005, 2006, 2008, 2009, 2010 Free Software Foundation, Inc.
 
    This file is part of GNU Zile.
 
@@ -34,13 +34,6 @@
 
 static astr regs[NUM_REGISTERS];
 
-static void
-register_free (size_t n)
-{
-  if (regs[n] != NULL)
-    astr_delete (regs[n]);
-}
-
 DEFUN_ARGS ("copy-to-register", copy_to_register,
             INT_ARG (reg))
 /*+
@@ -70,10 +63,9 @@ Copy region into register @i{register}.
         ok = leNIL;
       else
         {
-          char *p = copy_text_block (get_point_n (get_region_start (rp)), get_point_o (get_region_start (rp)), get_region_size (rp));
-          register_free ((size_t) reg);
-          regs[reg] = astr_new_cstr (p);
-          free (p);
+          if (regs[reg] != NULL)
+            astr_delete (regs[reg]);
+          regs[reg] = copy_text_block (get_region_start (rp), get_region_size (rp));
         }
 
       free (rp);
@@ -175,11 +167,3 @@ List defined registers.
   write_temp_buffer ("*Registers List*", true, write_registers_list);
 }
 END_DEFUN
-
-void
-free_registers (void)
-{
-  size_t i;
-  for (i = 0; i < NUM_REGISTERS; ++i)
-    register_free (i);
-}

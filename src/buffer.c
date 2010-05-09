@@ -126,21 +126,6 @@ free_buffer (Buffer * bp)
 }
 
 /*
- * Free all the allocated buffers (used at Zile exit).
- */
-void
-free_buffers (void)
-{
-  Buffer *bp, *next;
-
-  for (bp = head_bp; bp != NULL; bp = next)
-    {
-      next = bp->next;
-      free_buffer (bp);
-    }
-}
-
-/*
  * Initialise a buffer
  */
 void
@@ -340,8 +325,17 @@ calculate_the_region (Region * rp)
       set_region_end (rp, cur_bp->pt);
     }
 
-  set_region_size (rp, point_dist (get_region_start (rp),
-                                   get_region_end (rp)));
+  {
+    Point * pt1 = get_region_start (rp), * pt2 = get_region_end (rp);
+    int size = -get_point_o (pt1) + get_point_o (pt2);
+    Line *lp;
+
+    for (lp = get_point_p (pt1); lp != get_point_p (pt2); lp = get_line_next (lp))
+      size += astr_len (get_line_text (lp)) + 1;
+
+    set_region_size (rp, size);
+  }
+
   return true;
 }
 
@@ -480,47 +474,21 @@ tab_width (Buffer * bp)
 /*
  * Copy a region of text into an allocated buffer.
  */
-char *
-copy_text_block (size_t startn, size_t starto, size_t size)
+astr
+copy_text_block (Point * pt, size_t size)
 {
-  char *buf, *dp;
-  size_t max_size, n, i;
   Line *lp;
+  astr as = astr_substr (get_line_text (get_point_p (pt)), get_point_o (pt), astr_len (get_line_text (get_point_p (pt))) - get_point_o (pt));
 
-  max_size = 10;
-  dp = buf = (char *) xzalloc (max_size);
-
-  lp = get_point_p (cur_bp->pt);
-  n = get_point_n (cur_bp->pt);
-  if (n > startn)
-    do
-      lp = get_line_prev (lp);
-    while (--n > startn);
-  else if (n < startn)
-    do
-      lp = get_line_next (lp);
-    while (++n < startn);
-
-  for (i = starto; dp - buf < (int) size;)
+  astr_cat_char (as, '\n');
+  for (lp = get_line_next (get_point_p (pt)); astr_len (as) < size; lp = get_line_next (lp))
     {
-      if (dp >= buf + max_size)
-        {
-          int save_off = dp - buf;
-          max_size += 10;
-          buf = (char *) xrealloc (buf, max_size);
-          dp = buf + save_off;
-        }
-      if (i < astr_len (get_line_text (lp)))
-        *dp++ = astr_get (get_line_text (lp), i++);
-      else
-        {
-          *dp++ = '\n';
-          lp = get_line_next (lp);
-          i = 0;
-        }
+      astr_cat (as, get_line_text (lp));
+      astr_cat_char (as, '\n');
     }
+  astr_truncate (as, size);
 
-  return buf;
+  return as;
 }
 
 Buffer *
