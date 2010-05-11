@@ -77,7 +77,7 @@ undo_save (int type, Point * pt, size_t osize, size_t size)
 
   up = (Undo *) XZALLOC (Undo);
   up->type = type;
-  up->pt = pt;
+  up->pt = point_copy (pt);
   if (!get_buffer_modified (cur_bp))
     up->unchanged = true;
 
