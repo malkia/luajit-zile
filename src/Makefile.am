@@ -95,6 +95,7 @@ zile_LUA =						\
 	file.lua					\
 	line.lua					\
 	lisp.lua					\
+	marker.lua					\
 	term_curses.lua					\
 	term_redisplay.lua				\
 	tbl_vars.lua

@@ -44,7 +44,10 @@ push_mark (void)
     gl_list_add_last (mark_ring, (void *) copy_marker (get_buffer_mark (cur_bp)));
   else
     { /* Save an invalid mark.  */
-      int m = marker_new ();
+      int m;
+      (void) CLUE_DO (L, "m = marker_new ()");
+      lua_getglobal (L, "m");
+      m = luaL_ref (L, LUA_REGISTRYINDEX);
       move_marker (m, cur_bp, point_min ());
       set_point_p (get_marker_pt (m), LUA_NOREF);
       gl_list_add_last (mark_ring, (void *) m);

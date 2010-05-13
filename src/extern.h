@@ -203,7 +203,6 @@ extern int thisflag, lastflag, last_uniarg;
 #include "marker.h"
 #undef FIELD
 #undef TABLE_FIELD
-int marker_new (void);
 void free_marker (int marker);
 void move_marker (int marker, Buffer * bp, Point * pt);
 int copy_marker (int marker);

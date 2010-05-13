@@ -43,18 +43,6 @@
 #include "marker.h"
 #undef FIELD
 
-int
-marker_new (void)
-{
-  int m;
-
-  lua_newtable (L);
-  m = luaL_ref (L, LUA_REGISTRYINDEX);
-  set_marker_next (m, LUA_NOREF);
-
-  return m;
-}
-
 static void
 unchain_marker (int marker)
 {
@@ -113,7 +101,9 @@ copy_marker (int m)
   int marker = LUA_NOREF;
   if (m != LUA_NOREF)
     {
-      marker = marker_new ();
+      (void) CLUE_DO (L, "m = marker_new ()");
+      lua_getglobal (L, "m");
+      marker = luaL_ref (L, LUA_REGISTRYINDEX);
       move_marker (marker, get_marker_bp (m), get_marker_pt (m));
     }
   return marker;
@@ -122,7 +112,10 @@ copy_marker (int m)
 int
 point_marker (void)
 {
-  int marker = marker_new ();
+  int marker;
+  (void) CLUE_DO (L, "m = marker_new ()");
+  lua_getglobal (L, "m");
+  marker = luaL_ref (L, LUA_REGISTRYINDEX);
   move_marker (marker, cur_bp, point_copy (get_buffer_pt (cur_bp)));
   return marker;
 }
