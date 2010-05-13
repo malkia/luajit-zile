@@ -184,28 +184,28 @@ re_find_substr (const char *s1, size_t s1size,
 }
 
 static void
-goto_linep (Line * lp)
+goto_linep (int lp)
 {
   Point * pt;
   set_buffer_pt (cur_bp, point_min ());
   resync_redisplay ();
-  for (pt = get_buffer_pt (cur_bp); get_point_p (pt) != lp; pt = get_buffer_pt (cur_bp))
+  for (pt = get_buffer_pt (cur_bp); !lua_refeq (L, get_point_p (pt), lp); pt = get_buffer_pt (cur_bp))
     next_line ();
 }
 
 static int
-search_forward (Line * startp, size_t starto, const char *s, int regexp)
+search_forward (int startp, size_t starto, const char *s, int regexp)
 {
-  Line *lp;
+  int lp;
   const char *sp, *sp2, *translate = fold_table (s, regexp);
   size_t s1size, s2size = strlen (s);
 
   if (s2size < 1)
     return false;
 
-  for (lp = startp; lp != get_buffer_lines (cur_bp); lp = get_line_next (lp))
+  for (lp = startp; !lua_refeq (L, lp, get_buffer_lines (cur_bp)); lp = get_line_next (lp))
     {
-      if (lp == startp)
+      if (lua_refeq (L, lp, startp))
         {
           sp = astr_cstr (get_line_text (lp)) + starto;
           s1size = astr_len (get_line_text (lp)) - starto;
@@ -239,19 +239,19 @@ search_forward (Line * startp, size_t starto, const char *s, int regexp)
 }
 
 static int
-search_backward (Line * startp, size_t starto, const char *s, int regexp)
+search_backward (int startp, size_t starto, const char *s, int regexp)
 {
-  Line *lp;
+  int lp;
   const char *sp, *sp2, *translate = fold_table (s, regexp);
   size_t s1size, ssize = strlen (s);
 
   if (ssize < 1)
     return false;
 
-  for (lp = startp; lp != get_buffer_lines (cur_bp); lp = get_line_prev (lp))
+  for (lp = startp; !lua_refeq (L, lp, get_buffer_lines (cur_bp)); lp = get_line_prev (lp))
     {
       sp = astr_cstr (get_line_text (lp));
-      if (lp == startp)
+      if (lua_refeq (L, lp, startp))
         s1size = starto;
       else
         s1size = astr_len (get_line_text (lp));
@@ -280,7 +280,7 @@ search_backward (Line * startp, size_t starto, const char *s, int regexp)
 
 static char *last_search = NULL;
 
-typedef int (*Searcher) (Line * startp, size_t starto, const char *s, int regexp);
+typedef int (*Searcher) (int startp, size_t starto, const char *s, int regexp);
 
 static le
 search (Searcher searcher, bool regexp, const char *pattern, const char *search_msg)

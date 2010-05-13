@@ -118,7 +118,7 @@ draw_end_of_line (size_t line, int wp, size_t lineno, Region * rp,
 }
 
 static void
-draw_line (size_t line, size_t startcol, int wp, Line * lp,
+draw_line (size_t line, size_t startcol, int wp, int lp,
            size_t lineno, Region * rp, int highlight)
 {
   size_t x, i;
@@ -164,7 +164,7 @@ static void
 draw_window (size_t topline, int wp)
 {
   size_t i, startcol, lineno;
-  Line * lp;
+  int lp;
   Region * rp = region_new ();
   int highlight;
   Point * pt = window_pt (wp);
@@ -173,7 +173,7 @@ draw_window (size_t topline, int wp)
 
   /* Find the first line to display on the first screen line. */
   for (lp = get_point_p (pt), lineno = get_point_n (pt), i = get_window_topdelta (wp);
-       i > 0 && get_line_prev (lp) != get_buffer_lines (get_window_bp (wp));
+       i > 0 && !lua_refeq (L, get_line_prev (lp), get_buffer_lines (get_window_bp (wp)));
        lp = get_line_prev (lp), --i, --lineno)
     ;
 
@@ -188,7 +188,7 @@ draw_window (size_t topline, int wp)
       (void) CLUE_DO (L, "term_clrtoeol ()");
 
       /* If at the end of the buffer, don't write any text. */
-      if (lp == get_buffer_lines (get_window_bp (wp)))
+      if (lua_refeq (L, lp, get_buffer_lines (get_window_bp (wp))))
         continue;
 
       startcol = get_window_start_column (wp);

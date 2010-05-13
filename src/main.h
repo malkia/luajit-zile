@@ -46,7 +46,6 @@
  *--------------------------------------------------------------------------*/
 
 /* Opaque types. */
-typedef struct Line Line;
 typedef struct Region Region;
 typedef struct Marker Marker;
 typedef struct Undo Undo;
@@ -107,7 +106,7 @@ enum
     ret = lua_to ## lty (L, -1);                \
     lua_pop (L, 2);                             \
     return ret;                                 \
-  }                                             \
+  }
 
 #define LUA_TABLE_GETTER(name, field)           \
   int                                           \
@@ -120,7 +119,7 @@ enum
       ret = luaL_ref (L, LUA_REGISTRYINDEX);    \
     lua_pop (L, 1);                             \
     return ret;                                 \
-  }                                             \
+  }
 
 #define LUA_SETTER(name, cty, lty, field)               \
   void                                                  \
@@ -128,6 +127,16 @@ enum
   {                                                     \
     lua_rawgeti (L, LUA_REGISTRYINDEX, p);              \
     lua_push ## lty (L, val);                           \
+    lua_setfield (L, -2, #field);                       \
+    lua_pop (L, 1);                                     \
+  }
+
+#define LUA_TABLE_SETTER(name, field)                   \
+  void                                                  \
+  set_ ## name ## _ ## field (const le p, int val)      \
+  {                                                     \
+    lua_rawgeti (L, LUA_REGISTRYINDEX, p);              \
+    lua_rawgeti (L, LUA_REGISTRYINDEX, val);            \
     lua_setfield (L, -2, #field);                       \
     lua_pop (L, 1);                                     \
   }

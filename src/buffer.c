@@ -315,22 +315,21 @@ calculate_the_region (Region * rp)
   if (cmp_point (cur_bp->pt, get_marker_pt (cur_bp->mark)) < 0)
     {
       /* Point is before mark. */
-      set_region_start (rp, cur_bp->pt);
-      set_region_end (rp, get_marker_pt (cur_bp->mark));
+      set_region_start (rp, point_copy (cur_bp->pt));
+      set_region_end (rp, point_copy (get_marker_pt (cur_bp->mark)));
     }
   else
     {
       /* Mark is before point. */
-      set_region_start (rp, get_marker_pt (cur_bp->mark));
-      set_region_end (rp, cur_bp->pt);
+      set_region_start (rp, point_copy (get_marker_pt (cur_bp->mark)));
+      set_region_end (rp, point_copy (cur_bp->pt));
     }
 
   {
     Point * pt1 = get_region_start (rp), * pt2 = get_region_end (rp);
-    int size = -get_point_o (pt1) + get_point_o (pt2);
-    Line *lp;
+    int size = -get_point_o (pt1) + get_point_o (pt2), lp;
 
-    for (lp = get_point_p (pt1); lp != get_point_p (pt2); lp = get_line_next (lp))
+    for (lp = get_point_p (pt1); !lua_refeq (L, lp, get_point_p (pt2)); lp = get_line_next (lp))
       size += astr_len (get_line_text (lp)) + 1;
 
     set_region_size (rp, size);
@@ -424,17 +423,17 @@ set_temporary_buffer (Buffer * bp)
 size_t
 calculate_buffer_size (Buffer * bp)
 {
-  Line *lp = get_line_next (bp->lines);
+  int lp = get_line_next (bp->lines);
   size_t size = 0;
 
-  if (lp == bp->lines)
+  if (lua_refeq (L, lp, bp->lines))
     return 0;
 
   for (;;)
     {
       size += astr_len (get_line_text (lp));
       lp = get_line_next (lp);
-      if (lp == bp->lines)
+      if (lua_refeq (L, lp, bp->lines))
         break;
       ++size;
     }
@@ -477,7 +476,7 @@ tab_width (Buffer * bp)
 astr
 copy_text_block (Point * pt, size_t size)
 {
-  Line *lp;
+  int lp;
   astr as = astr_substr (get_line_text (get_point_p (pt)), get_point_o (pt), astr_len (get_line_text (get_point_p (pt))) - get_point_o (pt));
 
   astr_cat_char (as, '\n');

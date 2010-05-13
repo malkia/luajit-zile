@@ -139,16 +139,19 @@ astr keyvectostr (gl_list_t keys);
 void free_kill_ring (void);
 
 /* line.c ----------------------------------------------------------------- */
-#define FIELD(ty, field)                                \
-  ty get_line_ ## field (const Line *wp);               \
-  void set_line_ ## field (Line *wp, ty field);
+#define FIELD(cty, lty, field)                          \
+  cty get_line_ ## field (int l);                       \
+  void set_line_ ## field (int l, cty field);
+#define TABLE_FIELD(field)                      \
+  int get_line_ ## field (int l);               \
+  void set_line_ ## field (int l, int v);
 #include "line.h"
 #undef FIELD
-Line *line_new (void);
-void line_delete (Line *l);
-Line *line_insert (Line *l, astr i);
-void line_remove (Line *l);
-void line_replace_text (Line * lp, size_t offset, size_t oldlen,
+#undef TABLE_FIELD
+int line_new (void);
+void line_delete (int l);
+int line_insert (int l, astr i);
+void line_replace_text (int lp, size_t offset, size_t oldlen,
                         char *newtext, int replace_case);
 int insert_char (int c);
 int insert_char_in_insert_mode (int c);
@@ -175,6 +178,7 @@ int luaopen_curses (lua_State *L);
 
 /* lua.c ------------------------------------------------------------------ */
 int lua_debug (lua_State *L);
+int lua_refeq (lua_State *L, int r1, int r2);
 
 /* macro.c ---------------------------------------------------------------- */
 void cancel_kbd_macro (void);

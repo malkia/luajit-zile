@@ -29,7 +29,7 @@ FIELD_STR(filename)       /* The file being edited. */
 /* Other fields of Buffer. */
 FIELD(Buffer *, next)     /* Next buffer in buffer list. */
 FIELD(char *, eol)        /* EOL string (up to 2 chars). */
-FIELD(Line *, lines)      /* The lines of text. */
+FIELD(int, lines)         /* The lines of text. */
 FIELD(size_t, last_line)  /* The number of the last line in the buffer. */
 FIELD(size_t, goalc)      /* Goal column for previous/next-line commands. */
 FIELD(Point *, pt)        /* The point. */

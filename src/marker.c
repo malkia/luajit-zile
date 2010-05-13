@@ -101,7 +101,7 @@ move_marker (Marker * marker, Buffer * bp, Point * pt)
     }
 
   /* Change the point.  */
-  marker->pt = pt;
+  marker->pt = point_copy (pt);
 }
 
 Marker *

@@ -162,8 +162,7 @@ char coding_eol_cr[3] = "\r";
 static void
 read_from_disk (const char *filename)
 {
-  Line *lp;
-  int i, size;
+  int i, size, lp;
   bool first_eol = true;
   char *this_eol_type;
   size_t eol_len = 0, total_eols = 0;
@@ -399,7 +398,7 @@ Select buffer @i{buffer} in the current window.
 END_DEFUN
 
 static size_t
-insert_lines (size_t n, size_t end, size_t last, Line *from_lp)
+insert_lines (size_t n, size_t end, size_t last, int from_lp)
 {
   for (; n < end; n++, from_lp = get_line_next (from_lp))
     {
@@ -413,7 +412,7 @@ insert_lines (size_t n, size_t end, size_t last, Line *from_lp)
 static void
 insert_buffer (Buffer * bp)
 {
-  Line *old_next = get_line_next (get_point_p (get_buffer_pt (bp)));
+  int old_next = get_line_next (get_point_p (get_buffer_pt (bp)));
   astr old_cur_line = astr_cpy (astr_new (), get_line_text (get_point_p (get_buffer_pt (bp))));
   size_t old_cur_n = get_point_n (get_buffer_pt (bp)), old_lines = get_buffer_last_line (bp);
   size_t size = calculate_buffer_size (bp);
@@ -637,7 +636,7 @@ static int
 raw_write_to_disk (Buffer * bp, const char *filename, mode_t mode)
 {
   ssize_t eol_len = (ssize_t) strlen (get_buffer_eol (bp)), written;
-  Line *lp;
+  int lp;
   int ret = 0;
   int fd = creat (filename, mode);
 
@@ -646,7 +645,7 @@ raw_write_to_disk (Buffer * bp, const char *filename, mode_t mode)
 
   /* Save the lines. */
   for (lp = get_line_next (get_buffer_lines (bp));
-       lp != get_buffer_lines (bp);
+       !lua_refeq (L, lp, get_buffer_lines (bp));
        lp = get_line_next (lp))
     {
       ssize_t len = (ssize_t) astr_len (get_line_text (lp));
@@ -657,7 +656,7 @@ raw_write_to_disk (Buffer * bp, const char *filename, mode_t mode)
           ret = written;
           break;
         }
-      if (get_line_next (lp) != get_buffer_lines (bp))
+      if (!lua_refeq (L, get_line_next (lp), get_buffer_lines (bp)))
         {
           written = write (fd, get_buffer_eol (bp), eol_len);
           if (written != eol_len)

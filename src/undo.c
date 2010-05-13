@@ -41,7 +41,7 @@ struct Undo
   int type;
 
   /* Where the undo delta need to be applied.
-     Warning!: Do not use the "get_point_p (pt)" field. */
+     Warning!: Do not use the p field of pt. */
   Point * pt;
 
   /* Flag indicating that reverting this undo leaves the buffer
@@ -85,7 +85,7 @@ undo_save (int type, Point * pt, size_t osize, size_t size)
     {
       up->block.osize = osize;
       up->block.size = size;
-      up->block.text = copy_text_block (pt, osize);
+      up->block.text = copy_text_block (point_copy (pt), osize);
     }
 
   up->next = get_buffer_last_undop (cur_bp);

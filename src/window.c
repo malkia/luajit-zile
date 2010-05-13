@@ -332,14 +332,14 @@ window_pt (int wp)
       assert (get_window_bp (wp) == cur_bp);
       assert (get_window_saved_pt (wp) == NULL);
       assert (cur_bp);
-      return get_buffer_pt (cur_bp);
+      return point_copy (get_buffer_pt (cur_bp));
     }
   else
     {
       if (get_window_saved_pt (wp) != NULL)
-        return get_marker_pt (get_window_saved_pt (wp));
+        return point_copy (get_marker_pt (get_window_saved_pt (wp)));
       else
-        return get_buffer_pt (get_window_bp (wp));
+        return point_copy (get_buffer_pt (get_window_bp (wp)));
     }
 }
 

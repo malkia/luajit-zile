@@ -561,7 +561,7 @@ untabify_string (char *dest, char *src, size_t scol, size_t tw)
 #define TAB_TABIFY	1
 #define TAB_UNTABIFY	2
 static void
-edit_tab_line (Line * lp, size_t lineno, size_t offset, size_t size,
+edit_tab_line (int lp, size_t lineno, size_t offset, size_t size,
                int action)
 {
   char *src, *dest;
@@ -615,7 +615,7 @@ edit_tab_region (int action)
   if (get_region_size (rp) != 0)
     {
       Marker *m = point_marker ();
-      Line * lp;
+      int lp;
       size_t lineno;
 
       undo_save (UNDO_START_SEQUENCE, get_marker_pt (m), 0, 0);
@@ -1344,7 +1344,7 @@ static le
 setcase_region (enum casing rcase)
 {
   Region * rp = region_new ();
-  Line * lp;
+  int lp;
   size_t i, size;
   int (*func) (int) = rcase == case_upper ? toupper : tolower;
 
@@ -1653,7 +1653,7 @@ On nonblank line, delete any immediately following blank lines.
       while (is_blank_line ());
       if (forward)
         FUNCALL (forward_line);
-      if (get_point_p (get_buffer_pt (cur_bp)) != get_point_p (get_marker_pt (m)))
+      if (!lua_refeq (L, get_point_p (get_buffer_pt (cur_bp)), get_point_p (get_marker_pt (m))))
         {
           if (!seq_started)
             {

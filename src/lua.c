@@ -37,9 +37,6 @@
 #include <lauxlib.h>
 #include <lualib.h>
 
-/* FIXME: put this in a header file. */
-int lua_debug (lua_State *L);
-
 static lua_State *globalL = NULL;
 
 
@@ -200,10 +197,25 @@ static int pmain (lua_State *L) {
 }
 
 
+#include "main.h"
+#include "extern.h"
+
+/* N.B. Following code written by Reuben Thomas */
+
 int lua_debug (lua_State *L) {
   int status;
   status = lua_cpcall(L, &pmain, NULL);
   report(L, status);
   lua_close(L);
   return status ? EXIT_FAILURE : EXIT_SUCCESS;
+}
+
+
+int lua_refeq (lua_State *L, int r1, int r2) {
+  int ret;
+  lua_rawgeti (L, LUA_REGISTRYINDEX, r1);
+  lua_rawgeti (L, LUA_REGISTRYINDEX, r2);
+  ret = lua_equal (L, -1, -2);
+  lua_pop (L, 2);
+  return ret;
 }

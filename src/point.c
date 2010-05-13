@@ -21,6 +21,8 @@
 
 #include "config.h"
 
+#include <assert.h>
+
 #include "main.h"
 #include "extern.h"
 
@@ -115,12 +117,12 @@ line_beginning_position (int count)
   set_point_o (pt, 0);
 
   count--;
-  for (; count < 0 && get_line_prev (get_point_p (pt)) != get_buffer_lines (cur_bp); count++)
+  for (; count < 0 && !lua_refeq (L, get_line_prev (get_point_p (pt)), get_buffer_lines (cur_bp)); count++)
     {
       set_point_p (pt, get_line_prev (get_point_p (pt)));
       set_point_n (pt, get_point_n (pt) - 1);
     }
-  for (; count > 0 && get_line_next (get_point_p (pt)) != get_buffer_lines (cur_bp); count--)
+  for (; count > 0 && !lua_refeq (L, get_line_next (get_point_p (pt)), get_buffer_lines (cur_bp)); count--)
     {
       set_point_p (pt, get_line_next (get_point_p (pt)));
       set_point_n (pt, get_point_n (pt) + 1);

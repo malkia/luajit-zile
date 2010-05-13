@@ -46,7 +46,7 @@ push_mark (void)
     { /* Save an invalid mark.  */
       Marker *m = marker_new ();
       move_marker (m, cur_bp, point_min ());
-      set_point_p (get_marker_pt (m), NULL);
+      set_point_p (get_marker_pt (m), LUA_NOREF);
       gl_list_add_last (mark_ring, m);
     }
 }
@@ -131,7 +131,7 @@ bool
 bobp (void)
 {
   Point * pt = get_buffer_pt (cur_bp);
-  return (get_line_prev (get_point_p (pt)) == get_buffer_lines (cur_bp) && get_point_o (pt) == 0);
+  return (lua_refeq (L, get_line_prev (get_point_p (pt)), get_buffer_lines (cur_bp)) && get_point_o (pt) == 0);
 }
 
 /* Return true if point is at the end of the buffer. */
@@ -139,7 +139,7 @@ bool
 eobp (void)
 {
   Point * pt = get_buffer_pt (cur_bp);
-  return (get_line_next (get_point_p (pt)) == get_buffer_lines (cur_bp) &&
+  return (lua_refeq (L, get_line_next (get_point_p (pt)), get_buffer_lines (cur_bp)) &&
           get_point_o (pt) == astr_len (get_line_text (get_point_p (pt))));
 }
 

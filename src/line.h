@@ -23,6 +23,6 @@
  * A line is a doubly-linked list of astrs.
  * The newline at the end of each line is implicit.
  */
-FIELD(Line *, prev)
-FIELD(Line *, next)
-FIELD(astr, text)
+TABLE_FIELD(prev)
+TABLE_FIELD(next)
+FIELD(astr, lightuserdata, text)
