@@ -33,8 +33,8 @@ FIELD(int, lines)         /* The lines of text. */
 FIELD(size_t, last_line)  /* The number of the last line in the buffer. */
 FIELD(size_t, goalc)      /* Goal column for previous/next-line commands. */
 FIELD(Point *, pt)        /* The point. */
-FIELD(Marker *, mark)     /* The mark. */
-FIELD(Marker *, markers)  /* Markers list (updated whenever text is changed). */
+FIELD(int, mark)          /* The mark. */
+FIELD(int, markers)       /* Markers list (updated whenever text is changed). */
 FIELD(Undo *, last_undop) /* Most recent undo delta. */
 FIELD(Undo *, next_undop) /* Next undo delta to apply. */
 FIELD(int, vars)          /* Buffer-local variables. */

@@ -372,7 +372,7 @@ isearch (int dir, int regexp)
   astr buf = astr_new ();
   astr pattern = astr_new ();
   Point * start, * cur;
-  Marker *old_mark = copy_marker (get_buffer_mark (get_window_bp (cur_wp)));
+  int old_mark = copy_marker (get_buffer_mark (get_window_bp (cur_wp)));
 
   start = point_copy (get_buffer_pt (cur_bp));
   cur = point_copy (start);

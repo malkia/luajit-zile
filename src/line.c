@@ -50,62 +50,6 @@
  * Circular doubly-linked lists
  */
 
-/* Create an empty list, returning a pointer to the list */
-int
-line_new (void)
-{
-  int l;
-
-  lua_newtable (L);
-  l = luaL_ref (L, LUA_REGISTRYINDEX);
-  set_line_next (l, l);
-  set_line_prev (l, l);
-  set_line_text (l, NULL);
-
-  return l;
-}
-
-/* Remove a line from a list. */
-static void
-line_remove (int lp)
-{
-  astr as = get_line_text (lp);
-
-  set_line_next (get_line_prev (lp), get_line_next (lp));
-  set_line_prev (get_line_next (lp), get_line_prev (lp));
-  luaL_unref (L, LUA_REGISTRYINDEX, lp);
-  astr_delete (as);
-}
-
-/* Delete a list, freeing its nodes */
-void
-line_delete (int lp)
-{
-  while (!lua_refeq (L, get_line_next (lp), lp))
-    line_remove (get_line_next (lp));
-
-  luaL_unref (L, LUA_REGISTRYINDEX, lp);
-}
-
-
-/* Insert a line into list after the given point, returning the new line */
-int
-line_insert (int lp, astr i)
-{
-  int n;
-
-  lua_newtable (L);
-  n = luaL_ref (L, LUA_REGISTRYINDEX);
-  set_line_next (n, get_line_next (lp));
-  set_line_prev (n, lp);
-  set_line_text (n, i);
-  set_line_prev (get_line_next (lp), n);
-  set_line_next (lp, n);
-
-  return n;
-}
-
-
 /*
  * Adjust markers (including point) when line at point is split, or
  * next line is joined on, or where a line is edited.
@@ -120,24 +64,22 @@ line_insert (int lp, astr i)
 static void
 adjust_markers (int newlp, int oldlp, size_t pointo, int dir, ptrdiff_t delta)
 {
-  Marker *m_pt = point_marker (), *m;
+  int m_pt = point_marker (), m;
 
   assert (dir >= -1 && dir <= 1);
 
-  for (m = get_buffer_markers (cur_bp); m != NULL; m = get_marker_next (m))
+  for (m = get_buffer_markers (cur_bp); m != LUA_REFNIL; m = get_marker_next (m))
     {
-      if (lua_refeq (L, get_point_p (get_marker_pt (m)), oldlp) && (dir == -1 || get_point_o (get_marker_pt (m)) > pointo))
+      Point * pt = get_marker_pt (m);
+
+      if (lua_refeq (L, get_point_p (pt), oldlp) && (dir == -1 || get_point_o (pt) > pointo))
         {
-          Point * pt = get_marker_pt (m);
           set_point_p (pt, newlp);
           set_point_o (pt, get_point_o (pt) + delta - (pointo * dir));
           set_point_n (pt, get_point_n (pt) + dir);
         }
-      else if (get_point_n (get_marker_pt (m)) > get_point_n (get_buffer_pt (cur_bp)))
-        {
-          Point * pt = get_marker_pt (m);
-          set_point_n (pt, get_point_n (pt) + dir);
-        }
+      else if (get_point_n (pt) > get_point_n (get_buffer_pt (cur_bp)))
+        set_point_n (pt, get_point_n (pt) + dir);
     }
 
   /* This marker has been updated to new position. */
@@ -277,9 +219,12 @@ intercalate_newline (void)
   undo_save (UNDO_REPLACE_BLOCK, get_buffer_pt (cur_bp), 0, 1);
 
   /* Move the text after the point into a new line. */
-  line_insert (get_point_p (get_buffer_pt (cur_bp)),
-               astr_substr (get_line_text (get_point_p (get_buffer_pt (cur_bp))), get_point_o (get_buffer_pt (cur_bp)),
-                            astr_len (get_line_text (get_point_p (get_buffer_pt (cur_bp)))) - get_point_o (get_buffer_pt (cur_bp))));
+  lua_pushlightuserdata (L, astr_substr (get_line_text (get_point_p (get_buffer_pt (cur_bp))), get_point_o (get_buffer_pt (cur_bp)),
+                                         astr_len (get_line_text (get_point_p (get_buffer_pt (cur_bp)))) - get_point_o (get_buffer_pt (cur_bp))));
+  lua_setglobal (L, "s");
+  lua_rawgeti (L, LUA_REGISTRYINDEX, get_point_p (get_buffer_pt (cur_bp)));
+  lua_setglobal (L, "l");
+  (void) CLUE_DO (L, "line_insert (l, s)");
   set_buffer_last_line (cur_bp, get_buffer_last_line (cur_bp) + 1);
   astr_truncate (get_line_text (get_point_p (get_buffer_pt (cur_bp))), get_point_o (get_buffer_pt (cur_bp)));
   adjust_markers (get_line_next (get_point_p (get_buffer_pt (cur_bp))), get_point_p (get_buffer_pt (cur_bp)), get_point_o (get_buffer_pt (cur_bp)), 1, 0);
@@ -368,7 +313,7 @@ fill_break_line (void)
   if (get_goalc () > fillcol)
     {
       /* Save point. */
-      Marker *m = point_marker ();
+      int m = point_marker ();
 
       /* Move cursor back to fill column */
       old_col = get_point_o (get_buffer_pt (cur_bp));
@@ -525,7 +470,9 @@ delete_char (void)
 
       /* Join the lines. */
       astr_cat (get_line_text (get_point_p (get_buffer_pt (cur_bp))), get_line_text (oldlp));
-      line_remove (oldlp);
+      lua_rawgeti (L, LUA_REGISTRYINDEX, oldlp);
+      lua_setglobal (L, "l");
+      (void) CLUE_DO (L, "line_remove (l)");
 
       adjust_markers (get_point_p (get_buffer_pt (cur_bp)), oldlp, oldlen, -1, 0);
       set_buffer_last_line (cur_bp, get_buffer_last_line (cur_bp) - 1);
@@ -677,7 +624,7 @@ does nothing.
     target_goalc = 0;
   else
     { /* Find goalc in previous non-blank line. */
-      Marker *m = point_marker ();
+      int m = point_marker ();
 
       previous_nonblank_goalc ();
 
@@ -730,7 +677,7 @@ static size_t
 previous_line_indent (void)
 {
   size_t cur_indent;
-  Marker *m = point_marker ();
+  int m = point_marker ();
 
   FUNCALL (previous_line);
   FUNCALL (beginning_of_line);
@@ -779,8 +726,7 @@ Indentation is done using the `indent-for-tab-command' function.
   undo_save (UNDO_START_SEQUENCE, get_buffer_pt (cur_bp), 0, 0);
   if (insert_newline ())
     {
-      Marker *m = point_marker ();
-      int indent;
+      int m = point_marker (), indent;
       size_t pos;
 
       /* Check where last non-blank goalc is. */

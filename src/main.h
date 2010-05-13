@@ -47,7 +47,6 @@
 
 /* Opaque types. */
 typedef struct Region Region;
-typedef struct Marker Marker;
 typedef struct Undo Undo;
 typedef struct Macro Macro;
 typedef struct Binding *Binding;

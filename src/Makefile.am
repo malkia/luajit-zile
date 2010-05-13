@@ -93,6 +93,7 @@ zile_LUA =						\
 	completion.lua					\
 	history.lua					\
 	file.lua					\
+	line.lua					\
 	lisp.lua					\
 	term_curses.lua					\
 	term_redisplay.lua				\

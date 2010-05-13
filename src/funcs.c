@@ -329,7 +329,7 @@ Put the mark where point is now, and point where the mark is now.
 {
   Point * tmp;
 
-  if (get_buffer_mark (cur_bp) == NULL)
+  if (get_buffer_mark (cur_bp) == LUA_NOREF)
     {
       minibuf_error ("No mark set in this buffer");
       return leNIL;
@@ -614,7 +614,7 @@ edit_tab_region (int action)
 
   if (get_region_size (rp) != 0)
     {
-      Marker *m = point_marker ();
+      int m = point_marker ();
       int lp;
       size_t lineno;
 
@@ -923,7 +923,7 @@ astr_append_region (astr s)
 static bool
 transpose_subr (bool (*forward_func) (void), bool (*backward_func) (void))
 {
-  Marker *p0 = point_marker (), *m1, *m2;
+  int p0 = point_marker (), m1, m2;
   astr as1, as2 = NULL;
 
   /* For transpose-chars. */
@@ -1214,8 +1214,7 @@ DEFUN ("fill-paragraph", fill_paragraph)
 Fill paragraph at or after point.
 +*/
 {
-  int i, start, end;
-  Marker *m = point_marker ();
+  int i, start, end, m = point_marker ();
 
   undo_save (UNDO_START_SEQUENCE, get_buffer_pt (cur_bp), 0, 0);
 
@@ -1609,8 +1608,7 @@ On isolated blank line, delete that one.
 On nonblank line, delete any immediately following blank lines.
 +*/
 {
-  Marker *m = point_marker ();
-  int seq_started = false;
+  int m = point_marker (), seq_started = false;
 
   /* Delete any immediately following blank lines.  */
   if (next_line ())

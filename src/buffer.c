@@ -85,11 +85,15 @@ buffer_new (void)
   bp->pt = point_new ();
 
   /* Allocate a line. */
-  set_point_p (bp->pt, line_new ());
+  (void) CLUE_DO (L, "l = line_new ()");
+  lua_getglobal (L, "l");
+  set_point_p (bp->pt, luaL_ref (L, LUA_REGISTRYINDEX));
   set_line_text (get_point_p (bp->pt), astr_new ());
 
   /* Allocate the limit marker. */
-  bp->lines = line_new ();
+  (void) CLUE_DO (L, "l = line_new ()");
+  lua_getglobal (L, "l");
+  bp->lines = luaL_ref (L, LUA_REGISTRYINDEX);
 
   set_line_prev (bp->lines, get_point_p (bp->pt));
   set_line_next (bp->lines, get_point_p (bp->pt));
@@ -114,7 +118,6 @@ buffer_new (void)
 void
 free_buffer (Buffer * bp)
 {
-  line_delete (bp->lines);
   free_undo (bp->last_undop);
 
   while (bp->markers)
@@ -342,7 +345,7 @@ bool
 delete_region (const Region * rp)
 {
   size_t size = get_region_size (rp);
-  Marker *m = point_marker ();
+  int m = point_marker ();
 
   if (warn_if_readonly_buffer ())
     return false;
@@ -545,7 +548,7 @@ kill_buffer (Buffer * kill_bp)
           {
             set_window_bp (wp, next_bp);
             set_window_topdelta (wp, 0);
-            set_window_saved_pt (wp, NULL);	/* The marker will be freed. */
+            set_window_saved_pt (wp, LUA_NOREF);	/* The marker will be freed. */
           }
 
       /* Remove the buffer from the buffer list. */

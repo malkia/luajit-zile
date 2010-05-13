@@ -1,6 +1,6 @@
 /* Marker fields
 
-   Copyright (c) 2009 Free Software Foundation, Inc.
+   Copyright (c) 2009, 2010 Free Software Foundation, Inc.
 
    This file is part of GNU Zile.
 
@@ -19,6 +19,6 @@
    Free Software Foundation, Fifth Floor, 51 Franklin Street, Boston,
    MA 02111-1301, USA.  */
 
-FIELD(Marker *, next)		/* Used to chain all markers in the buffer. */
-FIELD(Buffer *, bp)		/* Buffer that points into. */
-FIELD(Point *, pt)		/* Point position. */
+TABLE_FIELD(next)                    /* Used to chain all markers in the buffer. */
+FIELD(Buffer *, lightuserdata, bp)   /* Buffer that points into. */
+FIELD(Point *, lightuserdata, pt)    /* Point position. */

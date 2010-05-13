@@ -32,45 +32,48 @@
  * Structure
  */
 
-struct Marker
-{
-#define FIELD(ty, name) ty name;
-#include "marker.h"
-#undef FIELD
-};
+#define FIELD(cty, lty, field)              \
+  LUA_GETTER (marker, cty, lty, field)      \
+  LUA_SETTER (marker, cty, lty, field)
 
-#define FIELD(ty, field)                         \
-  GETTER (Marker, marker, ty, field)             \
-  SETTER (Marker, marker, ty, field)
+#define TABLE_FIELD(field)                       \
+  LUA_TABLE_GETTER (marker, field)               \
+  LUA_TABLE_SETTER (marker, field)
 
 #include "marker.h"
 #undef FIELD
 
-Marker *
+int
 marker_new (void)
 {
-  return (Marker *) XZALLOC (Marker);
+  int m;
+
+  lua_newtable (L);
+  m = luaL_ref (L, LUA_REGISTRYINDEX);
+  set_marker_next (m, LUA_NOREF);
+
+  return m;
 }
 
 static void
-unchain_marker (Marker * marker)
+unchain_marker (int marker)
 {
-  Marker *m, *next, *prev = NULL;
+  int m, next, prev = LUA_NOREF;
 
-  if (!marker->bp)
+  if (!get_marker_bp (marker))
     return;
 
-  for (m = get_buffer_markers (marker->bp); m; m = next)
+  for (m = get_buffer_markers (get_marker_bp (marker)); m; m = next)
     {
-      next = m->next;
-      if (m == marker)
+      next = get_marker_next (m);
+      if (lua_refeq (L, m, marker))
         {
-          if (prev)
-            prev->next = next;
+          if (prev != LUA_NOREF)
+            set_marker_next (prev, next);
           else
-            set_buffer_markers (m->bp, next);
+            set_buffer_markers (get_marker_bp (m), next);
 
-          m->bp = NULL;
+          set_marker_bp (m, NULL);
           break;
         }
       prev = m;
@@ -78,48 +81,48 @@ unchain_marker (Marker * marker)
 }
 
 void
-free_marker (Marker * marker)
+free_marker (int marker)
 {
   unchain_marker (marker);
-  free (marker);
+  luaL_unref (L, LUA_REGISTRYINDEX, marker);
 }
 
 void
-move_marker (Marker * marker, Buffer * bp, Point * pt)
+move_marker (int marker, Buffer * bp, Point * pt)
 {
-  if (bp != marker->bp)
+  if (bp != get_marker_bp (marker))
     {
       /* Unchain with the previous pointed buffer.  */
       unchain_marker (marker);
 
       /* Change the buffer.  */
-      marker->bp = bp;
+      set_marker_bp (marker, bp);
 
       /* Chain with the new buffer.  */
-      marker->next = get_buffer_markers (bp);
+      set_marker_next (marker, get_buffer_markers (bp));
       set_buffer_markers (bp, marker);
     }
 
   /* Change the point.  */
-  marker->pt = point_copy (pt);
+  set_marker_pt (marker, point_copy (pt));
 }
 
-Marker *
-copy_marker (Marker * m)
+int
+copy_marker (int m)
 {
-  Marker *marker = NULL;
-  if (m)
+  int marker = LUA_NOREF;
+  if (m != LUA_NOREF)
     {
       marker = marker_new ();
-      move_marker (marker, m->bp, m->pt);
+      move_marker (marker, get_marker_bp (m), get_marker_pt (m));
     }
   return marker;
 }
 
-Marker *
+int
 point_marker (void)
 {
-  Marker *marker = marker_new ();
+  int marker = marker_new ();
   move_marker (marker, cur_bp, point_copy (get_buffer_pt (cur_bp)));
   return marker;
 }

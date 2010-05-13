@@ -148,9 +148,6 @@ void free_kill_ring (void);
 #include "line.h"
 #undef FIELD
 #undef TABLE_FIELD
-int line_new (void);
-void line_delete (int l);
-int line_insert (int l, astr i);
 void line_replace_text (int lp, size_t offset, size_t oldlen,
                         char *newtext, int replace_case);
 int insert_char (int c);
@@ -197,16 +194,20 @@ extern Buffer *cur_bp, *head_bp;
 extern int thisflag, lastflag, last_uniarg;
 
 /* marker.c --------------------------------------------------------------- */
-#define FIELD(ty, field)                                \
-  ty get_marker_ ## field (const Marker *cp);           \
-  void set_marker_ ## field (Marker *cp, ty field);
+#define FIELD(cty, lty, field)                  \
+  cty get_marker_ ## field (int wp);            \
+  void set_marker_ ## field (int wp, cty field);
+#define TABLE_FIELD(field)                        \
+  int get_marker_ ## field (int l);               \
+  void set_marker_ ## field (int l, int v);
 #include "marker.h"
 #undef FIELD
-Marker * marker_new (void);
-void free_marker (Marker * marker);
-void move_marker (Marker * marker, Buffer * bp, Point * pt);
-Marker *copy_marker (Marker * marker);
-Marker *point_marker (void);
+#undef TABLE_FIELD
+int marker_new (void);
+void free_marker (int marker);
+void move_marker (int marker, Buffer * bp, Point * pt);
+int copy_marker (int marker);
+int point_marker (void);
 
 /* minibuf.c -------------------------------------------------------------- */
 extern char *minibuf_contents;
@@ -286,8 +287,12 @@ bool get_variable_bool (const char *var);
 #define FIELD(cty, lty, field)                  \
   cty get_window_ ## field (int wp);            \
   void set_window_ ## field (int wp, cty field);
+#define TABLE_FIELD(field)                        \
+  int get_window_ ## field (int l);               \
+  void set_window_ ## field (int l, int v);
 #include "window.h"
 #undef FIELD
+#undef TABLE_FIELD
 void create_scratch_window (void);
 int find_window (const char *name);
 int popup_window (void);

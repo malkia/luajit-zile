@@ -35,10 +35,15 @@
  */
 #define FIELD(cty, lty, field)              \
   LUA_GETTER (window, cty, lty, field)      \
-  LUA_SETTER (window, cty, lty, field)      \
+  LUA_SETTER (window, cty, lty, field)
+
+#define TABLE_FIELD(field)                       \
+  LUA_TABLE_GETTER (window, field)               \
+  LUA_TABLE_SETTER (window, field)
 
 #include "window.h"
 #undef FIELD
+#undef TABLE_FIELD
 
 static int
 window_new (void)
@@ -88,7 +93,7 @@ set_current_window (int wp)
     {
       set_buffer_pt (cur_bp, point_copy (get_marker_pt (get_window_saved_pt (cur_wp))));
       free_marker (get_window_saved_pt (cur_wp));
-      set_window_saved_pt (cur_wp, NULL);
+      set_window_saved_pt (cur_wp, LUA_NOREF);
     }
 }
 
@@ -330,13 +335,13 @@ window_pt (int wp)
   if (wp == cur_wp)
     {
       assert (get_window_bp (wp) == cur_bp);
-      assert (get_window_saved_pt (wp) == NULL);
+      assert (get_window_saved_pt (wp) == LUA_REFNIL);
       assert (cur_bp);
       return point_copy (get_buffer_pt (cur_bp));
     }
   else
     {
-      if (get_window_saved_pt (wp) != NULL)
+      if (get_window_saved_pt (wp) != LUA_NOREF)
         return point_copy (get_marker_pt (get_window_saved_pt (wp)));
       else
         return point_copy (get_buffer_pt (get_window_bp (wp)));

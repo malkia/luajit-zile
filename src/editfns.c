@@ -41,13 +41,13 @@ push_mark (void)
 
   /* Save the mark.  */
   if (get_buffer_mark (cur_bp))
-    gl_list_add_last (mark_ring, copy_marker (get_buffer_mark (cur_bp)));
+    gl_list_add_last (mark_ring, (void *) copy_marker (get_buffer_mark (cur_bp)));
   else
     { /* Save an invalid mark.  */
-      Marker *m = marker_new ();
+      int m = marker_new ();
       move_marker (m, cur_bp, point_min ());
       set_point_p (get_marker_pt (m), LUA_NOREF);
-      gl_list_add_last (mark_ring, m);
+      gl_list_add_last (mark_ring, (void *) m);
     }
 }
 
@@ -55,8 +55,7 @@ push_mark (void)
 void
 pop_mark (void)
 {
-  Marker *m = (Marker *) gl_list_get_at (mark_ring,
-                                         gl_list_size (mark_ring) - 1);
+  int m = (int) gl_list_get_at (mark_ring, gl_list_size (mark_ring) - 1);
 
   /* Replace the mark. */
   if (get_buffer_mark (get_marker_bp (m)))

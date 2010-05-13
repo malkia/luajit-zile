@@ -231,7 +231,14 @@ read_from_disk (const char *filename)
                 astr_cat_char (get_line_text (lp), buf[i]);
               else
                 {
-                  lp = line_insert (lp, astr_new ());
+                  lua_pushlightuserdata (L, astr_new ());
+                  lua_setglobal (L, "s");
+                  lua_rawgeti (L, LUA_REGISTRYINDEX, lp);
+                  lua_setglobal (L, "l");
+                  (void) CLUE_DO (L, "n = line_insert (l, s)");
+                  lua_getglobal (L, "n");
+                  luaL_unref (L, LUA_REGISTRYINDEX, lp);
+                  lp = luaL_ref (L, LUA_REGISTRYINDEX);
                   set_buffer_last_line (cur_bp,
                                         get_buffer_last_line (cur_bp) + 1);
                   i += eol_len - 1;

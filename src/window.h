@@ -25,8 +25,8 @@ FIELD(size_t, integer, topdelta)	/* The top line delta. */
 FIELD(int, integer, lastpointn)		/* The last point line number. */
 FIELD(size_t, integer, start_column)	/* The start column of the window (>0 if scrolled
                                            sideways). */
-FIELD(Marker *, lightuserdata, saved_pt) /* The point line pointer, line number and offset
-                                            (used to hold the point in non-current windows). */
+TABLE_FIELD(saved_pt)                   /* The point line pointer, line number and offset
+                                           (used to hold the point in non-current windows). */
 FIELD(size_t, integer, fwidth)		/* The formal width and height of the window. */
 FIELD(size_t, integer, fheight)
 FIELD(size_t, integer, ewidth)		/* The effective width and height of the window. */
