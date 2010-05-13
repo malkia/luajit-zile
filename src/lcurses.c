@@ -508,9 +508,10 @@ static int lc_initscr(lua_State *L)
     return 1;
 }
 
-/* FIXME: Get rid of unused argument warning. */
+/* FIXME: Avoid cast to void. */
 static int lc_endwin(lua_State *L)
 {
+    (void) L;
     endwin();
     return 0;
 }
