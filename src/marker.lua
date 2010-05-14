@@ -2,6 +2,7 @@ function marker_new ()
   return {}
 end
 
+-- FIXME: Use a list of markers, not a chain
 local function unchain_marker (marker)
   if not marker.bp then
     return
@@ -29,13 +30,13 @@ end
 
 function move_marker (marker, bp, pt)
   if bp ~= get_marker_bp (marker) then
-    -- Unchain with the previous pointed buffer.
+    -- Unchain from previous buffer.
     unchain_marker (marker)
 
-    -- Change the buffer.
+    -- Change buffer.
     marker.bp = bp
 
-    -- Chain with the new buffer.
+    -- Add to new buffer's chain.
     marker.next = bp.markers
     bp.markers = marker
   end
@@ -46,7 +47,6 @@ end
 
 function copy_marker (m)
   local marker
-
   if m then
     marker = marker_new ()
     move_marker (marker, m.bp, m.pt)

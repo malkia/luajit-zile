@@ -43,35 +43,12 @@
 #include "marker.h"
 #undef FIELD
 
-static void
-unchain_marker (int marker)
-{
-  int m, next, prev = LUA_REFNIL;
-
-  if (get_marker_bp (marker) == LUA_REFNIL)
-    return;
-
-  for (m = get_buffer_markers (get_marker_bp (marker)); m != LUA_REFNIL; m = next)
-    {
-      next = get_marker_next (m);
-      if (lua_refeq (L, m, marker))
-        {
-          if (prev != LUA_REFNIL)
-            set_marker_next (prev, next);
-          else
-            set_buffer_markers (get_marker_bp (m), next);
-
-          set_marker_bp (m, LUA_REFNIL);
-          break;
-        }
-      prev = m;
-    }
-}
-
 void
 free_marker (int marker)
 {
-  unchain_marker (marker);
+  lua_rawgeti (L, LUA_REGISTRYINDEX, marker);
+  lua_setglobal (L, "marker");
+  (void) CLUE_DO (L, "unchain_marker (marker)");
   luaL_unref (L, LUA_REGISTRYINDEX, marker);
 }
 
@@ -81,7 +58,9 @@ move_marker (int marker, int bp, Point * pt)
   if (!lua_refeq (L, bp, get_marker_bp (marker)))
     {
       /* Unchain with the previous pointed buffer.  */
-      unchain_marker (marker);
+      lua_rawgeti (L, LUA_REGISTRYINDEX, marker);
+      lua_setglobal (L, "marker");
+      (void) CLUE_DO (L, "unchain_marker (marker)");
 
       /* Change the buffer.  */
       set_marker_bp (marker, bp);
