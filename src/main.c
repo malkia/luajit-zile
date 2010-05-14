@@ -47,9 +47,9 @@ CLUE_DEFS(L);
 char *prog_name = PACKAGE;
 
 /* The current window; the first window in list. */
-int cur_wp = LUA_NOREF, head_wp = LUA_NOREF;
+int cur_wp = LUA_REFNIL, head_wp = LUA_REFNIL;
 /* The current buffer; the first buffer in list. */
-Buffer *cur_bp = NULL, *head_bp = NULL;
+int cur_bp = LUA_REFNIL, head_bp = LUA_REFNIL;
 
 /* The global editor flags. */
 int thisflag = 0, lastflag = 0;
@@ -90,13 +90,13 @@ about_screen (void)
 static void
 setup_main_screen (void)
 {
-  Buffer *bp, *last_bp = NULL;
+  int bp, last_bp = LUA_REFNIL;
   int c = 0;
 
-  for (bp = head_bp; bp; bp = get_buffer_next (bp))
+  for (bp = head_bp; bp != LUA_REFNIL; bp = get_buffer_next (bp))
     {
       /* Last buffer that isn't *scratch*. */
-      if (get_buffer_next (bp) && !get_buffer_next (get_buffer_next (bp)))
+      if (get_buffer_next (bp) != LUA_REFNIL && get_buffer_next (get_buffer_next (bp)) == LUA_REFNIL)
         last_bp = bp;
       c++;
     }
@@ -178,7 +178,7 @@ main (int argc, char **argv)
   gl_list_t arg_line = gl_list_create_empty (GL_LINKED_LIST,
                                              NULL, NULL, NULL, false);
   size_t i, line = 1;
-  Buffer *scratch_bp;
+  int scratch_bp;
   astr as;
   bool ok = true;
 

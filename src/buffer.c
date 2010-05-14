@@ -35,22 +35,17 @@
  * Structure
  */
 
-struct Buffer
-{
-#define FIELD(ty, name) ty name;
-#define FIELD_STR(name) const char *name;
-#include "buffer.h"
-#undef FIELD
-#undef FIELD_STR
-};
+#define FIELD(cty, lty, field)              \
+  LUA_GETTER (buffer, cty, lty, field)      \
+  LUA_SETTER (buffer, cty, lty, field)
 
-#define FIELD(ty, field)                         \
-  GETTER (Buffer, buffer, ty, field)             \
-  SETTER (Buffer, buffer, ty, field)
+#define TABLE_FIELD(field)                       \
+  LUA_TABLE_GETTER (buffer, field)               \
+  LUA_TABLE_SETTER (buffer, field)
 
-#define FIELD_STR(field)                         \
-  GETTER (Buffer, buffer, const char *, field)   \
-  STR_SETTER (Buffer, buffer, field)
+#define FIELD_STR(field)                                \
+  LUA_GETTER (buffer, const char *, string, field)      \
+  LUA_SETTER (buffer, const char *, string, field)
 
 #include "buffer.h"
 #undef FIELD
@@ -76,35 +71,38 @@ struct Region
  * The allocation of the first empty line is done here to simplify
  * the code.
  */
-Buffer *
+int
 buffer_new (void)
 {
-  Buffer *bp = (Buffer *) XZALLOC (Buffer);
+  int bp;
+
+  lua_newtable (L);
+  bp = luaL_ref (L, LUA_REGISTRYINDEX);
 
   /* Allocate Point. */
-  bp->pt = point_new ();
+  set_buffer_pt (bp, point_new ());
 
   /* Allocate a line. */
   (void) CLUE_DO (L, "l = line_new ()");
   lua_getglobal (L, "l");
-  set_point_p (bp->pt, luaL_ref (L, LUA_REGISTRYINDEX));
-  set_line_text (get_point_p (bp->pt), astr_new ());
+  set_point_p (get_buffer_pt (bp), luaL_ref (L, LUA_REGISTRYINDEX));
+  set_line_text (get_point_p (get_buffer_pt (bp)), astr_new ());
 
   /* Allocate the limit marker. */
   (void) CLUE_DO (L, "l = line_new ()");
   lua_getglobal (L, "l");
-  bp->lines = luaL_ref (L, LUA_REGISTRYINDEX);
+  set_buffer_lines (bp, luaL_ref (L, LUA_REGISTRYINDEX));
 
-  set_line_prev (bp->lines, get_point_p (bp->pt));
-  set_line_next (bp->lines, get_point_p (bp->pt));
-  set_line_prev (get_point_p (bp->pt), bp->lines);
-  set_line_next (get_point_p (bp->pt), bp->lines);
+  set_line_prev (get_buffer_lines (bp), get_point_p (get_buffer_pt (bp)));
+  set_line_next (get_buffer_lines (bp), get_point_p (get_buffer_pt (bp)));
+  set_line_prev (get_point_p (get_buffer_pt (bp)), get_buffer_lines (bp));
+  set_line_next (get_point_p (get_buffer_pt (bp)), get_buffer_lines (bp));
 
   /* Set default EOL string. */
-  bp->eol = coding_eol_lf;
+  set_buffer_eol (bp, coding_eol_lf);
 
   /* Insert into buffer list. */
-  bp->next = head_bp;
+  set_buffer_next (bp, head_bp);
   head_bp = bp;
 
   init_buffer (bp);
@@ -116,23 +114,23 @@ buffer_new (void)
  * Free the buffer's allocated memory.
  */
 void
-free_buffer (Buffer * bp)
+free_buffer (int bp)
 {
-  free_undo (bp->last_undop);
+  free_undo (get_buffer_last_undop (bp));
 
-  while (bp->markers)
-    free_marker (bp->markers);
+  while (get_buffer_markers (bp))
+    free_marker (get_buffer_markers (bp));
 
-  free ((char *) bp->name);
-  free ((char *) bp->filename);
-  free (bp);
+  free ((char *) get_buffer_name (bp));
+  free ((char *) get_buffer_filename (bp));
+  luaL_unref (L, LUA_REGISTRYINDEX, bp);
 }
 
 /*
  * Initialise a buffer
  */
 void
-init_buffer (Buffer * bp)
+init_buffer (int bp)
 {
   if (get_variable_bool ("auto-fill-mode"))
     set_buffer_autofill (bp, true);
@@ -142,7 +140,7 @@ init_buffer (Buffer * bp)
  * Get filename, or buffer name if NULL.
  */
 const char *
-get_buffer_filename_or_name (Buffer * bp)
+get_buffer_filename_or_name (int bp)
 {
   const char *fname = get_buffer_filename (bp);
   return fname ? fname : get_buffer_name (bp);
@@ -161,7 +159,7 @@ make_buffer_name (const char *filename)
   else
     ++p;
 
-  if (find_buffer (p) == NULL)
+  if (find_buffer (p) == LUA_REFNIL)
     return xstrdup (p);
   else
     {
@@ -172,7 +170,7 @@ make_buffer_name (const char *filename)
       for (i = 2; true; i++)
         {
           xasprintf (&name, "%s<%ld>", p, i);
-          if (find_buffer (name) == NULL)
+          if (find_buffer (name) == LUA_REFNIL)
             return name;
           free (name);
         }
@@ -183,7 +181,7 @@ make_buffer_name (const char *filename)
  * Set a new filename, and from it a name, for the buffer.
  */
 void
-set_buffer_names (Buffer * bp, const char *filename)
+set_buffer_names (int bp, const char *filename)
 {
   astr as = NULL;
 
@@ -198,8 +196,8 @@ set_buffer_names (Buffer * bp, const char *filename)
   else
     set_buffer_filename (bp, filename);
 
-  free ((char *) bp->name);
-  bp->name = make_buffer_name (filename);
+  free ((char *) get_buffer_name (bp));
+  set_buffer_name (bp, make_buffer_name (filename));
   if (as)
     astr_delete (as);
 }
@@ -207,36 +205,36 @@ set_buffer_names (Buffer * bp, const char *filename)
 /*
  * Search for a buffer named `name'.
  */
-Buffer *
+int
 find_buffer (const char *name)
 {
-  Buffer *bp;
+  int bp;
 
-  for (bp = head_bp; bp != NULL; bp = bp->next)
+  for (bp = head_bp; bp != LUA_REFNIL; bp = get_buffer_next (bp))
     {
       const char *bname = get_buffer_name (bp);
       if (bname && !strcmp (bname, name))
         return bp;
     }
 
-  return NULL;
+  return LUA_REFNIL;
 }
 
 /* Move the selected buffer to head.  */
 
 static void
-move_buffer_to_head (Buffer * bp)
+move_buffer_to_head (int bp)
 {
-  Buffer *it, *prev = NULL;
+  int it, prev = LUA_REFNIL;
 
-  for (it = head_bp; it; prev = it, it = it->next)
+  for (it = head_bp; it; prev = it, it = get_buffer_next (it))
     {
-      if (bp == it)
+      if (lua_refeq (L, bp, it))
         {
-          if (prev)
+          if (prev != LUA_REFNIL)
             {
-              prev->next = bp->next;
-              bp->next = head_bp;
+              set_buffer_next (prev, get_buffer_next (bp));
+              set_buffer_next (bp, head_bp);
               head_bp = bp;
             }
           break;
@@ -248,7 +246,7 @@ move_buffer_to_head (Buffer * bp)
  * Switch to the specified buffer.
  */
 void
-switch_to_buffer (Buffer * bp)
+switch_to_buffer (int bp)
 {
   assert (get_window_bp (cur_wp) == cur_bp);
 
@@ -285,7 +283,7 @@ warn_if_readonly_buffer (void)
 static int
 warn_if_no_mark (void)
 {
-  if (!cur_bp->mark)
+  if (get_buffer_mark (cur_bp) != LUA_REFNIL)
     {
       minibuf_error ("The mark is not set now");
       return true;
@@ -315,17 +313,17 @@ calculate_the_region (Region * rp)
   if (warn_if_no_mark ())
     return false;
 
-  if (cmp_point (cur_bp->pt, get_marker_pt (cur_bp->mark)) < 0)
+  if (cmp_point (get_buffer_pt (cur_bp), get_marker_pt (get_buffer_mark (cur_bp))) < 0)
     {
       /* Point is before mark. */
-      set_region_start (rp, point_copy (cur_bp->pt));
-      set_region_end (rp, point_copy (get_marker_pt (cur_bp->mark)));
+      set_region_start (rp, point_copy (get_buffer_pt (cur_bp)));
+      set_region_end (rp, point_copy (get_marker_pt (get_buffer_mark (cur_bp))));
     }
   else
     {
       /* Mark is before point. */
-      set_region_start (rp, point_copy (get_marker_pt (cur_bp->mark)));
-      set_region_end (rp, point_copy (cur_bp->pt));
+      set_region_start (rp, point_copy (get_marker_pt (get_buffer_mark (cur_bp))));
+      set_region_end (rp, point_copy (get_buffer_pt (cur_bp)));
     }
 
   {
@@ -394,49 +392,49 @@ in_region (size_t lineno, size_t x, Region * rp)
  * to the end of the buffer list.
  */
 void
-set_temporary_buffer (Buffer * bp)
+set_temporary_buffer (int bp)
 {
-  Buffer *bp0;
+  int bp0;
 
   set_buffer_temporary (bp, true);
 
   if (bp == head_bp)
     {
-      if (head_bp->next == NULL)
+      if (get_buffer_next (head_bp) == LUA_REFNIL)
         return;
-      head_bp = head_bp->next;
+      head_bp = get_buffer_next (head_bp);
     }
-  else if (bp->next == NULL)
+  else if (get_buffer_next (bp) == LUA_REFNIL)
     return;
 
-  for (bp0 = head_bp; bp0 != NULL; bp0 = bp0->next)
-    if (bp0->next == bp)
+  for (bp0 = head_bp; bp0 != LUA_REFNIL; bp0 = get_buffer_next (bp0))
+    if (lua_refeq (L, get_buffer_next (bp0), bp))
       {
-        bp0->next = bp0->next->next;
+        set_buffer_next (bp0, get_buffer_next (get_buffer_next (bp0)));
         break;
       }
 
-  for (bp0 = head_bp; bp0->next != NULL; bp0 = bp0->next)
+  for (bp0 = head_bp; get_buffer_next (bp0) != LUA_REFNIL; bp0 = get_buffer_next (bp0))
     ;
 
-  bp0->next = bp;
-  bp->next = NULL;
+  set_buffer_next (bp0, bp);
+  set_buffer_next (bp, LUA_REFNIL);
 }
 
 size_t
-calculate_buffer_size (Buffer * bp)
+calculate_buffer_size (int bp)
 {
-  int lp = get_line_next (bp->lines);
+  int lp = get_line_next (get_buffer_lines (bp));
   size_t size = 0;
 
-  if (lua_refeq (L, lp, bp->lines))
+  if (lua_refeq (L, lp, get_buffer_lines (bp)))
     return 0;
 
   for (;;)
     {
       size += astr_len (get_line_text (lp));
       lp = get_line_next (lp);
-      if (lua_refeq (L, lp, bp->lines))
+      if (lua_refeq (L, lp, get_buffer_lines (bp)))
         break;
       ++size;
     }
@@ -466,7 +464,7 @@ deactivate_mark (void)
  * Return a safe tab width for the given buffer.
  */
 size_t
-tab_width (Buffer * bp)
+tab_width (int bp)
 {
   size_t t = get_variable_number_bp (bp, "tab-width");
 
@@ -493,10 +491,10 @@ copy_text_block (Point * pt, size_t size)
   return as;
 }
 
-Buffer *
+int
 create_scratch_buffer (void)
 {
-  Buffer *bp = buffer_new ();
+  int bp = buffer_new ();
   set_buffer_name (bp, "*scratch*");
   set_buffer_needname (bp, true);
   set_buffer_temporary (bp, true);
@@ -510,11 +508,11 @@ create_scratch_buffer (void)
  * buffer when required.
  */
 void
-kill_buffer (Buffer * kill_bp)
+kill_buffer (int kill_bp)
 {
-  Buffer *next_bp;
+  int next_bp;
 
-  if (get_buffer_next (kill_bp) != NULL)
+  if (get_buffer_next (kill_bp) != LUA_REFNIL)
     next_bp = get_buffer_next (kill_bp);
   else
     next_bp = head_bp;
@@ -525,10 +523,10 @@ kill_buffer (Buffer * kill_bp)
 
       assert (cur_bp == kill_bp);
       free_buffer (cur_bp);
-      head_bp = NULL;
+      head_bp = LUA_REFNIL;
 
       /* Close all the windows that display this buffer. */
-      for (wp = head_wp; wp != LUA_NOREF; wp = next_wp)
+      for (wp = head_wp; wp != LUA_REFNIL; wp = next_wp)
         {
           next_wp = get_window_next (wp);
           if (get_window_bp (wp) == cur_bp)
@@ -539,23 +537,22 @@ kill_buffer (Buffer * kill_bp)
     }
   else
     {
-      Buffer *bp;
-      int wp;
+      int bp, wp;
 
       /* Search for windows displaying the buffer to kill. */
-      for (wp = head_wp; wp != LUA_NOREF; wp = get_window_next (wp))
+      for (wp = head_wp; wp != LUA_REFNIL; wp = get_window_next (wp))
         if (get_window_bp (wp) == kill_bp)
           {
             set_window_bp (wp, next_bp);
             set_window_topdelta (wp, 0);
-            set_window_saved_pt (wp, LUA_NOREF);	/* The marker will be freed. */
+            set_window_saved_pt (wp, LUA_REFNIL);	/* The marker will be freed. */
           }
 
       /* Remove the buffer from the buffer list. */
       cur_bp = next_bp;
       if (head_bp == kill_bp)
         head_bp = get_buffer_next (head_bp);
-      for (bp = head_bp; get_buffer_next (bp) != NULL; bp = get_buffer_next (bp))
+      for (bp = head_bp; get_buffer_next (bp) != LUA_REFNIL; bp = get_buffer_next (bp))
         if (get_buffer_next (bp) == kill_bp)
           {
             set_buffer_next (bp, get_buffer_next (get_buffer_next (bp)));
@@ -575,7 +572,7 @@ Kill buffer BUFFER.
 With a nil argument, kill the current buffer.
 +*/
 {
-  Buffer *bp;
+  int bp;
 
   STR_INIT (buffer)
   else
@@ -590,7 +587,7 @@ With a nil argument, kill the current buffer.
   if (buffer && buffer[0] != '\0')
     {
       bp = find_buffer (buffer);
-      if (bp == NULL)
+      if (bp == LUA_REFNIL)
         {
           minibuf_error ("Buffer `%s' not found", buffer);
           free ((char *) buffer);
@@ -618,7 +615,7 @@ END_DEFUN
  * true, else false.
  */
 bool
-check_modified_buffer (Buffer * bp)
+check_modified_buffer (int bp)
 {
   if (get_buffer_modified (bp) && !get_buffer_nosave (bp))
     for (;;)

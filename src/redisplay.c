@@ -53,7 +53,7 @@ resize_windows (void)
   CLUE_GET (L, h, integer, h);
 
   /* Resize windows horizontally. */
-  for (wp = head_wp; wp != LUA_NOREF; wp = get_window_next (wp))
+  for (wp = head_wp; wp != LUA_REFNIL; wp = get_window_next (wp))
     {
       size_t w;
       (void) CLUE_DO (L, "w = term_width ()");
@@ -65,7 +65,7 @@ resize_windows (void)
   /* Work out difference in window height; windows may be taller than
      terminal if the terminal was very short. */
   for (hdelta = h - 1, wp = head_wp;
-       wp != LUA_NOREF;
+       wp != LUA_REFNIL;
        hdelta -= get_window_fheight (wp), wp = get_window_next (wp))
     ;
 
@@ -74,7 +74,7 @@ resize_windows (void)
     { /* Increase windows height. */
       for (wp = head_wp; hdelta > 0; wp = get_window_next (wp))
         {
-          if (wp == LUA_NOREF)
+          if (wp == LUA_REFNIL)
             wp = head_wp;
           set_window_fheight (wp, get_window_fheight (wp) + 1);
           set_window_eheight (wp, get_window_eheight (wp) + 1);
@@ -87,7 +87,7 @@ resize_windows (void)
       while (decreased)
         {
           decreased = false;
-          for (wp = head_wp; wp != LUA_NOREF && hdelta < 0; wp = get_window_next (wp))
+          for (wp = head_wp; wp != LUA_REFNIL && hdelta < 0; wp = get_window_next (wp))
             {
               if (get_window_fheight (wp) > 2)
                 {
@@ -96,7 +96,7 @@ resize_windows (void)
                   ++hdelta;
                   decreased = true;
                 }
-              else if (cur_wp != head_wp || get_window_next (cur_wp) != LUA_NOREF)
+              else if (cur_wp != head_wp || get_window_next (cur_wp) != LUA_REFNIL)
                 {
                   int new_wp = get_window_next (wp);
                   delete_window (wp);

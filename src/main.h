@@ -50,7 +50,6 @@ typedef struct Region Region;
 typedef struct Undo Undo;
 typedef struct Macro Macro;
 typedef struct Binding *Binding;
-typedef struct Buffer Buffer;
 typedef struct Point Point;
 
 /* Undo delta types. */

@@ -25,7 +25,7 @@
 #include "xalloc_extra.h"
 
 /* basic.c ---------------------------------------------------------------- */
-size_t get_goalc_bp (Buffer * bp, Point * pt);
+size_t get_goalc_bp (int bp, Point * pt);
 size_t get_goalc (void);
 bool previous_line (void);
 bool next_line (void);
@@ -44,47 +44,55 @@ void process_command (void);
 void init_default_bindings (void);
 
 /* buffer.c --------------------------------------------------------------- */
-#define FIELD(ty, field)                                \
-  ty get_buffer_ ## field (const Buffer *bp);           \
-  void set_buffer_ ## field (Buffer *bp, ty field);
-#define FIELD_STR(field)                                \
-  FIELD(const char *, field)
+#define FIELD(cty, lty, field)                  \
+  cty get_buffer_ ## field (int bp);            \
+  void set_buffer_ ## field (int bp, cty field);
+#define FIELD_STR(field)                        \
+  FIELD(const char *, string, field)
+#define TABLE_FIELD(field)                        \
+  int get_buffer_ ## field (int bp);              \
+  void set_buffer_ ## field (int bp, int v);
 #include "buffer.h"
 #undef FIELD
 #undef FIELD_STR
+#undef TABLE_FIELD
 #define FIELD(ty, field)                                \
   ty get_region_ ## field (const Region *cp);           \
   void set_region_ ## field (Region *cp, ty field);
 #include "region.h"
 #undef FIELD
-void free_buffer (Buffer * bp);
-void init_buffer (Buffer * bp);
-Buffer * buffer_new (void);
-const char *get_buffer_filename_or_name (Buffer * bp);
-void set_buffer_names (Buffer * bp, const char *filename);
-Buffer * find_buffer (const char *name);
-void switch_to_buffer (Buffer * bp);
+void free_buffer (int bp);
+void init_buffer (int bp);
+int buffer_new (void);
+const char *get_buffer_filename_or_name (int bp);
+void set_buffer_names (int bp, const char *filename);
+int find_buffer (const char *name);
+void switch_to_buffer (int bp);
 Region * region_new (void);
 int warn_if_readonly_buffer (void);
 int calculate_the_region (Region * rp);
 bool delete_region (const Region * rp);
 bool in_region (size_t lineno, size_t x, Region * rp);
-void set_temporary_buffer (Buffer * bp);
-size_t calculate_buffer_size (Buffer * bp);
+void set_temporary_buffer (int bp);
+size_t calculate_buffer_size (int bp);
 int transient_mark_mode (void);
 void activate_mark (void);
 void deactivate_mark (void);
-size_t tab_width (Buffer * bp);
+size_t tab_width (int bp);
 astr copy_text_block (Point * pt, size_t size);
-Buffer *create_scratch_buffer (void);
-void kill_buffer (Buffer * kill_bp);
-bool check_modified_buffer (Buffer * bp);
+int create_scratch_buffer (void);
+void kill_buffer (int kill_bp);
+bool check_modified_buffer (int bp);
 
 /* completion.c ----------------------------------------------------------- */
 #define FIELD(cty, lty, field)                                  \
   cty get_completion_ ## field (int cp);
+#define TABLE_FIELD(field)                      \
+  int get_completion_ ## field (int l);               \
+  void set_completion_ ## field (int l, int v);
 #include "completion.h"
 #undef FIELD
+#undef TABLE_FIELD
 void popup_completion (int cp);
 char *minibuf_read_variable_name (char *fmt, ...);
 int make_buffer_completion (void);
@@ -190,7 +198,7 @@ void add_macros_to_list (int l);
 CLUE_DECLS(L);
 extern char *prog_name;
 extern int cur_wp, head_wp;
-extern Buffer *cur_bp, *head_bp;
+extern int cur_bp, head_bp;
 extern int thisflag, lastflag, last_uniarg;
 
 /* marker.c --------------------------------------------------------------- */
@@ -204,7 +212,7 @@ extern int thisflag, lastflag, last_uniarg;
 #undef FIELD
 #undef TABLE_FIELD
 void free_marker (int marker);
-void move_marker (int marker, Buffer * bp, Point * pt);
+void move_marker (int marker, int bp, Point * pt);
 int copy_marker (int marker);
 int point_marker (void);
 
@@ -276,9 +284,9 @@ void undo_set_unchanged (Undo *up);
 /* variables.c ------------------------------------------------------------ */
 void init_variables (void);
 void set_variable (const char *var, const char *val);
-const char *get_variable_bp (Buffer * bp, const char *var);
+const char *get_variable_bp (int bp, const char *var);
 const char *get_variable (const char *var);
-long get_variable_number_bp (Buffer * bp, const char *var);
+long get_variable_number_bp (int bp, const char *var);
 long get_variable_number (const char *var);
 bool get_variable_bool (const char *var);
 

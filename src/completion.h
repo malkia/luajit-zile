@@ -1,6 +1,6 @@
 /* Completion fields
 
-   Copyright (c) 2009 Free Software Foundation, Inc.
+   Copyright (c) 2009, 2010 Free Software Foundation, Inc.
 
    This file is part of GNU Zile.
 
@@ -20,7 +20,7 @@
    MA 02111-1301, USA.  */
 
 FIELD(const char *, string, match)	/* The match buffer. */
-FIELD(Buffer *, lightuserdata, old_bp)	/* The buffer from which the completion was invoked. */
+TABLE_FIELD(old_bp)			/* The buffer from which the completion was invoked. */
 FIELD(size_t, integer, matchsize)	/* The match buffer size. */
 FIELD(int, boolean, poppedup)		/* Completion window has been popped up. */
 FIELD(int, boolean, close)		/* The completion window should be closed. */

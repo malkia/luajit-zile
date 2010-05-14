@@ -259,9 +259,9 @@ read_from_disk (const char *filename)
 bool
 find_file (const char *filename)
 {
-  Buffer *bp;
+  int bp;
 
-  for (bp = head_bp; bp != NULL; bp = get_buffer_next (bp))
+  for (bp = head_bp; bp != LUA_REFNIL; bp = get_buffer_next (bp))
     {
       if (get_buffer_filename (bp) != NULL &&
           !strcmp (get_buffer_filename (bp), filename))
@@ -366,7 +366,7 @@ DEFUN_ARGS ("switch-to-buffer", switch_to_buffer,
 Select buffer @i{buffer} in the current window.
 +*/
 {
-  Buffer *bp = ((get_buffer_next (cur_bp) != NULL) ? get_buffer_next (cur_bp) : head_bp);
+  int bp = ((get_buffer_next (cur_bp) != LUA_REFNIL) ? get_buffer_next (cur_bp) : head_bp);
 
   STR_INIT (buffer)
   else
@@ -384,10 +384,10 @@ Select buffer @i{buffer} in the current window.
       if (buffer && buffer[0] != '\0')
         {
           bp = find_buffer (buffer);
-          if (bp == NULL)
+          if (bp == LUA_REFNIL)
             {
               bp = find_buffer (buffer);
-              if (bp == NULL)
+              if (bp == LUA_REFNIL)
                 {
                   bp = buffer_new ();
                   set_buffer_name (bp, buffer);
@@ -417,7 +417,7 @@ insert_lines (size_t n, size_t end, size_t last, int from_lp)
 }
 
 static void
-insert_buffer (Buffer * bp)
+insert_buffer (int bp)
 {
   int old_next = get_line_next (get_point_p (get_buffer_pt (bp)));
   astr old_cur_line = astr_cpy (astr_new (), get_line_text (get_point_p (get_buffer_pt (bp))));
@@ -442,7 +442,7 @@ Insert after point the contents of BUFFER.
 Puts mark after the inserted text.
 +*/
 {
-  Buffer *def_bp = ((get_buffer_next (cur_bp) != NULL) ? get_buffer_next (cur_bp) : head_bp);
+  int def_bp = ((get_buffer_next (cur_bp) != LUA_REFNIL) ? get_buffer_next (cur_bp) : head_bp);
 
   if (warn_if_readonly_buffer ())
     return leNIL;
@@ -459,12 +459,12 @@ Puts mark after the inserted text.
 
   if (ok == leT)
     {
-      Buffer *bp;
+      int bp;
 
       if (buffer && buffer[0] != '\0')
         {
           bp = find_buffer (buffer);
-          if (bp == NULL)
+          if (bp == LUA_REFNIL)
             {
               minibuf_error ("Buffer `%s' not found", buffer);
               ok = leNIL;
@@ -640,7 +640,7 @@ copy_file (const char *source, const char *dest)
  * Write buffer to given file name with given mode.
  */
 static int
-raw_write_to_disk (Buffer * bp, const char *filename, mode_t mode)
+raw_write_to_disk (int bp, const char *filename, mode_t mode)
 {
   ssize_t eol_len = (ssize_t) strlen (get_buffer_eol (bp)), written;
   int lp;
@@ -723,7 +723,7 @@ create_backup_filename (const char *filename, const char *backupdir)
  * Create a backup file if specified by the user variables.
  */
 static int
-write_to_disk (Buffer * bp, const char *filename)
+write_to_disk (int bp, const char *filename)
 {
   int fd, backup = get_variable_bool ("make-backup-files"), ret;
   const char *backupdir = get_variable_bool ("backup-directory") ?
@@ -761,7 +761,7 @@ write_to_disk (Buffer * bp, const char *filename)
 }
 
 static le
-write_buffer (Buffer *bp, bool needname, bool confirm,
+write_buffer (int bp, bool needname, bool confirm,
               const char *name, const char *prompt)
 {
   bool ans = true;
@@ -817,7 +817,7 @@ write_buffer (Buffer *bp, bool needname, bool confirm,
 }
 
 static le
-save_buffer (Buffer * bp)
+save_buffer (int bp)
 {
   if (!get_buffer_modified (bp))
     {
@@ -856,11 +856,11 @@ END_DEFUN
 static int
 save_some_buffers (void)
 {
-  Buffer *bp;
+  int bp;
   size_t i = 0;
   bool noask = false;
 
-  for (bp = head_bp; bp != NULL; bp = get_buffer_next (bp))
+  for (bp = head_bp; bp != LUA_REFNIL; bp = get_buffer_next (bp))
     {
       if (get_buffer_modified (bp) && !get_buffer_nosave (bp))
         {
@@ -935,12 +935,12 @@ DEFUN ("save-buffers-kill-emacs", save_buffers_kill_emacs)
 Offer to save each buffer, then kill this Zile process.
 +*/
 {
-  Buffer *bp;
+  int bp;
 
   if (!save_some_buffers ())
     return leNIL;
 
-  for (bp = head_bp; bp != NULL; bp = get_buffer_next (bp))
+  for (bp = head_bp; bp != LUA_REFNIL; bp = get_buffer_next (bp))
     if (get_buffer_modified (bp) && !get_buffer_needname (bp))
       {
         for (;;)
@@ -969,10 +969,10 @@ END_DEFUN
 void
 zile_exit (int doabort)
 {
-  Buffer *bp;
+  int bp;
 
   fprintf (stderr, "Trying to save modified buffers (if any)...\r\n");
-  for (bp = head_bp; bp != NULL; bp = get_buffer_next (bp))
+  for (bp = head_bp; bp != LUA_REFNIL; bp = get_buffer_next (bp))
     if (get_buffer_modified (bp) && !get_buffer_nosave (bp))
       {
         astr buf = astr_new (), as;

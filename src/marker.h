@@ -20,5 +20,5 @@
    MA 02111-1301, USA.  */
 
 TABLE_FIELD(next)                    /* Used to chain all markers in the buffer. */
-FIELD(Buffer *, lightuserdata, bp)   /* Buffer that points into. */
+TABLE_FIELD(bp)                      /* Buffer that points into. */
 FIELD(Point *, lightuserdata, pt)    /* Point position. */

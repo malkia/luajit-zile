@@ -141,7 +141,7 @@ calculate_highlight_region (int wp, Region * rp, int *highlight)
 {
   if ((wp != cur_wp
        && !get_variable_bool ("highlight-nonselected-windows"))
-      || (get_buffer_mark (get_window_bp (wp)) == LUA_NOREF)
+      || (get_buffer_mark (get_window_bp (wp)) == LUA_REFNIL)
       || (!transient_mark_mode ())
       || (transient_mark_mode () && !get_buffer_mark_active (get_window_bp (wp))))
     {
@@ -299,7 +299,7 @@ draw_status_line (size_t line, int wp)
   size_t i, tw;
   char *buf, *eol_type;
   Point * pt = window_pt (wp);
-  Buffer *bp = get_window_bp (wp);
+  int bp = get_window_bp (wp);
   astr as, bs;
 
   (void) CLUE_DO (L, "tw = term_width ()");
@@ -357,7 +357,7 @@ term_redisplay (void)
 
   calculate_start_column (cur_wp);
 
-  for (wp = head_wp; wp != LUA_NOREF; wp = get_window_next (wp))
+  for (wp = head_wp; wp != LUA_REFNIL; wp = get_window_next (wp))
     {
       if (wp == cur_wp)
         cur_topline = topline;

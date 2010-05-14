@@ -20,7 +20,7 @@
    MA 02111-1301, USA.  */
 
 FIELD(int, integer, next)		/* The next window in window list. */
-FIELD(Buffer *, lightuserdata, bp)	/* The buffer displayed in window. */
+TABLE_FIELD(bp)				/* The buffer displayed in window. */
 FIELD(size_t, integer, topdelta)	/* The top line delta. */
 FIELD(int, integer, lastpointn)		/* The last point line number. */
 FIELD(size_t, integer, start_column)	/* The start column of the window (>0 if scrolled

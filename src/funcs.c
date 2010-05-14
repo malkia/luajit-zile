@@ -92,7 +92,7 @@ shorten_string (astr as, int maxlen)
 }
 
 static void
-print_buf (Buffer * old_bp, Buffer * bp)
+print_buf (int old_bp, int bp)
 {
   if (get_buffer_name (bp)[0] == ' ')
     return;
@@ -115,19 +115,19 @@ void
 write_temp_buffer (const char *name, bool show, void (*func) (va_list ap), ...)
 {
   int wp, old_wp = cur_wp;
-  Buffer *new_bp, *old_bp = cur_bp;
+  int new_bp, old_bp = cur_bp;
   va_list ap;
 
   /* Popup a window with the buffer "name". */
   wp = find_window (name);
-  if (show && wp != LUA_NOREF)
+  if (show && wp != LUA_REFNIL)
     set_current_window (wp);
   else
     {
-      Buffer *bp = find_buffer (name);
+      int bp = find_buffer (name);
       if (show)
         set_current_window (popup_window ());
-      if (bp == NULL)
+      if (bp == LUA_REFNIL)
         {
           bp = buffer_new ();
           set_buffer_name (bp, name);
@@ -169,7 +169,7 @@ static void
 write_buffers_list (va_list ap)
 {
   int old_wp = va_arg (ap, int);
-  Buffer *bp;
+  int bp;
 
   /* FIXME: Underline next line properly. */
   bprintf ("CRM Buffer                Size  Mode             File\n");
@@ -183,7 +183,7 @@ write_buffers_list (va_list ap)
       if (cur_bp != bp)
         print_buf (get_window_bp (old_wp), bp);
       bp = get_buffer_next (bp);
-      if (bp == NULL)
+      if (bp == LUA_REFNIL)
         bp = head_bp;
     }
   while (bp != get_window_bp (old_wp));

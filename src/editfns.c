@@ -168,6 +168,6 @@ ding (void)
   if (thisflag & FLAG_DEFINING_MACRO)
     cancel_kbd_macro ();
 
-  if (get_variable_bool ("ring-bell") && cur_wp != LUA_NOREF)
+  if (get_variable_bool ("ring-bell") && cur_wp != LUA_REFNIL)
     (void) CLUE_DO (L, "term_beep ()");
 }

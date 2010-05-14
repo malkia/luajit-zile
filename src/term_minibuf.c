@@ -345,7 +345,7 @@ term_minibuf_read (const char *prompt, const char *value, size_t pos,
     }
 
   if (!LUA_NIL (cp) && get_completion_poppedup (cp)
-      && (wp = find_window ("*Completions*")) != LUA_NOREF)
+      && (wp = find_window ("*Completions*")) != LUA_REFNIL)
     {
       set_current_window (wp);
       if (get_completion_close (cp))

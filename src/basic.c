@@ -54,7 +54,7 @@ END_DEFUN
  * Get the goal column.  Take care of expanding tabulations.
  */
 size_t
-get_goalc_bp (Buffer * bp, Point * pt)
+get_goalc_bp (int bp, Point * pt)
 {
   size_t col = 0, t = tab_width (bp), i;
   const char *sp = astr_cstr (get_line_text (get_point_p (pt)));

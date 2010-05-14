@@ -94,13 +94,13 @@ init_variables (void)
 }
 
 const char *
-get_variable_bp (Buffer * bp, const char *var)
+get_variable_bp (int bp, const char *var)
 {
   const char *ret = NULL;
   bool ok;
 
   (void) CLUE_DO (L, "vars = nil");
-  if (bp && get_buffer_vars (bp))
+  if (bp != LUA_REFNIL && get_buffer_vars (bp))
     {
       lua_rawgeti (L, LUA_REGISTRYINDEX, get_buffer_vars (bp));
       lua_setglobal (L, "vars");
@@ -122,7 +122,7 @@ get_variable (const char *var)
 }
 
 long
-get_variable_number_bp (Buffer * bp, const char *var)
+get_variable_number_bp (int bp, const char *var)
 {
   long t = 0;
   const char *s = get_variable_bp (bp, var);
