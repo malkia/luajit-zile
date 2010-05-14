@@ -283,7 +283,7 @@ warn_if_readonly_buffer (void)
 static int
 warn_if_no_mark (void)
 {
-  if (get_buffer_mark (cur_bp) != LUA_REFNIL)
+  if (get_buffer_mark (cur_bp) == LUA_REFNIL)
     {
       minibuf_error ("The mark is not set now");
       return true;
