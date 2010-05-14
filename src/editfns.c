@@ -74,7 +74,7 @@ pop_mark (void)
 void
 set_mark (void)
 {
-  if (!get_buffer_mark (cur_bp))
+  if (get_buffer_mark (cur_bp) == LUA_REFNIL)
     set_buffer_mark (cur_bp, point_marker ());
   else
     move_marker (get_buffer_mark (cur_bp), cur_bp, point_copy (get_buffer_pt (cur_bp)));
