@@ -24,9 +24,7 @@ local function unchain_marker (marker)
   end
 end
 
-function free_marker (marker)
-  unchain_marker (marker)
-end
+free_marker = unchain_marker
 
 function move_marker (marker, bp, pt)
   if bp ~= get_marker_bp (marker) then
