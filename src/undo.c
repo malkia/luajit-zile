@@ -34,24 +34,9 @@
  */
 struct Undo
 {
-  /* Next undo delta in list. */
-  Undo *next;
-
-  /* The type of undo delta. */
-  int type;
-
-  /* Where the undo delta need to be applied.
-     Warning!: Do not use the p field of pt. */
-  int pt;
-
-  /* Flag indicating that reverting this undo leaves the buffer
-     in an unchanged state. */
-  bool unchanged;
-
-  /* The block to insert. */
-  astr text;
-  size_t osize;		/* Original size. */
-  size_t size;		/* New block size. */
+#define FIELD(ty, name) ty name;
+#include "undo.h"
+#undef FIELD
 };
 
 /* Setting this variable to true stops undo_save saving the given
