@@ -65,8 +65,8 @@
 #undef TABLE_FIELD
 
 /*
- * Allocate a new buffer structure, set the default local
- * variable values, and insert it into the buffer list.
+ * Allocate a new buffer, set the default local variable values, and
+ * insert it into the buffer list.
  * The allocation of the first empty line is done here to simplify
  * the code.
  */
@@ -304,8 +304,8 @@ region_new (void)
 }
 
 /*
- * Calculate the region size between point and mark and set the region
- * structure.
+ * Calculate the region size between point and mark and set the
+ * region.
  */
 int
 calculate_the_region (int rp)
