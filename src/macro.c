@@ -34,10 +34,19 @@
 
 struct Macro
 {
-  gl_list_t keys;	/* List of keystrokes. */
-  char *name;		/* Name of the macro. */
-  Macro *next;		/* Next macro in the list. */
+#define FIELD(ty, name) ty name;
+#include "macro.h"
+#undef FIELD
 };
+
+#define FIELD(ty, field)                              \
+  static GETTER (Macro, macro, ty, field)             \
+  static SETTER (Macro, macro, ty, field)
+
+#include "macro.h"
+#undef FIELD
+#undef FIELD_STR
+
 
 static Macro *cur_mp, *cmd_mp = NULL, *head_mp = NULL;
 
@@ -45,8 +54,8 @@ static Macro *
 macro_new (void)
 {
   Macro * mp = XZALLOC (Macro);
-  mp->keys = gl_list_create_empty (GL_ARRAY_LIST,
-                                   NULL, NULL, NULL, true);
+  set_macro_keys (mp, gl_list_create_empty (GL_ARRAY_LIST,
+                                            NULL, NULL, NULL, true));
   return mp;
 }
 
@@ -55,8 +64,8 @@ macro_delete (Macro * mp)
 {
   if (mp)
     {
-      gl_list_free (mp->keys);
-      free (mp->name);
+      gl_list_free (get_macro_keys (mp));
+      free (get_macro_name (mp));
       free (mp);
     }
 }
@@ -64,13 +73,13 @@ macro_delete (Macro * mp)
 static void
 add_macro_key (Macro * mp, size_t key)
 {
-  gl_list_add_last (mp->keys, (void *) key);
+  gl_list_add_last (get_macro_keys (mp), (void *) key);
 }
 
 static void
 remove_macro_key (Macro * mp)
 {
-  gl_list_remove_at (mp->keys, gl_list_size (mp->keys) - 1);
+  gl_list_remove_at (get_macro_keys (mp), gl_list_size (get_macro_keys (mp)) - 1);
 }
 
 static void
@@ -183,13 +192,13 @@ Such a \"function\" cannot be called from Lisp, but it is a valid editor command
   mp = get_macro (ms);
   if (mp)
     /* If a macro with this name already exists, update its key list */
-    free (mp->keys);
+    free (get_macro_keys (mp));
   else
     {
       /* Add a new macro to the list */
       mp = macro_new ();
-      mp->next = head_mp;
-      mp->name = xstrdup (ms);
+      set_macro_next (mp, head_mp);
+      set_macro_name (mp, xstrdup (ms));
       head_mp = mp;
     }
 
@@ -227,8 +236,8 @@ void
 call_macro (Macro * mp)
 {
   assert (mp);
-  assert (mp->keys);
-  process_keys (mp->keys);
+  assert (get_macro_keys (mp));
+  process_keys (get_macro_keys (mp));
 }
 
 DEFUN ("call-last-kbd-macro", call_last_kbd_macro)
@@ -284,8 +293,8 @@ get_macro (const char *name)
 {
   Macro *mp;
   assert (name);
-  for (mp = head_mp; mp; mp = mp->next)
-    if (!strcmp (mp->name, name))
+  for (mp = head_mp; mp; mp = get_macro_next (mp))
+    if (!strcmp (get_macro_name (mp), name))
       return mp;
   return NULL;
 }
@@ -300,9 +309,9 @@ add_macros_to_list (int l)
 
   lua_rawgeti (L, LUA_REGISTRYINDEX, l);
   lua_setglobal (L, "cp");
-  for (mp = head_mp; mp; mp = mp->next)
+  for (mp = head_mp; mp; mp = get_macro_next (mp))
     {
-      CLUE_SET (L, s, string, mp->name);
+      CLUE_SET (L, s, string, get_macro_name (mp));
       (void) CLUE_DO (L, "table.insert (cp.completions, s)");
     }
 }
