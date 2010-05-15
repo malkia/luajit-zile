@@ -32,7 +32,7 @@ FIELD(const char *, string, eol) /* EOL string (up to 2 chars). */
 TABLE_FIELD(lines)        /* The lines of text. */
 FIELD(size_t, integer, last_line) /* The number of the last line in the buffer. */
 FIELD(size_t, integer, goalc) /* Goal column for previous/next-line commands. */
-FIELD(Point *, lightuserdata, pt) /* The point. */
+TABLE_FIELD(pt) /* The point. */
 TABLE_FIELD(mark)         /* The mark. */
 TABLE_FIELD(markers)      /* Markers list (updated whenever text is changed). */
 FIELD(Undo *, lightuserdata, last_undop) /* Most recent undo delta. */

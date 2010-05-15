@@ -186,7 +186,7 @@ re_find_substr (const char *s1, size_t s1size,
 static void
 goto_linep (int lp)
 {
-  Point * pt;
+  int pt;
   set_buffer_pt (cur_bp, point_min ());
   resync_redisplay ();
   for (pt = get_buffer_pt (cur_bp); !lua_refeq (L, get_point_p (pt), lp); pt = get_buffer_pt (cur_bp))
@@ -227,7 +227,7 @@ search_forward (int startp, size_t starto, const char *s, int regexp)
 
       if (sp2 != NULL)
         {
-          Point * pt;
+          int pt;
           goto_linep (lp);
           pt = get_buffer_pt (cur_bp);
           set_point_o (pt, sp2 - astr_cstr (get_line_text (lp)));
@@ -267,7 +267,7 @@ search_backward (int startp, size_t starto, const char *s, int regexp)
 
       if (sp2 != NULL)
         {
-          Point * pt;
+          int pt;
           goto_linep (lp);
           pt = get_buffer_pt (cur_bp);
           set_point_o (pt, sp2 - astr_cstr (get_line_text (lp)));
@@ -371,7 +371,7 @@ isearch (int dir, int regexp)
   int last = true;
   astr buf = astr_new ();
   astr pattern = astr_new ();
-  Point * start, * cur;
+  int start, cur;
   int old_mark = copy_marker (get_buffer_mark (get_window_bp (cur_wp)));
 
   start = point_copy (get_buffer_pt (cur_bp));
@@ -611,7 +611,7 @@ what to do with it.
 
   while (search_forward (get_point_p (get_buffer_pt (cur_bp)), get_point_o (get_buffer_pt (cur_bp)), find, false))
     {
-      Point * pt;
+      int pt;
       int c = ' ';
 
       if (!noask)

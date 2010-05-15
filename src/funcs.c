@@ -168,8 +168,7 @@ write_temp_buffer (const char *name, bool show, void (*func) (va_list ap), ...)
 static void
 write_buffers_list (va_list ap)
 {
-  int old_wp = va_arg (ap, int);
-  int bp;
+  int old_wp = va_arg (ap, int), bp;
 
   /* FIXME: Underline next line properly. */
   bprintf ("CRM Buffer                Size  Mode             File\n");
@@ -327,7 +326,7 @@ DEFUN ("exchange-point-and-mark", exchange_point_and_mark)
 Put the mark where point is now, and point where the mark is now.
 +*/
 {
-  Point * tmp;
+  int tmp;
 
   if (get_buffer_mark (cur_bp) == LUA_NOREF)
     {
@@ -703,7 +702,7 @@ move_word (int dir, int (*next_char) (void), bool (*move_char) (void), bool (*at
       while (!at_extreme ())
         {
           int c = next_char ();
-          Point * pt;
+          int pt;
 
           if (!ISWORDCHAR (c))
             {
@@ -789,7 +788,7 @@ move_sexp (int dir)
 
   for (;;)
     {
-      Point * pt;
+      int pt;
 
       while (dir > 0 ? !eolp () : !bolp ())
         {

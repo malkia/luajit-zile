@@ -54,7 +54,7 @@ END_DEFUN
  * Get the goal column.  Take care of expanding tabulations.
  */
 size_t
-get_goalc_bp (int bp, Point * pt)
+get_goalc_bp (int bp, int pt)
 {
   size_t col = 0, t = tab_width (bp), i;
   const char *sp = astr_cstr (get_line_text (get_point_p (pt)));
@@ -83,7 +83,7 @@ get_goalc (void)
 static void
 goto_goalc (void)
 {
-  Point * pt = get_buffer_pt (cur_bp);
+  int pt = get_buffer_pt (cur_bp);
   size_t i, col = 0, t = tab_width (cur_bp);
 
   for (i = 0; i < astr_len (get_line_text (get_point_p (pt))); i++)
@@ -109,7 +109,7 @@ move_line (int n)
 {
   bool ok = true;
   int dir;
-  Point * pt = get_buffer_pt (cur_bp);
+  int pt = get_buffer_pt (cur_bp);
 
   if (n == 0)
     return false;
@@ -135,7 +135,7 @@ move_line (int n)
 
   for (; n > 0; n--)
     {
-      Point * pt = get_buffer_pt (cur_bp);
+      int pt = get_buffer_pt (cur_bp);
       set_point_p (pt, (dir > 0 ? get_line_next : get_line_prev) (get_point_p (pt)));
       set_point_n (pt, get_point_n (pt) + dir);
     }
@@ -245,7 +245,7 @@ Goto line arg, counting from line 1 at beginning of buffer.
     ok = leNIL;
   else
     {
-      Point * pt = get_buffer_pt (cur_bp);
+      int pt = get_buffer_pt (cur_bp);
       move_line ((size_t) (MAX (n, 1) - 1) - get_point_n (pt));
       FUNCALL (beginning_of_line);
     }
@@ -297,13 +297,13 @@ move_char (int dir)
 {
   if (dir > 0 ? !eolp () : !bolp ())
     {
-      Point * pt = get_buffer_pt (cur_bp);
+      int pt = get_buffer_pt (cur_bp);
       set_point_o (pt, get_point_o (pt) + dir);
       return true;
     }
   else if (dir > 0 ? !eobp () : !bobp ())
     {
-      Point * pt = get_buffer_pt (cur_bp);
+      int pt = get_buffer_pt (cur_bp);
       thisflag |= FLAG_NEED_RESYNC;
       set_point_p (pt, (dir > 0 ? get_line_next : get_line_prev) (get_point_p (pt)));
       set_point_n (pt, get_point_n (pt) + dir);

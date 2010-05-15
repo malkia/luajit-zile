@@ -31,31 +31,30 @@
  * Structure
  */
 
-struct Point
-{
-#define FIELD(ty, name) ty name;
-#include "point.h"
-#undef FIELD
-};
+#define FIELD(cty, lty, field)              \
+  LUA_GETTER (point, cty, lty, field)       \
+  LUA_SETTER (point, cty, lty, field)
 
-#define FIELD(ty, field)                       \
-  GETTER (Point, point, ty, field)             \
-  SETTER (Point, point, ty, field)
+#define TABLE_FIELD(field)                       \
+  LUA_TABLE_GETTER (point, field)                \
+  LUA_TABLE_SETTER (point, field)
 
 #include "point.h"
 #undef FIELD
+#undef TABLE_FIELD
 
 
-Point *
+int
 point_new (void)
 {
-  return XZALLOC (Point);
+  lua_newtable (L);
+  return luaL_ref (L, LUA_REGISTRYINDEX);
 }
 
-Point *
+int
 make_point (size_t lineno, size_t offset)
 {
-  Point * pt = XZALLOC (Point);
+  int pt = point_new ();
   set_point_p (pt, get_line_next (get_buffer_lines (cur_bp)));
   set_point_n (pt, lineno);
   set_point_o (pt, offset);
@@ -67,16 +66,18 @@ make_point (size_t lineno, size_t offset)
   return pt;
 }
 
-Point *
-point_copy (Point *pt)
+int
+point_copy (int pt)
 {
-  Point * newpt = XZALLOC (Point);
-  *newpt = *pt;
-  return newpt;
+  lua_rawgeti (L, LUA_REGISTRYINDEX, pt);
+  lua_setglobal (L, "pt");
+  (void) CLUE_DO (L, "newpt = table.clone (pt)");
+  lua_getglobal (L, "newpt");
+  return luaL_ref (L, LUA_REGISTRYINDEX);
 }
 
 int
-cmp_point (Point * pt1, Point * pt2)
+cmp_point (int pt1, int pt2)
 {
   if (get_point_n (pt1) < get_point_n (pt2))
     return -1;
@@ -86,30 +87,30 @@ cmp_point (Point * pt1, Point * pt2)
     return ((get_point_o (pt1) < get_point_o (pt2)) ? -1 : (get_point_o (pt1) > get_point_o (pt2)) ? +1 : 0);
 }
 
-Point *
+int
 point_min (void)
 {
-  Point * pt = XZALLOC (Point);
+  int pt = point_new ();
   set_point_p (pt, get_line_next (get_buffer_lines (cur_bp)));
   set_point_n (pt, 0);
   set_point_o (pt, 0);
   return pt;
 }
 
-Point *
+int
 point_max (void)
 {
-  Point * pt = XZALLOC (Point);
+  int pt = point_new ();
   set_point_p (pt, get_line_prev (get_buffer_lines (cur_bp)));
   set_point_n (pt, get_buffer_last_line (cur_bp));
   set_point_o (pt, astr_len (get_line_text (get_line_prev (get_buffer_lines (cur_bp)))));
   return pt;
 }
 
-Point *
+int
 line_beginning_position (int count)
 {
-  Point * pt;
+  int pt;
 
   /* Copy current point position without offset (beginning of
    * line). */
@@ -131,32 +132,32 @@ line_beginning_position (int count)
   return pt;
 }
 
-Point *
+int
 line_end_position (int count)
 {
-  Point * pt = point_copy (line_beginning_position (count));
+  int pt = point_copy (line_beginning_position (count));
   set_point_o (pt, astr_len (get_line_text (get_point_p (pt))));
   return pt;
 }
 
 void
-goto_point (Point * pt)
+goto_point (int pt)
 {
-  if (get_buffer_pt (cur_bp)->n > get_point_n (pt))
+  if (get_point_n (get_buffer_pt (cur_bp)) > get_point_n (pt))
     do
       FUNCALL (previous_line);
-    while (get_buffer_pt (cur_bp)->n > get_point_n (pt));
-  else if (get_buffer_pt (cur_bp)->n < get_point_n (pt))
+    while (get_point_n (get_buffer_pt (cur_bp)) > get_point_n (pt));
+  else if (get_point_n (get_buffer_pt (cur_bp)) < get_point_n (pt))
     do
       FUNCALL (next_line);
-    while (get_buffer_pt (cur_bp)->n < get_point_n (pt));
+    while (get_point_n (get_buffer_pt (cur_bp)) < get_point_n (pt));
 
-  if (get_buffer_pt (cur_bp)->o > get_point_o (pt))
+  if (get_point_o (get_buffer_pt (cur_bp)) > get_point_o (pt))
     do
       FUNCALL (backward_char);
-    while (get_buffer_pt (cur_bp)->o > get_point_o (pt));
-  else if (get_buffer_pt (cur_bp)->o < get_point_o (pt))
+    while (get_point_o (get_buffer_pt (cur_bp)) > get_point_o (pt));
+  else if (get_point_o (get_buffer_pt (cur_bp)) < get_point_o (pt))
     do
       FUNCALL (forward_char);
-    while (get_buffer_pt (cur_bp)->o < get_point_o (pt));
+    while (get_point_o (get_buffer_pt (cur_bp)) < get_point_o (pt));
 }

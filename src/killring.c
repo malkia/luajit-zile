@@ -79,7 +79,7 @@ kill_to_bol (void)
   if (!bolp ())
     {
       Region * rp = region_new ();
-      Point * pt = get_buffer_pt (cur_bp);
+      int pt = get_buffer_pt (cur_bp);
 
       set_region_size (rp, get_point_o (pt));
       set_point_o (pt, 0);
@@ -100,7 +100,7 @@ kill_line (bool whole_line)
 
   if (!whole_line)
     {
-      Point * cur_pt = get_buffer_pt (cur_bp);
+      int cur_pt = get_buffer_pt (cur_bp);
       astr cur_line = get_line_text (get_point_p (cur_pt));
       size_t i;
 

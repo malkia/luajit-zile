@@ -19,6 +19,6 @@
    Free Software Foundation, Fifth Floor, 51 Franklin Street, Boston,
    MA 02111-1301, USA.  */
 
-FIELD(Point *, start)		/* The region start. */
-FIELD(Point *, end)		/* The region end. */
+FIELD(int, start)		/* The region start. */
+FIELD(int, end)			/* The region end. */
 FIELD(size_t, size)		/* The region size. */

@@ -21,4 +21,4 @@
 
 TABLE_FIELD(next)                    /* Used to chain all markers in the buffer. */
 TABLE_FIELD(bp)                      /* Buffer that points into. */
-FIELD(Point *, lightuserdata, pt)    /* Point position. */
+TABLE_FIELD(pt)                      /* Point position. */

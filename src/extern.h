@@ -25,7 +25,7 @@
 #include "xalloc_extra.h"
 
 /* basic.c ---------------------------------------------------------------- */
-size_t get_goalc_bp (int bp, Point * pt);
+size_t get_goalc_bp (int bp, int pt);
 size_t get_goalc (void);
 bool previous_line (void);
 bool next_line (void);
@@ -79,7 +79,7 @@ int transient_mark_mode (void);
 void activate_mark (void);
 void deactivate_mark (void);
 size_t tab_width (int bp);
-astr copy_text_block (Point * pt, size_t size);
+astr copy_text_block (int pt, size_t size);
 int create_scratch_buffer (void);
 void kill_buffer (int kill_bp);
 bool check_modified_buffer (int bp);
@@ -203,16 +203,16 @@ extern int thisflag, lastflag, last_uniarg;
 
 /* marker.c --------------------------------------------------------------- */
 #define FIELD(cty, lty, field)                  \
-  cty get_marker_ ## field (int wp);            \
-  void set_marker_ ## field (int wp, cty field);
+  cty get_marker_ ## field (int m);            \
+  void set_marker_ ## field (int m, cty field);
 #define TABLE_FIELD(field)                        \
-  int get_marker_ ## field (int l);               \
-  void set_marker_ ## field (int l, int v);
+  int get_marker_ ## field (int m);               \
+  void set_marker_ ## field (int m, int v);
 #include "marker.h"
 #undef FIELD
 #undef TABLE_FIELD
 void free_marker (int marker);
-void move_marker (int marker, int bp, Point * pt);
+void move_marker (int marker, int bp, int pt);
 int copy_marker (int marker);
 int point_marker (void);
 
@@ -237,22 +237,26 @@ char *minibuf_read_filename (const char *fmt, const char *value,
 void minibuf_clear (void);
 
 /* point.c ---------------------------------------------------------------- */
-#define FIELD(ty, field)                                \
-  ty get_point_ ## field (const Point * pt);            \
-  void set_point_ ## field (Point * pt, ty field);
+#define FIELD(cty, lty, field)                  \
+  cty get_point_ ## field (int pt);             \
+  void set_point_ ## field (int pt, cty field);
+#define TABLE_FIELD(field)                       \
+  int get_point_ ## field (int pt);              \
+  void set_point_ ## field (int pt, int v);
 #include "point.h"
 #undef FIELD
-Point *point_new (void);
-Point *make_point (size_t lineno, size_t offset);
-Point *point_copy (Point *pt);
-int cmp_point (Point * pt1, Point * pt2);
-int point_dist (Point * pt1, Point * pt2);
-int count_lines (Point * pt1, Point * pt2);
-Point *point_min (void);
-Point *point_max (void);
-Point *line_beginning_position (int count);
-Point *line_end_position (int count);
-void goto_point (Point * pt);
+#undef TABLE_FIELD
+int point_new (void);
+int make_point (size_t lineno, size_t offset);
+int point_copy (int pt);
+int cmp_point (int pt1, int pt2);
+int point_dist (int pt1, int pt2);
+int count_lines (int pt1, int pt2);
+int point_min (void);
+int point_max (void);
+int line_beginning_position (int count);
+int line_end_position (int count);
+void goto_point (int pt);
 
 /* redisplay.c ------------------------------------------------------------ */
 void resync_redisplay (void);
@@ -277,7 +281,7 @@ void show_splash_screen (const char *splash);
 extern int undo_nosave;
 void undo_start_sequence (void);
 void undo_end_sequence (void);
-void undo_save (int type, Point * pt, size_t arg1, size_t arg2);
+void undo_save (int type, int pt, size_t arg1, size_t arg2);
 void free_undo (Undo *up);
 void undo_set_unchanged (Undo *up);
 
@@ -294,9 +298,9 @@ bool get_variable_bool (const char *var);
 #define FIELD(cty, lty, field)                  \
   cty get_window_ ## field (int wp);            \
   void set_window_ ## field (int wp, cty field);
-#define TABLE_FIELD(field)                        \
-  int get_window_ ## field (int l);               \
-  void set_window_ ## field (int l, int v);
+#define TABLE_FIELD(field)                         \
+  int get_window_ ## field (int wp);               \
+  void set_window_ ## field (int wp, int v);
 #include "window.h"
 #undef FIELD
 #undef TABLE_FIELD
@@ -305,7 +309,7 @@ int find_window (const char *name);
 int popup_window (void);
 void set_current_window (int wp);
 void delete_window (int del_wp);
-Point *window_pt (int wp);
+int window_pt (int wp);
 void completion_scroll_up (void);
 void completion_scroll_down (void);
 bool window_top_visible (int wp);

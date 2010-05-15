@@ -42,7 +42,7 @@ struct Undo
 
   /* Where the undo delta need to be applied.
      Warning!: Do not use the p field of pt. */
-  Point * pt;
+  int pt;
 
   /* Flag indicating that reverting this undo leaves the buffer
      in an unchanged state. */
@@ -68,7 +68,7 @@ static int doing_undo = false;
  * Save a reverse delta for doing undo.
  */
 void
-undo_save (int type, Point * pt, size_t osize, size_t size)
+undo_save (int type, int pt, size_t osize, size_t size)
 {
   Undo *up;
 

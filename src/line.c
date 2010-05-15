@@ -70,7 +70,7 @@ adjust_markers (int newlp, int oldlp, size_t pointo, int dir, ptrdiff_t delta)
 
   for (m = get_buffer_markers (cur_bp); m != LUA_REFNIL; m = get_marker_next (m))
     {
-      Point * pt = get_marker_pt (m);
+      int pt = get_marker_pt (m);
 
       if (lua_refeq (L, get_point_p (pt), oldlp) && (dir == -1 || get_point_o (pt) > pointo))
         {
@@ -118,7 +118,7 @@ insert_char (int c)
 
   if (get_buffer_overwrite (cur_bp))
     {
-      Point * pt = get_buffer_pt (cur_bp);
+      int pt = get_buffer_pt (cur_bp);
       /* Current character isn't the end of line
          && isn't a \t
          || tab width isn't correct
@@ -319,7 +319,7 @@ fill_break_line (void)
       old_col = get_point_o (get_buffer_pt (cur_bp));
       while (get_goalc () > fillcol + 1)
         {
-          Point * pt = get_buffer_pt (cur_bp);
+          int pt = get_buffer_pt (cur_bp);
           set_point_o (pt, get_point_o (pt) - 1);
         }
 
@@ -353,7 +353,7 @@ fill_break_line (void)
 
       if (break_col >= 1) /* Break line. */
         {
-          Point * pt = get_buffer_pt (cur_bp);
+          int pt = get_buffer_pt (cur_bp);
           set_point_o (pt, break_col);
           FUNCALL (delete_horizontal_space);
           insert_newline ();
@@ -362,7 +362,7 @@ fill_break_line (void)
         }
       else /* Undo fiddling with point. */
         {
-          Point * pt = get_buffer_pt (cur_bp);
+          int pt = get_buffer_pt (cur_bp);
           set_point_o (pt, old_col);
         }
 

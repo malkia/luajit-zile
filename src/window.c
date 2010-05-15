@@ -325,7 +325,7 @@ find_window (const char *name)
   return LUA_REFNIL;
 }
 
-Point *
+int
 window_pt (int wp)
 {
   /* The current window uses the current buffer point; all other
@@ -355,7 +355,7 @@ void
 completion_scroll_up (void)
 {
   int wp, old_wp = cur_wp;
-  Point * pt;
+  int pt;
 
   wp = find_window ("*Completions*");
   assert (wp != LUA_REFNIL);
@@ -374,8 +374,7 @@ completion_scroll_up (void)
 void
 completion_scroll_down (void)
 {
-  int wp, old_wp = cur_wp;
-  Point * pt;
+  int pt, wp, old_wp = cur_wp;
 
   wp = find_window ("*Completions*");
   assert (wp != LUA_REFNIL);

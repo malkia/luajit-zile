@@ -19,6 +19,6 @@
    Free Software Foundation, Fifth Floor, 51 Franklin Street, Boston,
    MA 02111-1301, USA.  */
 
-FIELD(int, p)                   /* Line pointer. */
-FIELD(size_t, n)		/* Line number. */
-FIELD(size_t, o)		/* Offset. */
+TABLE_FIELD(p)			/* Line pointer. */
+FIELD(size_t, integer, n)	/* Line number. */
+FIELD(size_t, integer, o)	/* Offset. */

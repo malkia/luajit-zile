@@ -79,7 +79,7 @@ buffer_new (void)
   lua_newtable (L);
   bp = luaL_ref (L, LUA_REGISTRYINDEX);
 
-  /* Allocate Point. */
+  /* Allocate point. */
   set_buffer_pt (bp, point_new ());
 
   /* Allocate a line. */
@@ -327,7 +327,7 @@ calculate_the_region (Region * rp)
     }
 
   {
-    Point * pt1 = get_region_start (rp), * pt2 = get_region_end (rp);
+    int pt1 = get_region_start (rp), pt2 = get_region_end (rp);
     int size = -get_point_o (pt1) + get_point_o (pt2), lp;
 
     for (lp = get_point_p (pt1); !lua_refeq (L, lp, get_point_p (pt2)); lp = get_line_next (lp))
@@ -475,7 +475,7 @@ tab_width (int bp)
  * Copy a region of text into an allocated buffer.
  */
 astr
-copy_text_block (Point * pt, size_t size)
+copy_text_block (int pt, size_t size)
 {
   int lp;
   astr as = astr_substr (get_line_text (get_point_p (pt)), get_point_o (pt), astr_len (get_line_text (get_point_p (pt))) - get_point_o (pt));

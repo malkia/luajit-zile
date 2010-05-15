@@ -162,13 +162,12 @@ char coding_eol_cr[3] = "\r";
 static void
 read_from_disk (const char *filename)
 {
-  int i, size, lp;
+  int i, size, lp, pt;
   bool first_eol = true;
   char *this_eol_type;
   size_t eol_len = 0, total_eols = 0;
   char buf[BUFSIZ];
   FILE *fp = fopen (filename, "r");
-  Point * pt;
 
   if (fp == NULL)
     {

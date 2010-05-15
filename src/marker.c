@@ -53,7 +53,7 @@ free_marker (int marker)
 }
 
 void
-move_marker (int marker, int bp, Point * pt)
+move_marker (int marker, int bp, int pt)
 {
   if (!lua_refeq (L, bp, get_marker_bp (marker)))
     {

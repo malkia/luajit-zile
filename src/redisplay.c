@@ -113,7 +113,7 @@ resize_windows (void)
 void
 recenter (int wp)
 {
-  Point * pt = window_pt (wp);
+  int pt = window_pt (wp);
 
   if (get_point_n (pt) > get_window_eheight (wp) / 2)
     set_window_topdelta (wp, get_window_eheight (wp) / 2);

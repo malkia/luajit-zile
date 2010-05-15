@@ -83,14 +83,14 @@ set_mark (void)
 bool
 is_empty_line (void)
 {
-  Point * pt = get_buffer_pt (cur_bp);
+  int pt = get_buffer_pt (cur_bp);
   return astr_len (get_line_text (get_point_p (pt))) == 0;
 }
 
 bool
 is_blank_line (void)
 {
-  Point * pt = get_buffer_pt (cur_bp);
+  int pt = get_buffer_pt (cur_bp);
   size_t c;
   for (c = 0; c < astr_len (get_line_text (get_point_p (pt))); c++)
     if (!isspace ((int) astr_get (get_line_text (get_point_p (pt)), c)))
@@ -108,7 +108,7 @@ following_char (void)
     return '\n';
   else
     {
-      Point * pt = get_buffer_pt (cur_bp);
+      int pt = get_buffer_pt (cur_bp);
       return astr_get (get_line_text (get_point_p (pt)), get_point_o (pt));
     }
 }
@@ -123,7 +123,7 @@ preceding_char (void)
     return '\n';
   else
     {
-      Point * pt = get_buffer_pt (cur_bp);
+      int pt = get_buffer_pt (cur_bp);
       return astr_get (get_line_text (get_point_p (pt)), get_point_o (pt) - 1);
     }
 }
@@ -132,7 +132,7 @@ preceding_char (void)
 bool
 bobp (void)
 {
-  Point * pt = get_buffer_pt (cur_bp);
+  int pt = get_buffer_pt (cur_bp);
   return (lua_refeq (L, get_line_prev (get_point_p (pt)), get_buffer_lines (cur_bp)) && get_point_o (pt) == 0);
 }
 
@@ -140,7 +140,7 @@ bobp (void)
 bool
 eobp (void)
 {
-  Point * pt = get_buffer_pt (cur_bp);
+  int pt = get_buffer_pt (cur_bp);
   return (lua_refeq (L, get_line_next (get_point_p (pt)), get_buffer_lines (cur_bp)) &&
           get_point_o (pt) == astr_len (get_line_text (get_point_p (pt))));
 }
@@ -149,7 +149,7 @@ eobp (void)
 bool
 bolp (void)
 {
-  Point * pt = get_buffer_pt (cur_bp);
+  int pt = get_buffer_pt (cur_bp);
   return get_point_o (pt) == 0;
 }
 
@@ -157,7 +157,7 @@ bolp (void)
 bool
 eolp (void)
 {
-  Point * pt = get_buffer_pt (cur_bp);
+  int pt = get_buffer_pt (cur_bp);
   return get_point_o (pt) == astr_len (get_line_text (get_point_p (pt)));
 }
 

@@ -154,7 +154,7 @@ calculate_highlight_region (int wp, Region * rp, int *highlight)
   set_region_end (rp, get_marker_pt (get_buffer_mark (get_window_bp (wp))));
   if (cmp_point (get_region_end (rp), get_region_start (rp)) < 0)
     {
-      Point * pt = point_copy (get_region_start (rp));
+      int pt = point_copy (get_region_start (rp));
       set_region_start (rp, get_region_end (rp));
       set_region_end (rp, pt);
     }
@@ -167,7 +167,7 @@ draw_window (size_t topline, int wp)
   int lp;
   Region * rp = region_new ();
   int highlight;
-  Point * pt = window_pt (wp);
+  int pt = window_pt (wp);
 
   calculate_highlight_region (wp, rp, &highlight);
 
@@ -237,7 +237,7 @@ calculate_start_column (int wp)
   int rpfact, lpfact;
   char *buf;
   size_t rp, lp, p;
-  Point * pt = window_pt (wp);
+  int pt = window_pt (wp);
 
   rp = get_point_o (pt);
   rpfact = get_point_o (pt) / (get_window_ewidth (wp) / 3);
@@ -298,7 +298,7 @@ draw_status_line (size_t line, int wp)
 {
   size_t i, tw;
   char *buf, *eol_type;
-  Point * pt = window_pt (wp);
+  int pt = window_pt (wp);
   int bp = get_window_bp (wp);
   astr as, bs;
 
