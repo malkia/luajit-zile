@@ -39,6 +39,13 @@ struct Undo
 #undef FIELD
 };
 
+#define FIELD(ty, field)                     \
+  static GETTER (Undo, undo, ty, field)      \
+  static SETTER (Undo, undo, ty, field)
+
+#include "undo.h"
+#undef FIELD
+
 /* Setting this variable to true stops undo_save saving the given
    information. */
 int undo_nosave = false;
@@ -58,19 +65,19 @@ undo_save (int type, int pt, size_t osize, size_t size)
     return;
 
   up = (Undo *) XZALLOC (Undo);
-  up->type = type;
-  up->pt = point_copy (pt);
+  set_undo_type (up, type);
+  set_undo_pt (up, point_copy (pt));
   if (!get_buffer_modified (cur_bp))
-    up->unchanged = true;
+    set_undo_unchanged (up, true);
 
   if (type == UNDO_REPLACE_BLOCK)
     {
-      up->osize = osize;
-      up->size = size;
-      up->text = copy_text_block (point_copy (pt), osize);
+      set_undo_osize (up, osize);
+      set_undo_size (up, size);
+      set_undo_text (up, copy_text_block (point_copy (pt), osize));
     }
 
-  up->next = get_buffer_last_undop (cur_bp);
+  set_undo_next (up, get_buffer_last_undop (cur_bp));
   set_buffer_last_undop (cur_bp, up);
 
   if (!doing_undo)
@@ -87,35 +94,35 @@ revert_action (Undo * up)
 
   doing_undo = true;
 
-  if (up->type == UNDO_END_SEQUENCE)
+  if (get_undo_type (up) == UNDO_END_SEQUENCE)
     {
-      undo_save (UNDO_START_SEQUENCE, up->pt, 0, 0);
-      up = up->next;
-      while (up->type != UNDO_START_SEQUENCE)
+      undo_save (UNDO_START_SEQUENCE, get_undo_pt (up), 0, 0);
+      up = get_undo_next (up);
+      while (get_undo_type (up) != UNDO_START_SEQUENCE)
         up = revert_action (up);
-      undo_save (UNDO_END_SEQUENCE, up->pt, 0, 0);
-      goto_point (up->pt);
-      return up->next;
+      undo_save (UNDO_END_SEQUENCE, get_undo_pt (up), 0, 0);
+      goto_point (get_undo_pt (up));
+      return get_undo_next (up);
     }
 
-  goto_point (up->pt);
+  goto_point (get_undo_pt (up));
 
-  if (up->type == UNDO_REPLACE_BLOCK)
+  if (get_undo_type (up) == UNDO_REPLACE_BLOCK)
     {
-      undo_save (UNDO_REPLACE_BLOCK, up->pt, up->size, up->osize);
+      undo_save (UNDO_REPLACE_BLOCK, get_undo_pt (up), get_undo_size (up), get_undo_osize (up));
       undo_nosave = true;
-      for (i = 0; i < up->size; ++i)
+      for (i = 0; i < get_undo_size (up); ++i)
         delete_char ();
-      insert_nstring (astr_cstr (up->text), up->osize);
+      insert_nstring (astr_cstr (get_undo_text (up)), get_undo_osize (up));
       undo_nosave = false;
     }
 
   doing_undo = false;
 
-  if (up->unchanged)
+  if (get_undo_unchanged (up))
     set_buffer_modified (cur_bp, false);
 
-  return up->next;
+  return get_undo_next (up);
 }
 
 DEFUN ("undo", undo)
@@ -150,9 +157,9 @@ free_undo (Undo *up)
 {
   while (up != NULL)
     {
-      Undo *next_up = up->next;
-      if (up->type == UNDO_REPLACE_BLOCK)
-        astr_delete (up->text);
+      Undo *next_up = get_undo_next (up);
+      if (get_undo_type (up) == UNDO_REPLACE_BLOCK)
+        astr_delete (get_undo_text (up));
       free (up);
       up = next_up;
     }
@@ -164,6 +171,6 @@ free_undo (Undo *up)
 void
 undo_set_unchanged (Undo *up)
 {
-  for (; up; up = up->next)
-    up->unchanged = false;
+  for (; up != NULL; up = get_undo_next (up))
+    set_undo_unchanged (up, false);
 }
