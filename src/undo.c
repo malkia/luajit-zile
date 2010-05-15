@@ -32,19 +32,16 @@
 /*
  * Undo action
  */
-struct Undo
-{
-#define FIELD(ty, name) ty name;
-#include "undo.h"
-#undef FIELD
-};
-
-#define FIELD(ty, field)                     \
-  static GETTER (Undo, undo, ty, field)      \
-  static SETTER (Undo, undo, ty, field)
+#define FIELD(cty, lty, field)                  \
+  static LUA_GETTER (undo, cty, lty, field)     \
+  static LUA_SETTER (undo, cty, lty, field)
+#define TABLE_FIELD(field)                            \
+  static LUA_TABLE_GETTER (undo, field)               \
+  static LUA_TABLE_SETTER (undo, field)
 
 #include "undo.h"
 #undef FIELD
+#undef TABLE_FIELD
 
 /* Setting this variable to true stops undo_save saving the given
    information. */
@@ -59,12 +56,13 @@ static int doing_undo = false;
 void
 undo_save (int type, int pt, size_t osize, size_t size)
 {
-  Undo *up;
+  int up;
 
   if (get_buffer_noundo (cur_bp) || undo_nosave)
     return;
 
-  up = (Undo *) XZALLOC (Undo);
+  lua_newtable (L);
+  up = luaL_ref (L, LUA_REGISTRYINDEX);
   set_undo_type (up, type);
   set_undo_pt (up, point_copy (pt));
   if (!get_buffer_modified (cur_bp))
@@ -87,8 +85,8 @@ undo_save (int type, int pt, size_t osize, size_t size)
 /*
  * Revert an action.  Return the next undo entry.
  */
-static Undo *
-revert_action (Undo * up)
+static int
+revert_action (int up)
 {
   size_t i;
 
@@ -140,7 +138,7 @@ Repeat this command to undo more changes.
   if (warn_if_readonly_buffer ())
     return leNIL;
 
-  if (get_buffer_next_undop (cur_bp) == NULL)
+  if (get_buffer_next_undop (cur_bp) == LUA_REFNIL)
     {
       minibuf_error ("No further undo information");
       set_buffer_next_undop (cur_bp, get_buffer_last_undop (cur_bp));
@@ -153,14 +151,14 @@ Repeat this command to undo more changes.
 END_DEFUN
 
 void
-free_undo (Undo *up)
+free_undo (int up)
 {
-  while (up != NULL)
+  while (up != LUA_REFNIL)
     {
-      Undo *next_up = get_undo_next (up);
+      int next_up = get_undo_next (up);
       if (get_undo_type (up) == UNDO_REPLACE_BLOCK)
         astr_delete (get_undo_text (up));
-      free (up);
+      luaL_unref (L, LUA_REGISTRYINDEX, up);
       up = next_up;
     }
 }
@@ -169,8 +167,8 @@ free_undo (Undo *up)
  * Set unchanged flags to false.
  */
 void
-undo_set_unchanged (Undo *up)
+undo_set_unchanged (int up)
 {
-  for (; up != NULL; up = get_undo_next (up))
+  for (; up != LUA_REFNIL; up = get_undo_next (up))
     set_undo_unchanged (up, false);
 }

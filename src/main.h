@@ -46,7 +46,6 @@
  *--------------------------------------------------------------------------*/
 
 /* Opaque types. */
-typedef struct Undo Undo;
 typedef struct Macro Macro;
 
 /* Undo delta types. */

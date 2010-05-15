@@ -35,8 +35,8 @@ FIELD(size_t, integer, goalc) /* Goal column for previous/next-line commands. */
 TABLE_FIELD(pt) /* The point. */
 TABLE_FIELD(mark)         /* The mark. */
 TABLE_FIELD(markers)      /* Markers list (updated whenever text is changed). */
-FIELD(Undo *, lightuserdata, last_undop) /* Most recent undo delta. */
-FIELD(Undo *, lightuserdata, next_undop) /* Next undo delta to apply. */
+TABLE_FIELD(last_undop) /* Most recent undo delta. */
+TABLE_FIELD(next_undop) /* Next undo delta to apply. */
 TABLE_FIELD(vars)         /* Buffer-local variables. */
 FIELD(bool, boolean, modified)     /* Modified flag. */
 FIELD(bool, boolean, nosave)       /* The buffer need not be saved. */
