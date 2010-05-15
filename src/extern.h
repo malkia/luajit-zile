@@ -194,8 +194,8 @@ void cancel_kbd_macro (void);
 void add_cmd_to_macro (void);
 void add_key_to_cmd (size_t key);
 void remove_key_from_cmd (void);
-void call_macro (Macro * mp);
-Macro *get_macro (const char *name);
+void call_macro (int mp);
+int get_macro (const char *name);
 void add_macros_to_list (int l);
 
 /* main.c ----------------------------------------------------------------- */

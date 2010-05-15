@@ -32,63 +32,62 @@
 #include "extern.h"
 
 
-struct Macro
-{
-#define FIELD(ty, name) ty name;
-#include "macro.h"
-#undef FIELD
-};
-
-#define FIELD(ty, field)                              \
-  static GETTER (Macro, macro, ty, field)             \
-  static SETTER (Macro, macro, ty, field)
+#define FIELD(cty, lty, field)                   \
+  static LUA_GETTER (macro, cty, lty, field)     \
+  static LUA_SETTER (macro, cty, lty, field)
+#define TABLE_FIELD(field)                             \
+  static LUA_TABLE_GETTER (macro, field)               \
+  static LUA_TABLE_SETTER (macro, field)
 
 #include "macro.h"
 #undef FIELD
-#undef FIELD_STR
+#undef TABLE_FIELD
 
 
-static Macro *cur_mp, *cmd_mp = NULL, *head_mp = NULL;
+static int cur_mp, cmd_mp = LUA_REFNIL, head_mp = LUA_REFNIL;
 
-static Macro *
+static int
 macro_new (void)
 {
-  Macro * mp = XZALLOC (Macro);
+  int mp;
+
+  lua_newtable (L);
+  mp = luaL_ref (L, LUA_REGISTRYINDEX);
   set_macro_keys (mp, gl_list_create_empty (GL_ARRAY_LIST,
                                             NULL, NULL, NULL, true));
   return mp;
 }
 
 static void
-macro_delete (Macro * mp)
+macro_delete (int mp)
 {
   if (mp)
     {
       gl_list_free (get_macro_keys (mp));
-      free (get_macro_name (mp));
-      free (mp);
+      free ((char *) get_macro_name (mp));
+      luaL_unref (L, LUA_REGISTRYINDEX, mp);
     }
 }
 
 static void
-add_macro_key (Macro * mp, size_t key)
+add_macro_key (int mp, size_t key)
 {
   gl_list_add_last (get_macro_keys (mp), (void *) key);
 }
 
 static void
-remove_macro_key (Macro * mp)
+remove_macro_key (int mp)
 {
   gl_list_remove_at (get_macro_keys (mp), gl_list_size (get_macro_keys (mp)) - 1);
 }
 
 static void
-append_key_list (Macro *to, Macro *from)
+append_key_list (int to, int from)
 {
   size_t i;
 
-  for (i = 0; i < gl_list_size (from->keys); i++)
-    add_macro_key (to, (size_t) gl_list_get_at (from->keys, i));
+  for (i = 0; i < gl_list_size (get_macro_keys (from)); i++)
+    add_macro_key (to, (size_t) gl_list_get_at (get_macro_keys (from), i));
 }
 
 void
@@ -97,13 +96,13 @@ add_cmd_to_macro (void)
   assert (cmd_mp);
   append_key_list (cur_mp, cmd_mp);
   macro_delete (cmd_mp);
-  cmd_mp = NULL;
+  cmd_mp = LUA_REFNIL;
 }
 
 void
 add_key_to_cmd (size_t key)
 {
-  if (cmd_mp == NULL)
+  if (cmd_mp == LUA_REFNIL)
     cmd_mp = macro_new ();
 
   add_macro_key (cmd_mp, key);
@@ -121,7 +120,7 @@ cancel_kbd_macro (void)
 {
   macro_delete (cmd_mp);
   macro_delete (cur_mp);
-  cmd_mp = cur_mp = NULL;
+  cmd_mp = cur_mp = LUA_REFNIL;
   thisflag &= ~FLAG_DEFINING_MACRO;
 }
 
@@ -174,7 +173,7 @@ The symbol's function definition becomes the keyboard macro string.
 Such a \"function\" cannot be called from Lisp, but it is a valid editor command.
 +*/
 {
-  Macro *mp;
+  int mp;
   char *ms = minibuf_read ("Name for last kbd macro: ", "");
 
   if (ms == NULL)
@@ -183,7 +182,7 @@ Such a \"function\" cannot be called from Lisp, but it is a valid editor command
       return leNIL;
     }
 
-  if (cur_mp == NULL)
+  if (cur_mp == LUA_REFNIL)
     {
       minibuf_error ("No keyboard macro defined");
       return leNIL;
@@ -233,7 +232,7 @@ process_keys (gl_list_t keys)
 }
 
 void
-call_macro (Macro * mp)
+call_macro (int mp)
 {
   assert (mp);
   assert (get_macro_keys (mp));
@@ -288,10 +287,10 @@ END_DEFUN
 /*
  * Find a macro given its name.
  */
-Macro *
+int
 get_macro (const char *name)
 {
-  Macro *mp;
+  int mp;
   assert (name);
   for (mp = head_mp; mp; mp = get_macro_next (mp))
     if (!strcmp (get_macro_name (mp), name))
@@ -305,7 +304,7 @@ get_macro (const char *name)
 void
 add_macros_to_list (int l)
 {
-  Macro *mp;
+  int mp;
 
   lua_rawgeti (L, LUA_REGISTRYINDEX, l);
   lua_setglobal (L, "cp");
