@@ -98,7 +98,7 @@ le
 execute_function (const char *name, int uniarg, bool is_uniarg, le list)
 {
   Function func = NULL;
-  Macro *mp;
+  int mp;
 
   assert (name);
   CLUE_SET (L, name, string, name);

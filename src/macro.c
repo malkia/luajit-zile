@@ -250,7 +250,7 @@ defining others, use @kbd{M-x name-last-kbd-macro}.
 {
   int uni;
 
-  if (cur_mp == NULL)
+  if (cur_mp == LUA_REFNIL)
     {
       minibuf_error ("No kbd macro has been defined");
       return leNIL;
@@ -295,7 +295,7 @@ get_macro (const char *name)
   for (mp = head_mp; mp; mp = get_macro_next (mp))
     if (!strcmp (get_macro_name (mp), name))
       return mp;
-  return NULL;
+  return LUA_REFNIL;
 }
 
 /*
