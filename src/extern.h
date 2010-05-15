@@ -56,11 +56,15 @@ void init_default_bindings (void);
 #undef FIELD
 #undef FIELD_STR
 #undef TABLE_FIELD
-#define FIELD(ty, field)                                \
-  ty get_region_ ## field (const Region *cp);           \
-  void set_region_ ## field (Region *cp, ty field);
+#define FIELD(cty, lty, field)                  \
+  cty get_region_ ## field (int rp);            \
+  void set_region_ ## field (int rp, cty field);
+#define TABLE_FIELD(field)                        \
+  int get_region_ ## field (int rp);              \
+  void set_region_ ## field (int rp, int v);
 #include "region.h"
 #undef FIELD
+#undef TABLE_FIELD
 void free_buffer (int bp);
 void init_buffer (int bp);
 int buffer_new (void);
@@ -68,11 +72,11 @@ const char *get_buffer_filename_or_name (int bp);
 void set_buffer_names (int bp, const char *filename);
 int find_buffer (const char *name);
 void switch_to_buffer (int bp);
-Region * region_new (void);
+int region_new (void);
 int warn_if_readonly_buffer (void);
-int calculate_the_region (Region * rp);
-bool delete_region (const Region * rp);
-bool in_region (size_t lineno, size_t x, Region * rp);
+int calculate_the_region (int rp);
+bool delete_region (const int rp);
+bool in_region (size_t lineno, size_t x, int rp);
 void set_temporary_buffer (int bp);
 size_t calculate_buffer_size (int bp);
 int transient_mark_mode (void);

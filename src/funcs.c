@@ -603,11 +603,11 @@ edit_tab_line (int lp, size_t lineno, size_t offset, size_t size,
 static le
 edit_tab_region (int action)
 {
-  Region * rp = region_new ();
+  int rp = region_new ();
 
   if (warn_if_readonly_buffer () || !calculate_the_region (rp))
     {
-      free (rp);
+      luaL_unref (L, LUA_REGISTRYINDEX, rp);
       return leNIL;
     }
 
@@ -648,7 +648,7 @@ edit_tab_region (int action)
       deactivate_mark ();
     }
 
-  free (rp);
+  luaL_unref (L, LUA_REGISTRYINDEX, rp);
   return leT;
 }
 
@@ -906,7 +906,7 @@ END_DEFUN
 static void
 astr_append_region (astr s)
 {
-  Region * rp = region_new ();
+  int rp = region_new ();
   astr as;
 
   activate_mark ();
@@ -916,7 +916,7 @@ astr_append_region (astr s)
   astr_cat (s, as);
   astr_delete (as);
 
-  free (rp);
+  luaL_unref (L, LUA_REGISTRYINDEX, rp);
 }
 
 static bool
@@ -1341,14 +1341,14 @@ END_DEFUN
 static le
 setcase_region (enum casing rcase)
 {
-  Region * rp = region_new ();
+  int rp = region_new ();
   int lp;
   size_t i, size;
   int (*func) (int) = rcase == case_upper ? toupper : tolower;
 
   if (warn_if_readonly_buffer () || !calculate_the_region (rp))
     {
-      free (rp);
+      luaL_unref (L, LUA_REGISTRYINDEX, rp);
       return leNIL;
     }
 
@@ -1373,7 +1373,7 @@ setcase_region (enum casing rcase)
     }
 
   set_buffer_modified (cur_bp, true);
-  free (rp);
+  luaL_unref (L, LUA_REGISTRYINDEX, rp);
 
   return leT;
 }
@@ -1536,7 +1536,7 @@ The output is available in that buffer in both cases.
 
   if (cmd != NULL)
     {
-      Region * rp = region_new ();
+      int rp = region_new ();
 
       if (!calculate_the_region (rp))
         ok = leNIL;
@@ -1575,7 +1575,7 @@ The output is available in that buffer in both cases.
           remove (tempfile);
         }
 
-      free (rp);
+      luaL_unref (L, LUA_REGISTRYINDEX, rp);
     }
 
   STR_FREE (cmd);
@@ -1587,7 +1587,7 @@ DEFUN ("delete-region", delete_region)
 Delete the text between point and mark.
 +*/
 {
-  Region * rp = region_new ();
+  int rp = region_new ();
 
   if (!calculate_the_region (rp))
     ok = leNIL;
@@ -1596,7 +1596,7 @@ Delete the text between point and mark.
   else
     deactivate_mark ();
 
-  free (rp);
+  luaL_unref (L, LUA_REGISTRYINDEX, rp);
 }
 END_DEFUN
 

@@ -91,7 +91,7 @@ outch (int c, size_t font, size_t * x)
 }
 
 static void
-draw_end_of_line (size_t line, int wp, size_t lineno, Region * rp,
+draw_end_of_line (size_t line, int wp, size_t lineno, int rp,
                   int highlight, size_t x, size_t i)
 {
   size_t tw;
@@ -119,7 +119,7 @@ draw_end_of_line (size_t line, int wp, size_t lineno, Region * rp,
 
 static void
 draw_line (size_t line, size_t startcol, int wp, int lp,
-           size_t lineno, Region * rp, int highlight)
+           size_t lineno, int rp, int highlight)
 {
   size_t x, i;
 
@@ -137,7 +137,7 @@ draw_line (size_t line, size_t startcol, int wp, int lp,
 }
 
 static void
-calculate_highlight_region (int wp, Region * rp, int *highlight)
+calculate_highlight_region (int wp, int rp, int *highlight)
 {
   if ((wp != cur_wp
        && !get_variable_bool ("highlight-nonselected-windows"))
@@ -164,9 +164,8 @@ static void
 draw_window (size_t topline, int wp)
 {
   size_t i, startcol, lineno;
-  int lp;
-  Region * rp = region_new ();
-  int highlight;
+  int lp, highlight;
+  int rp = region_new ();
   int pt = window_pt (wp);
 
   calculate_highlight_region (wp, rp, &highlight);
@@ -205,7 +204,7 @@ draw_window (size_t topline, int wp)
       lp = get_line_next (lp);
     }
 
-  free (rp);
+  luaL_unref (L, LUA_REGISTRYINDEX, rp);
 }
 
 static char *

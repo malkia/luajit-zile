@@ -51,7 +51,7 @@ Copy region into register @i{register}.
     ok = FUNCALL (keyboard_quit);
   else
     {
-      Region * rp = region_new ();
+      int rp = region_new ();
 
       minibuf_clear ();
       if (reg < 0)
@@ -68,7 +68,7 @@ Copy region into register @i{register}.
           regs[reg] = copy_text_block (get_region_start (rp), get_region_size (rp));
         }
 
-      free (rp);
+      luaL_unref (L, LUA_REGISTRYINDEX, rp);
     }
 }
 END_DEFUN

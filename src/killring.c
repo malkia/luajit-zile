@@ -48,7 +48,7 @@ kill_ring_push (astr as)
 }
 
 static bool
-copy_or_kill_region (bool kill, Region * rp)
+copy_or_kill_region (bool kill, int rp)
 {
   astr as = copy_text_block (get_region_start (rp), get_region_size (rp));
 
@@ -78,7 +78,7 @@ kill_to_bol (void)
 
   if (!bolp ())
     {
-      Region * rp = region_new ();
+      int rp = region_new ();
       int pt = get_buffer_pt (cur_bp);
 
       set_region_size (rp, get_point_o (pt));
@@ -86,7 +86,7 @@ kill_to_bol (void)
       set_region_start (rp, pt);
 
       ok = copy_or_kill_region (true, rp);
-      free (rp);
+      luaL_unref (L, LUA_REGISTRYINDEX, rp);
     }
 
   return ok;
@@ -125,13 +125,13 @@ kill_line (bool whole_line)
 
   if (!eolp ())
     {
-      Region * rp = region_new ();
+      int rp = region_new ();
 
       set_region_start (rp, get_buffer_pt (cur_bp));
       set_region_size (rp, astr_len (get_line_text (get_point_p (get_buffer_pt (cur_bp)))) - get_point_o (get_buffer_pt (cur_bp)));
 
       ok = copy_or_kill_region (true, rp);
-      free (rp);
+      luaL_unref (L, LUA_REGISTRYINDEX, rp);
     }
 
   if (ok && (whole_line || only_blanks_to_end_of_line) && !eobp ())
@@ -201,13 +201,13 @@ END_DEFUN
 static bool
 copy_or_kill_the_region (bool kill)
 {
-  Region * rp = region_new ();
+  int rp = region_new ();
   bool ok = false;
 
   if (calculate_the_region (rp))
     ok = copy_or_kill_region (kill, rp);
 
-  free (rp);
+  luaL_unref (L, LUA_REGISTRYINDEX, rp);
   return ok;
 }
 

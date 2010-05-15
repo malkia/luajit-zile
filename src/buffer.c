@@ -49,21 +49,20 @@
 
 #include "buffer.h"
 #undef FIELD
+#undef TABLE_FIELD
 #undef FIELD_STR
 
-struct Region
-{
-#define FIELD(ty, name) ty name;
-#include "region.h"
-#undef FIELD
-};
+#define FIELD(cty, lty, field)              \
+  LUA_GETTER (region, cty, lty, field)      \
+  LUA_SETTER (region, cty, lty, field)
 
-#define FIELD(ty, field)                         \
-  GETTER (Region, region, ty, field)             \
-  SETTER (Region, region, ty, field)
+#define TABLE_FIELD(field)                       \
+  LUA_TABLE_GETTER (region, field)               \
+  LUA_TABLE_SETTER (region, field)
 
 #include "region.h"
 #undef FIELD
+#undef TABLE_FIELD
 
 /*
  * Allocate a new buffer structure, set the default local
@@ -297,10 +296,11 @@ warn_if_no_mark (void)
     return false;
 }
 
-Region *
+int
 region_new (void)
 {
-  return (Region *) XZALLOC (Region);
+  lua_newtable (L);
+  return luaL_ref (L, LUA_REGISTRYINDEX);
 }
 
 /*
@@ -308,7 +308,7 @@ region_new (void)
  * structure.
  */
 int
-calculate_the_region (Region * rp)
+calculate_the_region (int rp)
 {
   if (warn_if_no_mark ())
     return false;
@@ -340,7 +340,7 @@ calculate_the_region (Region * rp)
 }
 
 bool
-delete_region (const Region * rp)
+delete_region (int rp)
 {
   size_t size = get_region_size (rp);
   int m = point_marker ();
@@ -361,23 +361,23 @@ delete_region (const Region * rp)
 }
 
 bool
-in_region (size_t lineno, size_t x, Region * rp)
+in_region (size_t lineno, size_t x, int rp)
 {
-  if (lineno >= get_point_n (rp->start) && lineno <= get_point_n (rp->end))
+  if (lineno >= get_point_n (get_region_start (rp)) && lineno <= get_point_n (get_region_end (rp)))
     {
-      if (get_point_n (rp->start) == get_point_n (rp->end))
+      if (get_point_n (get_region_start (rp)) == get_point_n (get_region_end (rp)))
         {
-          if (x >= get_point_o (rp->start) && x < get_point_o (rp->end))
+          if (x >= get_point_o (get_region_start (rp)) && x < get_point_o (get_region_end (rp)))
             return true;
         }
-      else if (lineno == get_point_n (rp->start))
+      else if (lineno == get_point_n (get_region_start (rp)))
         {
-          if (x >= get_point_o (rp->start))
+          if (x >= get_point_o (get_region_start (rp)))
             return true;
         }
-      else if (lineno == get_point_n (rp->end))
+      else if (lineno == get_point_n (get_region_end (rp)))
         {
-          if (x < get_point_o (rp->end))
+          if (x < get_point_o (get_region_end (rp)))
             return true;
         }
       else
