@@ -48,7 +48,6 @@
 /* Opaque types. */
 typedef struct Undo Undo;
 typedef struct Macro Macro;
-typedef struct Binding *Binding;
 
 /* Undo delta types. */
 enum

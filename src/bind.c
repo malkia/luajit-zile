@@ -37,6 +37,8 @@
  * Key binding.
  *--------------------------------------------------------------------------*/
 
+typedef struct Binding *Binding;
+
 struct Binding
 {
   size_t key; /* The key code (for every level except the root). */
