@@ -49,12 +49,9 @@ struct Undo
   bool unchanged;
 
   /* The block to insert. */
-  struct
-  {
-    astr text;
-    size_t osize;		/* Original size. */
-    size_t size;		/* New block size. */
-  } block;
+  astr text;
+  size_t osize;		/* Original size. */
+  size_t size;		/* New block size. */
 };
 
 /* Setting this variable to true stops undo_save saving the given
@@ -83,9 +80,9 @@ undo_save (int type, int pt, size_t osize, size_t size)
 
   if (type == UNDO_REPLACE_BLOCK)
     {
-      up->block.osize = osize;
-      up->block.size = size;
-      up->block.text = copy_text_block (point_copy (pt), osize);
+      up->osize = osize;
+      up->size = size;
+      up->text = copy_text_block (point_copy (pt), osize);
     }
 
   up->next = get_buffer_last_undop (cur_bp);
@@ -120,12 +117,11 @@ revert_action (Undo * up)
 
   if (up->type == UNDO_REPLACE_BLOCK)
     {
-      undo_save (UNDO_REPLACE_BLOCK, up->pt,
-                 up->block.size, up->block.osize);
+      undo_save (UNDO_REPLACE_BLOCK, up->pt, up->size, up->osize);
       undo_nosave = true;
-      for (i = 0; i < up->block.size; ++i)
+      for (i = 0; i < up->size; ++i)
         delete_char ();
-      insert_nstring (astr_cstr (up->block.text), up->block.osize);
+      insert_nstring (astr_cstr (up->text), up->osize);
       undo_nosave = false;
     }
 
@@ -171,7 +167,7 @@ free_undo (Undo *up)
     {
       Undo *next_up = up->next;
       if (up->type == UNDO_REPLACE_BLOCK)
-        astr_delete (up->block.text);
+        astr_delete (up->text);
       free (up);
       up = next_up;
     }
