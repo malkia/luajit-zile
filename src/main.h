@@ -45,9 +45,6 @@
  * Main editor structures.
  *--------------------------------------------------------------------------*/
 
-/* Opaque types. */
-typedef struct Macro Macro;
-
 /* Undo delta types. */
 enum
 {
