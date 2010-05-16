@@ -41,13 +41,17 @@ typedef struct Binding *Binding;
 
 struct Binding
 {
-  size_t key; /* The key code (for every level except the root). */
-  const char * func; /* The function for this key (if a leaf node). */
-
-  /* Branch vector, number of items, max number of items. */
-  Binding *vec;
-  size_t vecnum, vecmax;
+#define FIELD(ty, name) ty name;
+#include "binding.h"
+#undef FIELD
 };
+
+#define FIELD(ty, field)                                         \
+  static GETTER (struct Binding, binding, ty, field)             \
+  static SETTER (struct Binding, binding, ty, field)
+
+#include "binding.h"
+#undef FIELD
 
 static Binding root_bindings;
 
@@ -56,8 +60,8 @@ node_new (int vecmax)
 {
   Binding p = (Binding) XZALLOC (struct Binding);
 
-  p->vecmax = vecmax;
-  p->vec = (Binding *) XCALLOC (vecmax, struct Binding);
+  set_binding_vecmax (p, vecmax);
+  set_binding_vec (p, (Binding *) XCALLOC (vecmax, struct Binding));
 
   return p;
 }
@@ -67,9 +71,9 @@ search_node (Binding tree, size_t key)
 {
   size_t i;
 
-  for (i = 0; i < tree->vecnum; ++i)
-    if (tree->vec[i]->key == key)
-      return tree->vec[i];
+  for (i = 0; i < get_binding_vecnum (tree); ++i)
+    if (get_binding_vec (tree)[i]->key == key)
+      return get_binding_vec (tree)[i];
 
   return NULL;
 }
@@ -82,28 +86,28 @@ add_node (Binding tree, Binding p)
   /* Erase any previous binding the current key might have had in case
      it was non-prefix and is now being made prefix, as we don't want
      to accidentally create a default for the prefix map. */
-  if (tree->vecnum == 0)
-    tree->func = NULL;
+  if (get_binding_vecnum (tree) == 0)
+    set_binding_func (tree, NULL);
 
   /* Reallocate vector if there is not enough space. */
-  if (tree->vecnum + 1 >= tree->vecmax)
+  if (get_binding_vecnum (tree) + 1 >= get_binding_vecmax (tree))
     {
-      tree->vecmax += 5;
-      tree->vec = (Binding *) xrealloc (tree->vec, sizeof (*p) * tree->vecmax);
+      set_binding_vecmax (tree, get_binding_vecmax (tree) + 5);
+      set_binding_vec (tree, (Binding *) xrealloc (get_binding_vec (tree), sizeof (*p) * get_binding_vecmax (tree)));
     }
 
   /* Insert the node at the sorted position. */
-  for (i = 0; i < tree->vecnum; i++)
-    if (tree->vec[i]->key > p->key)
+  for (i = 0; i < get_binding_vecnum (tree); i++)
+    if (get_binding_vec (tree)[i]->key > get_binding_key (p))
       {
-        memmove (&tree->vec[i + 1], &tree->vec[i],
-                 sizeof (p) * (tree->vecnum - i));
-        tree->vec[i] = p;
+        memmove (&get_binding_vec (tree)[i + 1], &get_binding_vec (tree)[i],
+                 sizeof (p) * (get_binding_vecnum (tree) - i));
+        get_binding_vec (tree)[i] = p;
         break;
       }
-  if (i == tree->vecnum)
-    tree->vec[tree->vecnum] = p;
-  ++tree->vecnum;
+  if (i == get_binding_vecnum (tree))
+    get_binding_vec (tree)[get_binding_vecnum (tree)] = p;
+  set_binding_vecnum (tree, get_binding_vecnum (tree) + 1);
 }
 
 static void
@@ -115,17 +119,17 @@ bind_key_vec (Binding tree, gl_list_t keys, size_t from, const char * func)
   if (s == NULL)
     {
       p = node_new (n == 1 ? 1 : 5);
-      p->key = (size_t) gl_list_get_at (keys, from);
+      set_binding_key (p, (size_t) gl_list_get_at (keys, from));
       add_node (tree, p);
       if (n == 1)
-        p->func = func;
+        set_binding_func (p, func);
       else if (n > 0)
         bind_key_vec (p, keys, from + 1, func);
     }
   else if (n > 1)
     bind_key_vec (s, keys, from + 1, func);
   else
-    s->func = func;
+    set_binding_func (s, func);
 }
 
 static Binding
@@ -216,7 +220,7 @@ get_key_sequence (void)
     {
       astr as;
       Binding p = search_key (root_bindings, keys, 0);
-      if (p == NULL || p->func != NULL)
+      if (p == NULL || get_binding_func (p) != NULL)
         break;
       as = make_completion (keys);
       gl_list_add_last (keys, (void *) do_binding_completion (as));
@@ -243,7 +247,7 @@ get_function_by_keys (gl_list_t keys)
   /* See if we've got a valid key sequence */
   p = search_key (root_bindings, keys, 0);
 
-  return p ? p->func : NULL;
+  return p ? get_binding_func (p) : NULL;
 }
 
 static bool
@@ -534,17 +538,17 @@ walk_bindings_tree (Binding tree, gl_list_t keys,
                     void (*process) (astr key, Binding p, void *st), void *st)
 {
   size_t i, j;
-  astr as = chordtostr (tree->key);
+  astr as = chordtostr (get_binding_key (tree));
 
   gl_list_add_last (keys, as);
 
-  for (i = 0; i < tree->vecnum; ++i)
+  for (i = 0; i < get_binding_vecnum (tree); ++i)
     {
-      Binding p = tree->vec[i];
-      if (p->func != NULL)
+      Binding p = get_binding_vec (tree)[i];
+      if (get_binding_func (p) != NULL)
         {
           astr key = astr_new ();
-          astr as = chordtostr (p->key);
+          astr as = chordtostr (get_binding_key (p));
           for (j = 1; j < gl_list_size (keys); j++)
             {
               astr_cat (key, (astr) gl_list_get_at (keys, j));
@@ -584,7 +588,7 @@ gather_bindings (astr key, Binding p, void *st)
 {
   gather_bindings_state *g = (gather_bindings_state *) st;
 
-  if (p->func == g->f)
+  if (get_binding_func (p) == g->f)
     {
       if (astr_len (g->bindings) > 0)
         astr_cat_cstr (g->bindings, ", ");
@@ -636,7 +640,7 @@ END_DEFUN
 static void
 print_binding (astr key, Binding p, void *st GCC_UNUSED)
 {
-  bprintf ("%-15s %s\n", astr_cstr (key), p->func);
+  bprintf ("%-15s %s\n", astr_cstr (key), get_binding_func (p));
 }
 
 static void
