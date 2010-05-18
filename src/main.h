@@ -65,28 +65,6 @@ enum
  * Object field getter and setter generators.
  *--------------------------------------------------------------------------*/
 
-#define GETTER(Obj, name, ty, field)            \
-  ty                                            \
-  get_ ## name ## _ ## field (const Obj *_p)    \
-  {                                             \
-    return _p->field;                           \
-  }                                             \
-
-#define SETTER(Obj, name, ty, field)                    \
-  void                                                  \
-  set_ ## name ## _ ## field (Obj *_p, ty field)        \
-  {                                                     \
-    _p->field = field;                                  \
-  }
-
-#define STR_SETTER(Obj, name, field)                            \
-  void                                                          \
-  set_ ## name ## _ ## field (Obj *p, const char *field)        \
-  {                                                             \
-    free ((char *) p->field);                                   \
-    p->field = field ? xstrdup (field) : NULL;                  \
-  }
-
 #define LUA_GETTER(name, cty, lty, field)       \
   cty                                           \
   get_ ## name ## _ ## field (const le p)       \
