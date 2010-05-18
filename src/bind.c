@@ -37,88 +37,65 @@
  * Key binding.
  *--------------------------------------------------------------------------*/
 
-typedef struct Binding *Binding;
-
-struct Binding
-{
-#define FIELD(ty, name) ty name;
-#include "binding.h"
-#undef FIELD
-};
-
-#define FIELD(ty, field)                                         \
-  static GETTER (struct Binding, binding, ty, field)             \
-  static SETTER (struct Binding, binding, ty, field)
+#define FIELD(cty, lty, field)                     \
+  static LUA_GETTER (binding, cty, lty, field)     \
+  static LUA_SETTER (binding, cty, lty, field)
+#define TABLE_FIELD(field)                            \
+  static LUA_TABLE_GETTER (binding, field)            \
+  static LUA_TABLE_SETTER (binding, field)
 
 #include "binding.h"
 #undef FIELD
+#undef TABLE_FIELD
 
-static Binding root_bindings;
+static int root_bindings;
 
-static Binding
-node_new (int vecmax)
+static int
+node_new (void)
 {
-  Binding p = (Binding) XZALLOC (struct Binding);
+  int p;
 
-  set_binding_vecmax (p, vecmax);
-  set_binding_vec (p, (Binding *) XCALLOC (vecmax, struct Binding));
+  lua_newtable (L);
+  p = luaL_ref (L, LUA_REGISTRYINDEX);
+  lua_newtable (L);
+  set_binding_vec (p, luaL_ref (L, LUA_REGISTRYINDEX));
 
   return p;
 }
 
-static Binding
-search_node (Binding tree, size_t key)
+static int
+search_node (int tree, size_t key)
 {
-  size_t i;
-
-  for (i = 0; i < get_binding_vecnum (tree); ++i)
-    if (get_binding_vec (tree)[i]->key == key)
-      return get_binding_vec (tree)[i];
-
-  return NULL;
+  CLUE_SET (L, key, integer, key);
+  lua_rawgeti (L, LUA_REGISTRYINDEX, tree);
+  lua_setglobal (L, "tree");
+  (void) CLUE_DO (L, "b = nil; for i = 1, #tree.vec do if tree.vec[i].key == key then b = tree.vec[i] end end");
+  lua_getglobal (L, "b");
+  return luaL_ref (L, LUA_REGISTRYINDEX);
 }
 
 static void
-add_node (Binding tree, Binding p)
+add_node (int tree, int p)
 {
-  size_t i;
-
   /* Erase any previous binding the current key might have had in case
      it was non-prefix and is now being made prefix, as we don't want
      to accidentally create a default for the prefix map. */
-  if (get_binding_vecnum (tree) == 0)
-    set_binding_func (tree, NULL);
-
-  /* Reallocate vector if there is not enough space. */
-  if (get_binding_vecnum (tree) + 1 >= get_binding_vecmax (tree))
-    {
-      set_binding_vecmax (tree, get_binding_vecmax (tree) + 5);
-      set_binding_vec (tree, (Binding *) xrealloc (get_binding_vec (tree), sizeof (*p) * get_binding_vecmax (tree)));
-    }
-
-  /* Insert the node at the sorted position. */
-  for (i = 0; i < get_binding_vecnum (tree); i++)
-    if (get_binding_vec (tree)[i]->key > get_binding_key (p))
-      {
-        memmove (&get_binding_vec (tree)[i + 1], &get_binding_vec (tree)[i],
-                 sizeof (p) * (get_binding_vecnum (tree) - i));
-        get_binding_vec (tree)[i] = p;
-        break;
-      }
-  if (i == get_binding_vecnum (tree))
-    get_binding_vec (tree)[get_binding_vecnum (tree)] = p;
-  set_binding_vecnum (tree, get_binding_vecnum (tree) + 1);
+  lua_rawgeti (L, LUA_REGISTRYINDEX, tree);
+  lua_setglobal (L, "tree");
+  lua_rawgeti (L, LUA_REGISTRYINDEX, p);
+  lua_setglobal (L, "p");
+  (void) CLUE_DO (L, "tree.func = nil; table.insert (tree.vec, p)");
 }
 
 static void
-bind_key_vec (Binding tree, gl_list_t keys, size_t from, const char * func)
+bind_key_vec (int tree, gl_list_t keys, size_t from, const char * func)
 {
-  Binding p, s = search_node (tree, (size_t) gl_list_get_at (keys, from));
+  int p, s = search_node (tree, (size_t) gl_list_get_at (keys, from));
   size_t n = gl_list_size (keys) - from;
 
-  if (s == NULL)
+  if (s == LUA_REFNIL)
     {
-      p = node_new (n == 1 ? 1 : 5);
+      p = node_new ();
       set_binding_key (p, (size_t) gl_list_get_at (keys, from));
       add_node (tree, p);
       if (n == 1)
@@ -132,12 +109,12 @@ bind_key_vec (Binding tree, gl_list_t keys, size_t from, const char * func)
     set_binding_func (s, func);
 }
 
-static Binding
-search_key (Binding tree, gl_list_t keys, size_t from)
+static int
+search_key (int tree, gl_list_t keys, size_t from)
 {
-  Binding p = search_node (tree, (size_t) gl_list_get_at (keys, from));
+  int p = search_node (tree, (size_t) gl_list_get_at (keys, from));
 
-  if (p != NULL)
+  if (p != LUA_REFNIL)
     {
       if (gl_list_size (keys) - from == 1)
         return p;
@@ -145,7 +122,7 @@ search_key (Binding tree, gl_list_t keys, size_t from)
         return search_key (p, keys, from + 1);
     }
 
-  return NULL;
+  return LUA_REFNIL;
 }
 
 static astr
@@ -219,8 +196,8 @@ get_key_sequence (void)
   for (;;)
     {
       astr as;
-      Binding p = search_key (root_bindings, keys, 0);
-      if (p == NULL || get_binding_func (p) != NULL)
+      int p = search_key (root_bindings, keys, 0);
+      if (p == LUA_REFNIL || get_binding_func (p) != NULL)
         break;
       as = make_completion (keys);
       gl_list_add_last (keys, (void *) do_binding_completion (as));
@@ -233,7 +210,7 @@ get_key_sequence (void)
 const char *
 get_function_by_keys (gl_list_t keys)
 {
-  Binding p;
+  int p;
 
   /* Detect Meta-digit */
   if (gl_list_size (keys) == 1)
@@ -335,10 +312,10 @@ process_command (void)
   lastflag = thisflag;
 }
 
-static Binding
+static int
 init_bindings (void)
 {
-  return node_new (10);
+  return node_new ();
 }
 
 void
@@ -534,17 +511,26 @@ sequence.
 END_DEFUN
 
 static void
-walk_bindings_tree (Binding tree, gl_list_t keys,
-                    void (*process) (astr key, Binding p, void *st), void *st)
+walk_bindings_tree (int tree, gl_list_t keys,
+                    void (*process) (astr key, int p, void *st), void *st)
 {
-  size_t i, j;
+  size_t i, j, vecnum;
   astr as = chordtostr (get_binding_key (tree));
 
   gl_list_add_last (keys, as);
 
-  for (i = 0; i < get_binding_vecnum (tree); ++i)
+  lua_rawgeti (L, LUA_REGISTRYINDEX, tree);
+  (void) CLUE_DO (L, "vecnum = #tree.vec");
+  CLUE_GET (L, vecnum, integer, vecnum);
+  for (i = 0; i < vecnum; ++i)
     {
-      Binding p = get_binding_vec (tree)[i];
+      int p;
+      CLUE_SET (L, i, integer, i);
+      lua_rawgeti (L, LUA_REGISTRYINDEX, tree);
+      lua_setglobal (L, "tree");
+      (void) CLUE_DO (L, "p = tree.vec[i]");
+      lua_getglobal (L, "p");
+      p = luaL_ref (L, LUA_REGISTRYINDEX);
       if (get_binding_func (p) != NULL)
         {
           astr key = astr_new ();
@@ -568,7 +554,7 @@ walk_bindings_tree (Binding tree, gl_list_t keys,
 }
 
 static void
-walk_bindings (Binding tree, void (*process) (astr key, Binding p, void *st),
+walk_bindings (int tree, void (*process) (astr key, int p, void *st),
                void *st)
 {
   gl_list_t l = gl_list_create_empty (GL_LINKED_LIST,
@@ -584,7 +570,7 @@ typedef struct
 } gather_bindings_state;
 
 static void
-gather_bindings (astr key, Binding p, void *st)
+gather_bindings (astr key, int p, void *st)
 {
   gather_bindings_state *g = (gather_bindings_state *) st;
 
@@ -638,7 +624,7 @@ message in the buffer.
 END_DEFUN
 
 static void
-print_binding (astr key, Binding p, void *st GCC_UNUSED)
+print_binding (astr key, int p, void *st GCC_UNUSED)
 {
   bprintf ("%-15s %s\n", astr_cstr (key), get_binding_func (p));
 }
