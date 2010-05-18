@@ -103,7 +103,6 @@ zile_LUA =						\
 LUA_RUNTIME =						\
 	$(LUA_STD)					\
 	$(zile_LUA)					\
-	default-bindings.el				\
 	tbl_funcs.lua
 
 LUA_BUILDTIME =						\
