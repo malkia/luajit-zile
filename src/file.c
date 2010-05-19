@@ -156,11 +156,11 @@ char coding_eol_cr[3] = "\r";
 #define MAX_EOL_CHECK_COUNT 3
 
 /*
- * Read the file contents into a buffer.
+ * Read the file contents into current buffer.
  * Return quietly if the file doesn't exist, or other error.
  */
 static void
-read_from_disk (const char *filename)
+read_file (const char *filename)
 {
   int i, size, lp, pt;
   bool first_eol = true;
@@ -186,6 +186,7 @@ read_from_disk (const char *filename)
   lp = get_point_p (pt);
 
   /* Read first chunk and determine EOL type. */
+  /* FIXME: Don't assume first EOL occurs in first chunk. */
   size = fread (buf, 1, BUFSIZ, fp);
   if (size > 0)
     {
@@ -280,7 +281,7 @@ find_file (const char *filename)
   set_buffer_names (bp, filename);
 
   switch_to_buffer (bp);
-  read_from_disk (filename);
+  read_file (filename);
 
   thisflag |= FLAG_NEED_RESYNC;
 

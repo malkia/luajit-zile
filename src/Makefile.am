@@ -161,7 +161,7 @@ MAINTAINERCLEANFILES =					\
 	tbl_vars.lua					\
 	tbl_funcs.h
 
-CLOC = cloc --no3
+CLOC = cloc --force-lang="C",h --no3
 
 TESTSOURCES = $(LISP_TESTS) $(LISP_TESTS_ZILE_ONLY) $(TESTSCRIPTS)
 

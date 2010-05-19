@@ -504,65 +504,54 @@ create_scratch_buffer (void)
 
 /*
  * Remove the specified buffer from the buffer list and deallocate
- * its space.  Avoid killing the sole buffers and creates the scratch
- * buffer when required.
+ * its space.  Recreate the scratch buffer when required.
  */
 void
 kill_buffer (int kill_bp)
 {
-  int next_bp;
+  int next_bp, wp, bp;
 
   if (get_buffer_next (kill_bp) != LUA_REFNIL)
     next_bp = get_buffer_next (kill_bp);
   else
-    next_bp = head_bp;
+    next_bp = (head_bp == kill_bp) ? LUA_REFNIL : head_bp;
 
-  if (next_bp == kill_bp) /* Only one buffer. */
+  /* Search for windows displaying the buffer to kill. */
+  for (wp = head_wp; wp != LUA_REFNIL; wp = get_window_next (wp))
+    if (get_window_bp (wp) == kill_bp)
+      {
+        set_window_bp (wp, next_bp);
+        set_window_topdelta (wp, 0);
+        set_window_saved_pt (wp, LUA_REFNIL); /* The old marker will be freed. */
+      }
+
+  /* Remove the buffer from the buffer list. */
+  if (cur_bp == kill_bp)
+    cur_bp = next_bp;
+  if (head_bp == kill_bp)
+    head_bp = get_buffer_next (head_bp);
+  for (bp = head_bp; bp != LUA_REFNIL && get_buffer_next (bp) != LUA_REFNIL; bp = get_buffer_next (bp))
+    if (get_buffer_next (bp) == kill_bp)
+      {
+        set_buffer_next (bp, get_buffer_next (get_buffer_next (bp)));
+        break;
+      }
+
+  free_buffer (kill_bp);
+
+  /* If no buffers left, recreate scratch buffer and point windows at
+     it. */
+  if (next_bp == LUA_REFNIL)
     {
-      int wp, next_wp;
-
-      assert (cur_bp == kill_bp);
-      free_buffer (cur_bp);
-      head_bp = LUA_REFNIL;
-
-      /* Close all the windows that display this buffer. */
-      for (wp = head_wp; wp != LUA_REFNIL; wp = next_wp)
-        {
-          next_wp = get_window_next (wp);
-          if (get_window_bp (wp) == cur_bp)
-            delete_window (wp);
-        }
-
-      create_scratch_window ();
-    }
-  else
-    {
-      int bp, wp;
-
-      /* Search for windows displaying the buffer to kill. */
+      cur_bp = head_bp = next_bp = create_scratch_buffer ();
       for (wp = head_wp; wp != LUA_REFNIL; wp = get_window_next (wp))
-        if (get_window_bp (wp) == kill_bp)
-          {
-            set_window_bp (wp, next_bp);
-            set_window_topdelta (wp, 0);
-            set_window_saved_pt (wp, LUA_REFNIL);	/* The marker will be freed. */
-          }
-
-      /* Remove the buffer from the buffer list. */
-      cur_bp = next_bp;
-      if (head_bp == kill_bp)
-        head_bp = get_buffer_next (head_bp);
-      for (bp = head_bp; get_buffer_next (bp) != LUA_REFNIL; bp = get_buffer_next (bp))
-        if (get_buffer_next (bp) == kill_bp)
-          {
-            set_buffer_next (bp, get_buffer_next (get_buffer_next (bp)));
-            break;
-          }
-
-      free_buffer (kill_bp);
-
-      thisflag |= FLAG_NEED_RESYNC;
+        set_window_bp (wp, head_bp);
     }
+
+  /* Resync windows that need it. */
+  for (wp = head_wp; wp != LUA_REFNIL; wp = get_window_next (wp))
+    if (get_window_bp (wp) == next_bp)
+      resync_redisplay (wp);
 }
 
 DEFUN_ARGS ("kill-buffer", kill_buffer,

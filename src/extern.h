@@ -143,7 +143,6 @@ void init_getkey (void);
 
 /* keycode.c -------------------------------------------------------------- */
 astr chordtostr (size_t key);
-size_t strtochord (const char *buf, size_t * len);
 gl_list_t keystrtovec (const char *key);
 astr keyvectostr (gl_list_t keys);
 
@@ -264,7 +263,7 @@ int line_end_position (int count);
 void goto_point (int pt);
 
 /* redisplay.c ------------------------------------------------------------ */
-void resync_redisplay (void);
+void resync_redisplay (int wp);
 void resize_windows (void);
 void recenter (int wp);
 

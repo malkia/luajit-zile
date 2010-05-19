@@ -58,18 +58,6 @@ window_new (void)
 }
 
 /*
- * Free a window's allocated memory.
- */
-static void
-free_window (int wp)
-{
-  if (get_window_saved_pt (wp))
-    free_marker (get_window_saved_pt (wp));
-
-  luaL_unref (L, LUA_REGISTRYINDEX, wp);
-}
-
-/*
  * Set the current window and his buffer as the current buffer.
  */
 void
@@ -134,11 +122,11 @@ delete_window (int del_wp)
 {
   int wp;
 
-  if (cur_wp == head_wp)
+  if (del_wp == head_wp)
     wp = head_wp = get_window_next (head_wp);
   else
     for (wp = head_wp; wp != LUA_REFNIL; wp = get_window_next (wp))
-      if (get_window_next (wp) == cur_wp)
+      if (get_window_next (wp) == del_wp)
         {
           set_window_next (wp, get_window_next (get_window_next (wp)));
           break;
@@ -151,7 +139,10 @@ delete_window (int del_wp)
       set_current_window (wp);
     }
 
-  free_window (del_wp);
+  if (get_window_saved_pt (del_wp))
+    free_marker (get_window_saved_pt (del_wp));
+
+  luaL_unref (L, LUA_REGISTRYINDEX, del_wp);
 }
 
 DEFUN ("delete-window", delete_window)
@@ -262,17 +253,8 @@ Make the selected window fill the screen.
     {
       nextwp = get_window_next (wp);
       if (wp != cur_wp)
-        free_window (wp);
+        delete_window (wp);
     }
-
-  set_window_fwidth (cur_wp, w);
-  set_window_ewidth (cur_wp, w);
-  /* Save space for minibuffer. */
-  set_window_fheight (cur_wp, h - 1);
-  /* Save space for status line. */
-  set_window_eheight (cur_wp, get_window_fheight (cur_wp) - 1);
-  set_window_next (cur_wp, LUA_REFNIL);
-  head_wp = cur_wp;
 }
 END_DEFUN
 
@@ -383,7 +365,7 @@ completion_scroll_down (void)
   if (get_point_n (pt) == 0 || !FUNCALL (scroll_down))
     {
       gotoeob ();
-      resync_redisplay ();
+      resync_redisplay (cur_wp);
     }
   set_current_window (old_wp);
 

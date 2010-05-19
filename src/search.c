@@ -188,7 +188,7 @@ goto_linep (int lp)
 {
   int pt;
   set_buffer_pt (cur_bp, point_min ());
-  resync_redisplay ();
+  resync_redisplay (cur_wp);
   for (pt = get_buffer_pt (cur_bp); !lua_refeq (L, get_point_p (pt), lp); pt = get_buffer_pt (cur_bp))
     next_line ();
 }
@@ -513,7 +513,7 @@ isearch (int dir, int regexp)
         last = true;
 
       if (thisflag & FLAG_NEED_RESYNC)
-        resync_redisplay ();
+        resync_redisplay (cur_wp);
     }
 
   /* done */
@@ -617,7 +617,7 @@ what to do with it.
       if (!noask)
         {
           if (thisflag & FLAG_NEED_RESYNC)
-            resync_redisplay ();
+            resync_redisplay (cur_wp);
           for (;;)
             {
               minibuf_write
@@ -660,7 +660,7 @@ what to do with it.
   free (repl);
 
   if (thisflag & FLAG_NEED_RESYNC)
-    resync_redisplay ();
+    resync_redisplay (cur_wp);
 
   if (ok)
     minibuf_write ("Replaced %d occurrences", count);
