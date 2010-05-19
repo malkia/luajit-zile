@@ -193,6 +193,7 @@ main (int argc, char **argv)
   luaopen_posix (L);
   luaopen_curses (L);
   lua_atpanic (L, at_lua_panic);
+  lua_init (L);
 
   /* Load Lua files. */
   /* FIXME: Use a single absolute path for either the build or install directory. */

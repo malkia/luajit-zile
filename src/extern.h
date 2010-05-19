@@ -188,6 +188,7 @@ int luaopen_curses (lua_State *L);
 /* lua.c ------------------------------------------------------------------ */
 int lua_debug (lua_State *L);
 int lua_refeq (lua_State *L, int r1, int r2);
+void lua_init (lua_State *L);
 
 /* macro.c ---------------------------------------------------------------- */
 void cancel_kbd_macro (void);

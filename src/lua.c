@@ -219,3 +219,29 @@ int lua_refeq (lua_State *L, int r1, int r2) {
   lua_pop (L, 2);
   return ret;
 }
+
+/* FIXME: Package this properly */
+static int
+zlua_isprint (lua_State *L)
+{
+    const char *s = lua_tostring (L, -1);
+    lua_pop (L, 1);
+    lua_pushinteger (L, isprint (*s));
+    return 1;
+}
+
+static int
+zlua_isgraph (lua_State *L)
+{
+    const char *s = lua_tostring (L, -1);
+    lua_pop (L, 1);
+    lua_pushnumber (L, isgraph (*s));
+    return 1;
+}
+
+void
+lua_init (lua_State *L)
+{
+  lua_register (L, "isprint", zlua_isprint);
+  lua_register (L, "isgraph", zlua_isgraph);
+}
