@@ -312,12 +312,6 @@ process_command (void)
   lastflag = thisflag;
 }
 
-static int
-init_bindings (void)
-{
-  return node_new ();
-}
-
 void
 init_default_bindings (void)
 {
@@ -325,7 +319,7 @@ init_default_bindings (void)
   gl_list_t keys = gl_list_create_empty (GL_ARRAY_LIST,
                                          NULL, NULL, NULL, true);
 
-  root_bindings = init_bindings ();
+  root_bindings = node_new ();
 
   /* Bind all printing keys to self_insert_command */
   gl_list_add_last (keys, NULL);
