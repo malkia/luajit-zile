@@ -308,7 +308,7 @@ add_macros_to_list (int l)
 
   lua_rawgeti (L, LUA_REGISTRYINDEX, l);
   lua_setglobal (L, "cp");
-  for (mp = head_mp; mp; mp = get_macro_next (mp))
+  for (mp = head_mp; mp != LUA_REFNIL; mp = get_macro_next (mp))
     {
       CLUE_SET (L, s, string, get_macro_name (mp));
       (void) CLUE_DO (L, "table.insert (cp.completions, s)");
