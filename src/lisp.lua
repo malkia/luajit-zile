@@ -217,3 +217,7 @@ The values val are expressions; they are evaluated.
     return ret
   end
 }
+
+function function_exists (f)
+  return usercmd[f] ~= nil
+end
