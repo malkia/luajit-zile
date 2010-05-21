@@ -247,7 +247,7 @@ move_buffer_to_head (int bp)
 void
 switch_to_buffer (int bp)
 {
-  assert (get_window_bp (cur_wp) == cur_bp);
+  assert (lua_refeq (L, get_window_bp (cur_wp), cur_bp));
 
   /* The buffer is the current buffer; return safely.  */
   if (cur_bp == bp)
