@@ -183,10 +183,8 @@ call_zile_command (lua_State *L)
   assert (lua_istable (L, -1));
   keyword = lua_tostring (L, -2);
   trybranch = luaL_ref (L, LUA_REGISTRYINDEX);
-  if (function_exists (keyword))
-    lua_pushvalue (L, execute_function (keyword, 1, false, trybranch));
-  else
-    lua_pushnil (L);
+  assert (function_exists (keyword));
+  lua_pushvalue (L, execute_function (keyword, 1, false, trybranch));
   luaL_unref (L, LUA_REGISTRYINDEX, trybranch);
   return 1;
 }
