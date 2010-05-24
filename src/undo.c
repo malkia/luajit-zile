@@ -1,6 +1,6 @@
 /* Undo facility functions
 
-   Copyright (c) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2008, 2009 Free Software Foundation, Inc.
+   Copyright (c) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2008, 2009, 2010 Free Software Foundation, Inc.
 
    This file is part of GNU Zile.
 
@@ -64,12 +64,26 @@ undo_save (int type, int pt, size_t osize, size_t size)
   lua_newtable (L);
   up = luaL_ref (L, LUA_REGISTRYINDEX);
   set_undo_type (up, type);
-  set_undo_pt (up, point_copy (pt));
+  set_undo_n (up, get_point_n (pt));
+  set_undo_o (up, get_point_o (pt));
   if (!get_buffer_modified (cur_bp))
     set_undo_unchanged (up, true);
 
   if (type == UNDO_REPLACE_BLOCK)
     {
+      int lp = get_point_line (get_buffer_pt (cur_bp));
+      size_t n = get_point_n (get_buffer_pt (cur_bp));
+
+      if (n > pt.n)
+        do
+          lp = get_line_prev (lp);
+        while (--n > pt.n);
+      else if (n < pt.n)
+        do
+          lp = get_line_next (lp);
+        while (++n < pt.n);
+
+      set_point_p (pt, lp);
       set_undo_osize (up, osize);
       set_undo_size (up, size);
       set_undo_text (up, copy_text_block (point_copy (pt), osize));
@@ -89,16 +103,22 @@ static int
 revert_action (int up)
 {
   size_t i;
+  int pt;
+
+  set_point_n (pt, get_undo_n (up));
+  set_point_o (pt, get_undo_o (up));
 
   doing_undo = true;
 
   if (get_undo_type (up) == UNDO_END_SEQUENCE)
     {
-      undo_save (UNDO_START_SEQUENCE, get_undo_pt (up), 0, 0);
+      undo_save (UNDO_START_SEQUENCE, pt, 0, 0);
       up = get_undo_next (up);
       while (get_undo_type (up) != UNDO_START_SEQUENCE)
         up = revert_action (up);
-      undo_save (UNDO_END_SEQUENCE, get_undo_pt (up), 0, 0);
+      set_point_n (pt, get_undo_n (up));
+      set_point_o (pt, get_undo_o (up));
+      undo_save (UNDO_END_SEQUENCE, pt, 0, 0);
       goto_point (get_undo_pt (up));
       return get_undo_next (up);
     }
@@ -107,7 +127,7 @@ revert_action (int up)
 
   if (get_undo_type (up) == UNDO_REPLACE_BLOCK)
     {
-      undo_save (UNDO_REPLACE_BLOCK, get_undo_pt (up), get_undo_size (up), get_undo_osize (up));
+      undo_save (UNDO_REPLACE_BLOCK, pt, get_undo_size (up), get_undo_osize (up));
       undo_nosave = true;
       for (i = 0; i < get_undo_size (up); ++i)
         delete_char ();
