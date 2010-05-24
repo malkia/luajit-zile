@@ -477,11 +477,11 @@ tab_width (int bp)
 astr
 copy_text_block (int pt, size_t size)
 {
-  int lp;
+  int lp = get_point_p (pt);
   astr as = astr_substr (get_line_text (get_point_p (pt)), get_point_o (pt), astr_len (get_line_text (get_point_p (pt))) - get_point_o (pt));
 
   astr_cat_char (as, '\n');
-  for (lp = get_line_next (get_point_p (pt)); astr_len (as) < size; lp = get_line_next (lp))
+  for (lp = get_line_next (lp); astr_len (as) < size; lp = get_line_next (lp))
     {
       astr_cat (as, get_line_text (lp));
       astr_cat_char (as, '\n');
