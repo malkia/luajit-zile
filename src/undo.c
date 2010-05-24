@@ -71,17 +71,17 @@ undo_save (int type, int pt, size_t osize, size_t size)
 
   if (type == UNDO_REPLACE_BLOCK)
     {
-      int lp = get_point_line (get_buffer_pt (cur_bp));
+      int lp = get_point_p (get_buffer_pt (cur_bp));
       size_t n = get_point_n (get_buffer_pt (cur_bp));
 
-      if (n > pt.n)
+      if (n > get_point_n (pt))
         do
           lp = get_line_prev (lp);
-        while (--n > pt.n);
-      else if (n < pt.n)
+        while (--n > get_point_n (pt));
+      else if (n < get_point_n (pt))
         do
           lp = get_line_next (lp);
-        while (++n < pt.n);
+        while (++n < get_point_n (pt));
 
       set_point_p (pt, lp);
       set_undo_osize (up, osize);
@@ -103,7 +103,7 @@ static int
 revert_action (int up)
 {
   size_t i;
-  int pt;
+  int pt = point_new ();
 
   set_point_n (pt, get_undo_n (up));
   set_point_o (pt, get_undo_o (up));
@@ -119,11 +119,11 @@ revert_action (int up)
       set_point_n (pt, get_undo_n (up));
       set_point_o (pt, get_undo_o (up));
       undo_save (UNDO_END_SEQUENCE, pt, 0, 0);
-      goto_point (get_undo_pt (up));
+      goto_point (pt);
       return get_undo_next (up);
     }
 
-  goto_point (get_undo_pt (up));
+  goto_point (pt);
 
   if (get_undo_type (up) == UNDO_REPLACE_BLOCK)
     {

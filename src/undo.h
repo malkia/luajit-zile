@@ -4,9 +4,10 @@ TABLE_FIELD(next)
 /* The type of undo delta. */
 FIELD(int, integer, type)
 
-/* Where the undo delta need to be applied.
-   Warning!: Do not use the p field of pt. */
-TABLE_FIELD(pt)
+/* Location of the undo delta. Stored as a numeric position because
+   line pointers can change. */
+FIELD(size_t, integer, n)
+FIELD(size_t, integer, o)
 
 /* Flag indicating that reverting this undo leaves the buffer
    in an unchanged state. */
