@@ -74,7 +74,7 @@ undo_save (int type, int pt, size_t osize, size_t size)
       int lp = get_point_p (get_buffer_pt (cur_bp));
       size_t n = get_point_n (get_buffer_pt (cur_bp));
 
-      if (n > pt.n)
+      if (n > get_point_n (pt))
         do
           lp = get_line_prev (lp);
         while (--n > get_point_n (pt));
@@ -103,10 +103,10 @@ static int
 revert_action (int up)
 {
   size_t i;
-  Point pt;
+  int pt = point_new ();
 
-  pt.n = up->n;
-  pt.o = up->o;
+  set_point_n (pt, get_undo_n (up));
+  set_point_o (pt, get_undo_o (up));
 
   doing_undo = true;
 
@@ -119,14 +119,8 @@ revert_action (int up)
       set_point_n (pt, get_undo_n (up));
       set_point_o (pt, get_undo_o (up));
       undo_save (UNDO_END_SEQUENCE, pt, 0, 0);
-      goto_point (get_undo_pt (up));
-      return get_undo_next (up);
-    }
-
-  goto_point (pt);
-      undo_save (UNDO_END_SEQUENCE, pt, 0, 0);
       goto_point (pt);
-      return up->next;
+      return get_undo_next (up);
     }
 
   goto_point (pt);
