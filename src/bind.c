@@ -224,7 +224,7 @@ get_function_by_keys (gl_list_t keys)
   /* See if we've got a valid key sequence */
   p = search_key (root_bindings, keys, 0);
 
-  return p ? get_binding_func (p) : NULL;
+  return p != LUA_REFNIL ? get_binding_func (p) : NULL;
 }
 
 static bool
@@ -320,6 +320,8 @@ init_default_bindings (void)
                                          NULL, NULL, NULL, true);
 
   root_bindings = node_new ();
+  lua_rawgeti (L, LUA_REGISTRYINDEX, root_bindings);
+  lua_setglobal (L, "root_bindings");
 
   /* Bind all printing keys to self_insert_command */
   gl_list_add_last (keys, NULL);
@@ -389,23 +391,24 @@ sequence.
 }
 END_DEFUN
 
-/* FIXME: This function relies on chordtostr (0) returning ""; it
-   should not call chordtostr in this case, should iterate from j=0,
-   not j=1, and should only remove an element from the array at the
-   end of the function if one was added. */
 static void
 walk_bindings_tree (int tree, gl_list_t keys,
                     void (*process) (astr key, int p, void *st), void *st)
 {
   size_t i, j, vecnum;
-  astr as = chordtostr (get_binding_key (tree));
+  const char *s;
 
-  gl_list_add_last (keys, as);
+  lua_rawgeti (L, LUA_REGISTRYINDEX, tree);
+  lua_setglobal (L, "tree");
+  (void) CLUE_DO (L, "s = nil; if tree.key then s = chordtostr (tree.key) end");
+  CLUE_GET (L, s, string, s);
+  if (s != NULL)
+    gl_list_add_last (keys, astr_new_cstr (s));
 
   lua_rawgeti (L, LUA_REGISTRYINDEX, tree);
   (void) CLUE_DO (L, "vecnum = #tree.vec");
   CLUE_GET (L, vecnum, integer, vecnum);
-  for (i = 0; i < vecnum; ++i)
+  for (i = 1; i <= vecnum; ++i)
     {
       int p;
       CLUE_SET (L, i, integer, i);
@@ -432,8 +435,11 @@ walk_bindings_tree (int tree, gl_list_t keys,
         walk_bindings_tree (p, keys, process, st);
     }
 
-  astr_delete ((astr) gl_list_get_at (keys, gl_list_size (keys) - 1));
-  assert (gl_list_remove_at (keys, gl_list_size (keys) - 1));
+  if (gl_list_size (keys) > 0)
+    {
+      astr_delete ((astr) gl_list_get_at (keys, gl_list_size (keys) - 1));
+      assert (gl_list_remove_at (keys, gl_list_size (keys) - 1));
+    }
 }
 
 static void
@@ -446,25 +452,6 @@ walk_bindings (int tree, void (*process) (astr key, int p, void *st),
   gl_list_free (l);
 }
 
-typedef struct
-{
-  const char * f;
-  astr bindings;
-} gather_bindings_state;
-
-static void
-gather_bindings (astr key, int p, void *st)
-{
-  gather_bindings_state *g = (gather_bindings_state *) st;
-
-  if (get_binding_func (p) == g->f)
-    {
-      if (astr_len (g->bindings) > 0)
-        astr_cat_cstr (g->bindings, ", ");
-      astr_cat (g->bindings, key);
-    }
-}
-
 DEFUN ("where-is", where_is)
 /*+
 Print message listing key sequences that invoke the command DEFINITION.
@@ -472,34 +459,31 @@ Argument is a command name.  If the prefix arg is non-nil, insert the
 message in the buffer.
 +*/
 {
-  const char *name = minibuf_read_function_name ("Where is command: ");
-  gather_bindings_state g;
+  const char *name = minibuf_read_function_name ("Where is command: "), *bindings;
 
   ok = leNIL;
 
-  if (name)
+  if (name && function_exists (name))
     {
-      g.f = name;
-      if (function_exists (g.f))
-        {
-          g.bindings = astr_new ();
-          walk_bindings (root_bindings, gather_bindings, &g);
+      CLUE_SET (L, name, string, name);
+      (void) CLUE_DO (L, "g = {f = name, bindings = \"\"}");
+      (void) CLUE_DO (L, "walk_bindings (root_bindings, gather_bindings, g)");
+      (void) CLUE_DO (L, "bindings = g.bindings");
+      CLUE_GET (L, bindings, string, bindings);
 
-          if (astr_len (g.bindings) == 0)
-            minibuf_write ("%s is not on any key", name);
+      if (strlen (bindings) == 0)
+        minibuf_write ("%s is not on any key", name);
+      else
+        {
+          astr as = astr_new ();
+          astr_afmt (as, "%s is on %s", name, bindings);
+          if (lastflag & FLAG_SET_UNIARG)
+            bprintf ("%s", astr_cstr (as));
           else
-            {
-              astr as = astr_new ();
-              astr_afmt (as, "%s is on %s", name, astr_cstr (g.bindings));
-              if (lastflag & FLAG_SET_UNIARG)
-                bprintf ("%s", astr_cstr (as));
-              else
-                minibuf_write ("%s", astr_cstr (as));
-              astr_delete (as);
-            }
-          astr_delete (g.bindings);
-          ok = leT;
+            minibuf_write ("%s", astr_cstr (as));
+          astr_delete (as);
         }
+      ok = leT;
     }
 
   free ((char *) name);

@@ -90,9 +90,11 @@ LUA_STD = std.lua
 
 zile_LUA =						\
 	main.lua					\
+	bind.lua					\
 	completion.lua					\
 	history.lua					\
 	file.lua					\
+	keycode.lua					\
 	line.lua					\
 	lisp.lua					\
 	marker.lua					\
