@@ -1,4 +1,4 @@
--- local
+-- FIXME: local
 function walk_bindings (tree, process, st)
   local function walk_bindings_tree (tree, keys, process, st)
     if tree.key then
