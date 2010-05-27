@@ -140,16 +140,3 @@ Repeat this command to undo more changes.
   minibuf_write ("Undo!");
 }
 END_DEFUN
-
-void
-free_undo (int up)
-{
-  while (up != LUA_REFNIL)
-    {
-      int next_up = get_undo_next (up);
-      /* if (get_undo_type (up) == UNDO_REPLACE_BLOCK) */
-      /*   astr_delete (get_undo_text (up)); */
-      luaL_unref (L, LUA_REGISTRYINDEX, up);
-      up = next_up;
-    }
-}

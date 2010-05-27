@@ -115,8 +115,6 @@ buffer_new (void)
 void
 free_buffer (int bp)
 {
-  free_undo (get_buffer_last_undop (bp));
-
   while (get_buffer_markers (bp))
     free_marker (get_buffer_markers (bp));
 
