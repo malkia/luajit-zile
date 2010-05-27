@@ -18,7 +18,6 @@ function undo_save (ty, pt, osize, size)
   end
 
   if ty == UNDO_REPLACE_BLOCK then
-    io.stderr:write ("undo_replace_block\n")
     local lp = cur_bp.pt.p
     local n = cur_bp.pt.n
 
