@@ -22,6 +22,7 @@
 #include "config.h"
 
 #include <assert.h>
+#include <string.h>
 
 #include "main.h"
 #include "extern.h"
@@ -55,7 +56,7 @@ int
 make_point (size_t lineno, size_t offset)
 {
   int pt = point_new ();
-  set_point_p (pt, get_line_next (get_buffer_lines (cur_bp)));
+  set_point_p (pt, get_line_next (get_buffer_lines (cur_bp ())));
   set_point_n (pt, lineno);
   set_point_o (pt, offset);
   while (lineno > 0)
@@ -91,7 +92,7 @@ int
 point_min (void)
 {
   int pt = point_new ();
-  set_point_p (pt, get_line_next (get_buffer_lines (cur_bp)));
+  set_point_p (pt, get_line_next (get_buffer_lines (cur_bp ())));
   set_point_n (pt, 0);
   set_point_o (pt, 0);
   return pt;
@@ -101,9 +102,9 @@ int
 point_max (void)
 {
   int pt = point_new ();
-  set_point_p (pt, get_line_prev (get_buffer_lines (cur_bp)));
-  set_point_n (pt, get_buffer_last_line (cur_bp));
-  set_point_o (pt, astr_len (get_line_text (get_line_prev (get_buffer_lines (cur_bp)))));
+  set_point_p (pt, get_line_prev (get_buffer_lines (cur_bp ())));
+  set_point_n (pt, get_buffer_last_line (cur_bp ()));
+  set_point_o (pt, strlen (get_line_text (get_line_prev (get_buffer_lines (cur_bp ())))));
   return pt;
 }
 
@@ -114,16 +115,16 @@ line_beginning_position (int count)
 
   /* Copy current point position without offset (beginning of
    * line). */
-  pt = point_copy (get_buffer_pt (cur_bp));
+  pt = point_copy (get_buffer_pt (cur_bp ()));
   set_point_o (pt, 0);
 
   count--;
-  for (; count < 0 && !lua_refeq (L, get_line_prev (get_point_p (pt)), get_buffer_lines (cur_bp)); count++)
+  for (; count < 0 && !lua_refeq (L, get_line_prev (get_point_p (pt)), get_buffer_lines (cur_bp ())); count++)
     {
       set_point_p (pt, get_line_prev (get_point_p (pt)));
       set_point_n (pt, get_point_n (pt) - 1);
     }
-  for (; count > 0 && !lua_refeq (L, get_line_next (get_point_p (pt)), get_buffer_lines (cur_bp)); count--)
+  for (; count > 0 && !lua_refeq (L, get_line_next (get_point_p (pt)), get_buffer_lines (cur_bp ())); count--)
     {
       set_point_p (pt, get_line_next (get_point_p (pt)));
       set_point_n (pt, get_point_n (pt) + 1);
@@ -136,7 +137,7 @@ int
 line_end_position (int count)
 {
   int pt = point_copy (line_beginning_position (count));
-  set_point_o (pt, astr_len (get_line_text (get_point_p (pt))));
+  set_point_o (pt, strlen (get_line_text (get_point_p (pt))));
   return pt;
 }
 
@@ -144,21 +145,21 @@ line_end_position (int count)
 void
 goto_point (int pt)
 {
-  if (get_point_n (get_buffer_pt (cur_bp)) > get_point_n (pt))
+  if (get_point_n (get_buffer_pt (cur_bp ())) > get_point_n (pt))
     do
       FUNCALL (previous_line);
-    while (get_point_n (get_buffer_pt (cur_bp)) > get_point_n (pt));
-  else if (get_point_n (get_buffer_pt (cur_bp)) < get_point_n (pt))
+    while (get_point_n (get_buffer_pt (cur_bp ())) > get_point_n (pt));
+  else if (get_point_n (get_buffer_pt (cur_bp ())) < get_point_n (pt))
     do
       FUNCALL (next_line);
-    while (get_point_n (get_buffer_pt (cur_bp)) < get_point_n (pt));
+    while (get_point_n (get_buffer_pt (cur_bp ())) < get_point_n (pt));
 
-  if (get_point_o (get_buffer_pt (cur_bp)) > get_point_o (pt))
+  if (get_point_o (get_buffer_pt (cur_bp ())) > get_point_o (pt))
     do
       FUNCALL (backward_char);
-    while (get_point_o (get_buffer_pt (cur_bp)) > get_point_o (pt));
-  else if (get_point_o (get_buffer_pt (cur_bp)) < get_point_o (pt))
+    while (get_point_o (get_buffer_pt (cur_bp ())) > get_point_o (pt));
+  else if (get_point_o (get_buffer_pt (cur_bp ())) < get_point_o (pt))
     do
       FUNCALL (forward_char);
-    while (get_point_o (get_buffer_pt (cur_bp)) < get_point_o (pt));
+    while (get_point_o (get_buffer_pt (cur_bp ())) < get_point_o (pt));
 }

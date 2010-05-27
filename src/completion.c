@@ -69,11 +69,7 @@ popup_completion (int cp)
   write_temp_buffer ("*Completions*", true, write_completion, cp, get_window_ewidth (cur_wp));
 
   if (!get_completion_close (cp))
-    {
-      lua_rawgeti (L, LUA_REGISTRYINDEX, cur_bp);
-      lua_setglobal (L, "cur_bp");
-      (void) CLUE_DO (L, "cp.old_bp = cur_bp");
-    }
+    (void) CLUE_DO (L, "cp.old_bp = cur_bp");
 
   term_redisplay ();
 }
@@ -107,7 +103,7 @@ make_buffer_completion (void)
   int bp;
 
   (void) CLUE_DO (L, "cp = completion_new ()");
-  for (bp = head_bp; bp != LUA_REFNIL; bp = get_buffer_next (bp))
+  for (bp = head_bp (); bp != LUA_REFNIL; bp = get_buffer_next (bp))
     {
       CLUE_SET (L, s, string, get_buffer_name (bp));
       (void) CLUE_DO (L, "table.insert (cp.completions, s)");

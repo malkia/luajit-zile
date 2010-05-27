@@ -24,6 +24,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <string.h>
 #include "gl_linked_list.h"
 
 #include "main.h"
@@ -40,15 +41,15 @@ push_mark (void)
                                       NULL, NULL, NULL, true);
 
   /* Save the mark.  */
-  if (get_buffer_mark (cur_bp))
-    gl_list_add_last (mark_ring, (void *) copy_marker (get_buffer_mark (cur_bp)));
+  if (get_buffer_mark (cur_bp ()))
+    gl_list_add_last (mark_ring, (void *) copy_marker (get_buffer_mark (cur_bp ())));
   else
     { /* Save an invalid mark.  */
       int m;
       (void) CLUE_DO (L, "m = marker_new ()");
       lua_getglobal (L, "m");
       m = luaL_ref (L, LUA_REGISTRYINDEX);
-      move_marker (m, cur_bp, point_min ());
+      move_marker (m, cur_bp (), point_min ());
       set_point_p (get_marker_pt (m), LUA_NOREF);
       gl_list_add_last (mark_ring, (void *) m);
     }
@@ -74,26 +75,26 @@ pop_mark (void)
 void
 set_mark (void)
 {
-  if (get_buffer_mark (cur_bp) == LUA_REFNIL)
-    set_buffer_mark (cur_bp, point_marker ());
+  if (get_buffer_mark (cur_bp ()) == LUA_REFNIL)
+    set_buffer_mark (cur_bp (), point_marker ());
   else
-    move_marker (get_buffer_mark (cur_bp), cur_bp, point_copy (get_buffer_pt (cur_bp)));
+    move_marker (get_buffer_mark (cur_bp ()), cur_bp (), point_copy (get_buffer_pt (cur_bp ())));
 }
 
 bool
 is_empty_line (void)
 {
-  int pt = get_buffer_pt (cur_bp);
-  return astr_len (get_line_text (get_point_p (pt))) == 0;
+  int pt = get_buffer_pt (cur_bp ());
+  return strlen (get_line_text (get_point_p (pt))) == 0;
 }
 
 bool
 is_blank_line (void)
 {
-  int pt = get_buffer_pt (cur_bp);
+  int pt = get_buffer_pt (cur_bp ());
   size_t c;
-  for (c = 0; c < astr_len (get_line_text (get_point_p (pt))); c++)
-    if (!isspace ((int) astr_get (get_line_text (get_point_p (pt)), c)))
+  for (c = 0; c < strlen (get_line_text (get_point_p (pt))); c++)
+    if (!isspace ((int) get_line_text (get_point_p (pt))[c]))
       return false;
   return true;
 }
@@ -108,8 +109,8 @@ following_char (void)
     return '\n';
   else
     {
-      int pt = get_buffer_pt (cur_bp);
-      return astr_get (get_line_text (get_point_p (pt)), get_point_o (pt));
+      int pt = get_buffer_pt (cur_bp ());
+      return get_line_text (get_point_p (pt))[get_point_o (pt)];
     }
 }
 
@@ -123,8 +124,8 @@ preceding_char (void)
     return '\n';
   else
     {
-      int pt = get_buffer_pt (cur_bp);
-      return astr_get (get_line_text (get_point_p (pt)), get_point_o (pt) - 1);
+      int pt = get_buffer_pt (cur_bp ());
+      return get_line_text (get_point_p (pt))[get_point_o (pt) - 1];
     }
 }
 
@@ -132,24 +133,24 @@ preceding_char (void)
 bool
 bobp (void)
 {
-  int pt = get_buffer_pt (cur_bp);
-  return (lua_refeq (L, get_line_prev (get_point_p (pt)), get_buffer_lines (cur_bp)) && get_point_o (pt) == 0);
+  int pt = get_buffer_pt (cur_bp ());
+  return (lua_refeq (L, get_line_prev (get_point_p (pt)), get_buffer_lines (cur_bp ())) && get_point_o (pt) == 0);
 }
 
 /* Return true if point is at the end of the buffer. */
 bool
 eobp (void)
 {
-  int pt = get_buffer_pt (cur_bp);
-  return (lua_refeq (L, get_line_next (get_point_p (pt)), get_buffer_lines (cur_bp)) &&
-          get_point_o (pt) == astr_len (get_line_text (get_point_p (pt))));
+  int pt = get_buffer_pt (cur_bp ());
+  return (lua_refeq (L, get_line_next (get_point_p (pt)), get_buffer_lines (cur_bp ())) &&
+          get_point_o (pt) == strlen (get_line_text (get_point_p (pt))));
 }
 
 /* Return true if point is at the beginning of a line. */
 bool
 bolp (void)
 {
-  int pt = get_buffer_pt (cur_bp);
+  int pt = get_buffer_pt (cur_bp ());
   return get_point_o (pt) == 0;
 }
 
@@ -157,8 +158,8 @@ bolp (void)
 bool
 eolp (void)
 {
-  int pt = get_buffer_pt (cur_bp);
-  return get_point_o (pt) == astr_len (get_line_text (get_point_p (pt)));
+  int pt = get_buffer_pt (cur_bp ());
+  return get_point_o (pt) == strlen (get_line_text (get_point_p (pt)));
 }
 
 /* Signal an error, and abort any ongoing macro definition. */

@@ -59,7 +59,7 @@ copy_or_kill_region (bool kill, int rp)
 
   if (kill)
     {
-      if (get_buffer_readonly (cur_bp))
+      if (get_buffer_readonly (cur_bp ()))
         minibuf_error ("Read only text copied to kill ring");
       else
         assert (delete_region (rp));
@@ -79,7 +79,7 @@ kill_to_bol (void)
   if (!bolp ())
     {
       int rp = region_new ();
-      int pt = get_buffer_pt (cur_bp);
+      int pt = get_buffer_pt (cur_bp ());
 
       set_region_size (rp, get_point_o (pt));
       set_point_o (pt, 0);
@@ -100,18 +100,18 @@ kill_line (bool whole_line)
 
   if (!whole_line)
     {
-      int cur_pt = get_buffer_pt (cur_bp);
-      astr cur_line = get_line_text (get_point_p (cur_pt));
+      int cur_pt = get_buffer_pt (cur_bp ());
+      const char *cur_line = get_line_text (get_point_p (cur_pt));
       size_t i;
 
-      for (i = get_point_o (cur_pt); i < astr_len (cur_line); i++)
+      for (i = get_point_o (cur_pt); i < strlen (cur_line); i++)
         {
-          char c = astr_get (cur_line, i);
+          char c = cur_line[i];
           if (!(c == ' ' || c == '\t'))
             break;
         }
 
-      if (i == astr_len (cur_line))
+      if (i == strlen (cur_line))
         only_blanks_to_end_of_line = true;
     }
 
@@ -121,14 +121,14 @@ kill_line (bool whole_line)
       return false;
     }
 
-  undo_save (UNDO_START_SEQUENCE, get_buffer_pt (cur_bp), 0, 0);
+  undo_save (UNDO_START_SEQUENCE, get_buffer_pt (cur_bp ()), 0, 0);
 
   if (!eolp ())
     {
       int rp = region_new ();
 
-      set_region_start (rp, get_buffer_pt (cur_bp));
-      set_region_size (rp, astr_len (get_line_text (get_point_p (get_buffer_pt (cur_bp)))) - get_point_o (get_buffer_pt (cur_bp)));
+      set_region_start (rp, get_buffer_pt (cur_bp ()));
+      set_region_size (rp, strlen (get_line_text (get_point_p (get_buffer_pt (cur_bp ())))) - get_point_o (get_buffer_pt (cur_bp ())));
 
       ok = copy_or_kill_region (true, rp);
       luaL_unref (L, LUA_REGISTRYINDEX, rp);
@@ -147,7 +147,7 @@ kill_line (bool whole_line)
       set_this_command ("kill-region");
     }
 
-  undo_save (UNDO_END_SEQUENCE, get_buffer_pt (cur_bp), 0, 0);
+  undo_save (UNDO_END_SEQUENCE, get_buffer_pt (cur_bp ()), 0, 0);
 
   return ok;
 }
@@ -186,12 +186,12 @@ with no argument.
     ok = bool_to_lisp (kill_line (bolp () && get_variable_bool ("kill-whole-line")));
   else
     {
-      undo_save (UNDO_START_SEQUENCE, get_buffer_pt (cur_bp), 0, 0);
+      undo_save (UNDO_START_SEQUENCE, get_buffer_pt (cur_bp ()), 0, 0);
       if (arg <= 0)
         ok = bool_to_lisp (kill_to_bol ());
       if (arg != 0 && ok == leT)
         ok = execute_with_uniarg (true, arg, kill_whole_line, kill_line_backward);
-      undo_save (UNDO_END_SEQUENCE, get_buffer_pt (cur_bp), 0, 0);
+      undo_save (UNDO_END_SEQUENCE, get_buffer_pt (cur_bp ()), 0, 0);
     }
 
   deactivate_mark ();
@@ -247,10 +247,10 @@ kill_text (int uniarg, const char * mark_func)
     return leNIL;
 
   push_mark ();
-  undo_save (UNDO_START_SEQUENCE, get_buffer_pt (cur_bp), 0, 0);
+  undo_save (UNDO_START_SEQUENCE, get_buffer_pt (cur_bp ()), 0, 0);
   execute_function (mark_func, uniarg, true, LUA_NOREF);
   FUNCALL (kill_region);
-  undo_save (UNDO_END_SEQUENCE, get_buffer_pt (cur_bp), 0, 0);
+  undo_save (UNDO_END_SEQUENCE, get_buffer_pt (cur_bp ()), 0, 0);
   pop_mark ();
 
   set_this_command ("kill-region");
@@ -311,11 +311,11 @@ killed @i{or} yanked.  Put point at end, and set mark at beginning.
 
   set_mark_interactive ();
 
-  undo_save (UNDO_REPLACE_BLOCK, get_buffer_pt (cur_bp), 0,
+  undo_save (UNDO_REPLACE_BLOCK, get_buffer_pt (cur_bp ()), 0,
              astr_len (kill_ring_text));
-  undo_nosave = true;
+  set_undo_nosave (true);
   insert_astr (kill_ring_text);
-  undo_nosave = false;
+  set_undo_nosave (false);
 
   deactivate_mark ();
 }

@@ -125,8 +125,8 @@ draw_line (size_t line, size_t startcol, int wp, int lp,
 
   CLUE_SET (L, y, integer, line);
   (void) CLUE_DO (L, "term_move (y, 0)");
-  for (x = 0, i = startcol; i < astr_len (get_line_text (lp)) && x < get_window_ewidth (wp); i++)
-    outch (astr_get (get_line_text (lp), i),
+  for (x = 0, i = startcol; i < strlen (get_line_text (lp)) && x < get_window_ewidth (wp); i++)
+    outch (get_line_text (lp)[i],
            highlight && in_region (lineno, i, rp) ? FONT_REVERSE : FONT_NORMAL,
            &x);
 
@@ -241,16 +241,16 @@ calculate_start_column (int wp)
   for (lp = rp; lp != SIZE_MAX; --lp)
     {
       for (col = 0, p = lp; p < rp; ++p)
-        if (astr_get (get_line_text (get_point_p (pt)), p) == '\t')
+        if (get_line_text (get_point_p (pt))[p] == '\t')
           {
             col |= t - 1;
             ++col;
           }
-        else if (isprint ((int) astr_get (get_line_text (get_point_p (pt)), p)))
+        else if (isprint ((int) get_line_text (get_point_p (pt))[p]))
           ++col;
         else
           {
-            col += make_char_printable (&buf, astr_get (get_line_text (get_point_p (pt)), p));
+            col += make_char_printable (&buf, get_line_text (get_point_p (pt))[p]);
             free (buf);
           }
 
@@ -308,9 +308,9 @@ draw_status_line (size_t line, int wp)
   for (i = 0; i < get_window_ewidth (wp); ++i)
     (void) CLUE_DO (L, "term_addch (string.byte ('-'))");
 
-  if (get_buffer_eol (cur_bp) == coding_eol_cr)
+  if (get_buffer_eol (cur_bp ()) == coding_eol_cr)
     eol_type = "(Mac)";
-  else if (get_buffer_eol (cur_bp) == coding_eol_crlf)
+  else if (get_buffer_eol (cur_bp ()) == coding_eol_crlf)
     eol_type = "(DOS)";
   else
     eol_type = ":";

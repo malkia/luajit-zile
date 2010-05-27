@@ -115,7 +115,7 @@ void
 write_temp_buffer (const char *name, bool show, void (*func) (va_list ap), ...)
 {
   int wp, old_wp = cur_wp;
-  int new_bp, old_bp = cur_bp;
+  int new_bp, old_bp = cur_bp ();
   va_list ap;
 
   /* Popup a window with the buffer "name". */
@@ -137,16 +137,16 @@ write_temp_buffer (const char *name, bool show, void (*func) (va_list ap), ...)
 
   /* Remove the contents of that buffer. */
   new_bp = buffer_new ();
-  set_buffer_name (new_bp, get_buffer_name (cur_bp));
-  kill_buffer (cur_bp);
-  cur_bp = new_bp;
-  set_window_bp (cur_wp, cur_bp);
+  set_buffer_name (new_bp, get_buffer_name (cur_bp ()));
+  kill_buffer (cur_bp ());
+  set_cur_bp (new_bp);
+  set_window_bp (cur_wp, cur_bp ());
 
   /* Make the buffer a temporary one. */
-  set_buffer_needname (cur_bp, true);
-  set_buffer_noundo (cur_bp, true);
-  set_buffer_nosave (cur_bp, true);
-  set_temporary_buffer (cur_bp);
+  set_buffer_needname (cur_bp (), true);
+  set_buffer_noundo (cur_bp (), true);
+  set_buffer_nosave (cur_bp (), true);
+  set_temporary_buffer (cur_bp ());
 
   /* Use the "callback" routine. */
   va_start (ap, func);
@@ -154,8 +154,8 @@ write_temp_buffer (const char *name, bool show, void (*func) (va_list ap), ...)
   va_end (ap);
 
   gotobob ();
-  set_buffer_readonly (cur_bp, true);
-  set_buffer_modified (cur_bp, false);
+  set_buffer_readonly (cur_bp (), true);
+  set_buffer_modified (cur_bp (), false);
 
   /* Restore old current window. */
   set_current_window (old_wp);
@@ -179,11 +179,11 @@ write_buffers_list (va_list ap)
   do
     {
       /* Print all buffers except this one (the *Buffer List*). */
-      if (cur_bp != bp)
+      if (cur_bp () != bp)
         print_buf (get_window_bp (old_wp), bp);
       bp = get_buffer_next (bp);
       if (bp == LUA_REFNIL)
-        bp = head_bp;
+        bp = head_bp ();
     }
   while (bp != get_window_bp (old_wp));
 }
@@ -218,8 +218,8 @@ is supposed to make it easier to insert characters when necessary.
 +*/
 {
   INT_OR_UNIARG_INIT (arg);
-  set_buffer_overwrite (cur_bp, lastflag & FLAG_SET_UNIARG ? uniarg > 0 :
-                        !get_buffer_overwrite (cur_bp));
+  set_buffer_overwrite (cur_bp (), lastflag & FLAG_SET_UNIARG ? uniarg > 0 :
+                        !get_buffer_overwrite (cur_bp ()));
 }
 END_DEFUN
 
@@ -228,7 +228,7 @@ DEFUN ("toggle-read-only", toggle_read_only)
 Change whether this buffer is visiting its file read-only.
 +*/
 {
-  set_buffer_readonly (cur_bp, !get_buffer_readonly (cur_bp));
+  set_buffer_readonly (cur_bp (), !get_buffer_readonly (cur_bp ()));
 }
 END_DEFUN
 
@@ -239,7 +239,7 @@ In Auto Fill mode, inserting a space at a column beyond `fill-column'
 automatically breaks the line at a previous space.
 +*/
 {
-  set_buffer_autofill (cur_bp, !get_buffer_autofill (cur_bp));
+  set_buffer_autofill (cur_bp (), !get_buffer_autofill (cur_bp ()));
 }
 END_DEFUN
 
@@ -251,16 +251,16 @@ Just C-u as argument means to use the current column.
 +*/
 {
   long fill_col = (lastflag & FLAG_UNIARG_EMPTY) ?
-    get_point_o (get_buffer_pt (cur_bp)) : (unsigned long) uniarg;
+    get_point_o (get_buffer_pt (cur_bp ())) : (unsigned long) uniarg;
   char *buf;
 
   if (!(lastflag & FLAG_SET_UNIARG) && LUA_NIL (arglist))
     {
-      fill_col = minibuf_read_number ("Set fill-column to (default %d): ", get_point_o (get_buffer_pt (cur_bp)));
+      fill_col = minibuf_read_number ("Set fill-column to (default %d): ", get_point_o (get_buffer_pt (cur_bp ())));
       if (fill_col == LONG_MAX)
         return leNIL;
       else if (fill_col == LONG_MAX - 1)
-        fill_col = get_point_o (get_buffer_pt (cur_bp));
+        fill_col = get_point_o (get_buffer_pt (cur_bp ()));
     }
 
   if (!LUA_NIL (arglist))
@@ -328,15 +328,15 @@ Put the mark where point is now, and point where the mark is now.
 {
   int tmp;
 
-  if (get_buffer_mark (cur_bp) == LUA_NOREF)
+  if (get_buffer_mark (cur_bp ()) == LUA_NOREF)
     {
       minibuf_error ("No mark set in this buffer");
       return leNIL;
     }
 
-  tmp = point_copy (get_buffer_pt (cur_bp));
-  set_buffer_pt (cur_bp, point_copy (get_marker_pt (get_buffer_mark (cur_bp))));
-  set_marker_pt (get_buffer_mark (cur_bp), tmp);
+  tmp = point_copy (get_buffer_pt (cur_bp ()));
+  set_buffer_pt (cur_bp (), point_copy (get_marker_pt (get_buffer_mark (cur_bp ()))));
+  set_marker_pt (get_buffer_mark (cur_bp ()), tmp);
 
   /* In transient-mark-mode we must reactivate the mark.  */
   if (transient_mark_mode ())
@@ -564,21 +564,21 @@ edit_tab_line (int lp, size_t lineno, size_t offset, size_t size,
                int action)
 {
   char *src, *dest;
-  size_t col, i, t = tab_width (cur_bp);
+  size_t col, i, t = tab_width (cur_bp ());
 
   if (size == 0)
     return;
 
   src = (char *) xzalloc (size + 1);
   dest = (char *) xzalloc (size * t + 1);
-  strncpy (src, astr_cstr (get_line_text (lp)) + offset, size);
+  strncpy (src, get_line_text (lp) + offset, size);
   src[size] = '\0';
 
   /* Get offset's column.  */
   col = 0;
   for (i = 0; i < offset; i++)
     {
-      if (astr_get (get_line_text (lp), i) == '\t')
+      if (get_line_text (lp)[i] == '\t')
         col |= t - 1;
       ++col;
     }
@@ -630,19 +630,19 @@ edit_tab_region (int action)
               /* Region is multi-line. */
               else
                 edit_tab_line (lp, lineno, get_point_o (get_region_start (rp)),
-                               astr_len (get_line_text (lp)) - get_point_o (get_region_start (rp)), action);
+                               strlen (get_line_text (lp)) - get_point_o (get_region_start (rp)), action);
             }
           /* Last line of multi-line region. */
           else if (lineno == get_point_n (get_region_end (rp)))
             edit_tab_line (lp, lineno, 0, get_point_o (get_region_end (rp)), action);
           /* Middle line of multi-line region. */
           else
-            edit_tab_line (lp, lineno, 0, astr_len (get_line_text (lp)), action);
+            edit_tab_line (lp, lineno, 0, strlen (get_line_text (lp)), action);
           /* Done?  */
           if (lineno == get_point_n (get_region_end (rp)))
             break;
         }
-      set_buffer_pt (cur_bp, point_copy (get_marker_pt (m)));
+      set_buffer_pt (cur_bp (), point_copy (get_marker_pt (m)));
       undo_save (UNDO_END_SEQUENCE, get_marker_pt (m), 0, 0);
       free_marker (m);
       deactivate_mark ();
@@ -679,7 +679,7 @@ DEFUN ("back-to-indentation", back_to_indentation)
 Move point to the first non-whitespace character on this line.
 +*/
 {
-  set_buffer_pt (cur_bp, line_beginning_position (1));
+  set_buffer_pt (cur_bp (), line_beginning_position (1));
   while (!eolp ())
     {
       if (!isspace (following_char ()))
@@ -711,7 +711,7 @@ move_word (int dir, int (*next_char) (void), bool (*move_char) (void), bool (*at
             }
           else
             gotword = true;
-          pt = get_buffer_pt (cur_bp);
+          pt = get_buffer_pt (cur_bp ());
           set_point_o (pt, get_point_o (pt) + dir);
         }
       if (gotword)
@@ -769,14 +769,14 @@ END_DEFUN
                                ISCLOSEBRACKETCHAR (c))
 #define PRECEDINGQUOTEDQUOTE(c)                                         \
   (c == '\\'                                                            \
-   && get_point_o (get_buffer_pt (cur_bp)) + 1 < astr_len (get_line_text (get_point_p (get_buffer_pt (cur_bp)))) \
-   && ((astr_get (get_line_text (get_point_p (get_buffer_pt (cur_bp))), get_point_o (get_buffer_pt (cur_bp)) + 1) == '\"') || \
-       (astr_get (get_line_text (get_point_p (get_buffer_pt (cur_bp))), get_point_o (get_buffer_pt (cur_bp)) + 1) == '\'')))
+   && get_point_o (get_buffer_pt (cur_bp ())) + 1 < strlen (get_line_text (get_point_p (get_buffer_pt (cur_bp ())))) \
+   && ((get_line_text (get_point_p (get_buffer_pt (cur_bp ())))[get_point_o (get_buffer_pt (cur_bp ())) + 1] == '\"') || \
+       (get_line_text (get_point_p (get_buffer_pt (cur_bp ())))[get_point_o (get_buffer_pt (cur_bp ())) + 1] == '\'')))
 #define FOLLOWINGQUOTEDQUOTE(c)                                         \
   (c == '\\'                                                            \
-   && get_point_o (get_buffer_pt (cur_bp)) + 1 < astr_len (get_line_text (get_point_p (get_buffer_pt (cur_bp)))) \
-   && ((astr_get (get_line_text (get_point_p (get_buffer_pt (cur_bp))), get_point_o (get_buffer_pt (cur_bp)) + 1) == '\"') || \
-       (astr_get (get_line_text (get_point_p (get_buffer_pt (cur_bp))), get_point_o (get_buffer_pt (cur_bp)) + 1) == '\'')))
+   && get_point_o (get_buffer_pt (cur_bp ())) + 1 < strlen (get_line_text (get_point_p (get_buffer_pt (cur_bp ())))) \
+   && ((get_line_text (get_point_p (get_buffer_pt (cur_bp ())))[get_point_o (get_buffer_pt (cur_bp ())) + 1] == '\"') || \
+       (get_line_text (get_point_p (get_buffer_pt (cur_bp ())))[get_point_o (get_buffer_pt (cur_bp ())) + 1] == '\'')))
 
 static int
 move_sexp (int dir)
@@ -797,7 +797,7 @@ move_sexp (int dir)
           /* Jump quotes that aren't sexp separators. */
           if (dir > 0 ? PRECEDINGQUOTEDQUOTE (c) : FOLLOWINGQUOTEDQUOTE (c))
             {
-              pt = get_buffer_pt (cur_bp);
+              pt = get_buffer_pt (cur_bp ());
               set_point_o (pt, get_point_o (pt) + dir);
               c = 'a';		/* Treat ' and " like word chars. */
             }
@@ -834,7 +834,7 @@ move_sexp (int dir)
                 }
             }
 
-          pt = get_buffer_pt (cur_bp);
+          pt = get_buffer_pt (cur_bp ());
           set_point_o (pt, get_point_o (pt) + dir);
 
           if (!ISSEXPCHAR (c))
@@ -843,7 +843,7 @@ move_sexp (int dir)
                 {
                   if (!ISSEXPSEPARATOR (c))
                     {
-                      pt = get_buffer_pt (cur_bp);
+                      pt = get_buffer_pt (cur_bp ());
                       set_point_o (pt, get_point_o (pt) - dir);
                     }
                   return true;
@@ -860,8 +860,8 @@ move_sexp (int dir)
             minibuf_error ("Scan error: \"Unbalanced parentheses\"");
           break;
         }
-      pt = get_buffer_pt (cur_bp);
-      set_point_o (pt, dir > 0 ? 0 : astr_len (get_line_text (get_point_p (pt))));
+      pt = get_buffer_pt (cur_bp ());
+      set_point_o (pt, dir > 0 ? 0 : strlen (get_line_text (get_point_p (pt))));
     }
   return false;
 }
@@ -929,7 +929,7 @@ transpose_subr (bool (*forward_func) (void), bool (*backward_func) (void))
   if (forward_func == forward_char && eolp ())
     backward_func ();
   /* For transpose-lines. */
-  if (forward_func == next_line && get_point_n (get_buffer_pt (cur_bp)) == 0)
+  if (forward_func == next_line && get_point_n (get_buffer_pt (cur_bp ())) == 0)
     forward_func ();
 
   /* Backward. */
@@ -1042,10 +1042,10 @@ transpose (int uniarg, bool (*forward_func) (void), bool (*backward_func) (void)
       backward_func = tmp_func;
       uniarg = -uniarg;
     }
-  undo_save (UNDO_START_SEQUENCE, get_buffer_pt (cur_bp), 0, 0);
+  undo_save (UNDO_START_SEQUENCE, get_buffer_pt (cur_bp ()), 0, 0);
   for (uni = 0; ret && uni < uniarg; ++uni)
     ret = transpose_subr (forward_func, backward_func);
-  undo_save (UNDO_END_SEQUENCE, get_buffer_pt (cur_bp), 0, 0);
+  undo_save (UNDO_END_SEQUENCE, get_buffer_pt (cur_bp ()), 0, 0);
 
   return bool_to_lisp (ret);
 }
@@ -1215,15 +1215,15 @@ Fill paragraph at or after point.
 {
   int i, start, end, m = point_marker ();
 
-  undo_save (UNDO_START_SEQUENCE, get_buffer_pt (cur_bp), 0, 0);
+  undo_save (UNDO_START_SEQUENCE, get_buffer_pt (cur_bp ()), 0, 0);
 
   FUNCALL (forward_paragraph);
-  end = get_point_n (get_buffer_pt (cur_bp));
+  end = get_point_n (get_buffer_pt (cur_bp ()));
   if (is_empty_line ())
     end--;
 
   FUNCALL (backward_paragraph);
-  start = get_point_n (get_buffer_pt (cur_bp));
+  start = get_point_n (get_buffer_pt (cur_bp ()));
   if (is_empty_line ())
     { /* Move to next line if between two paragraphs. */
       next_line ();
@@ -1242,10 +1242,10 @@ Fill paragraph at or after point.
          && fill_break_line ())
     ;
 
-  set_buffer_pt (cur_bp, point_copy (get_marker_pt (m)));
+  set_buffer_pt (cur_bp (), point_copy (get_marker_pt (m)));
   free_marker (m);
 
-  undo_save (UNDO_END_SEQUENCE, get_buffer_pt (cur_bp), 0, 0);
+  undo_save (UNDO_END_SEQUENCE, get_buffer_pt (cur_bp ()), 0, 0);
 }
 END_DEFUN
 
@@ -1261,23 +1261,27 @@ setcase_word (int rcase)
       return false;
 
   as = astr_new ();
-  for (i = get_point_o (get_buffer_pt (cur_bp));
-       i < astr_len (get_line_text (get_point_p (get_buffer_pt (cur_bp)))) &&
-         ISWORDCHAR ((int) (c = astr_get (get_line_text (get_point_p (get_buffer_pt (cur_bp))), i)));
+  for (i = get_point_o (get_buffer_pt (cur_bp ()));
+       i < strlen (get_line_text (get_point_p (get_buffer_pt (cur_bp ())))) &&
+         ISWORDCHAR ((int) (c = get_line_text (get_point_p (get_buffer_pt (cur_bp ())))[i]));
        i++)
     astr_cat_char (as, c);
 
   if (astr_len (as) > 0)
     {
-      undo_save (UNDO_REPLACE_BLOCK, get_buffer_pt (cur_bp), astr_len (as), astr_len (as));
+      astr bs;
+      undo_save (UNDO_REPLACE_BLOCK, get_buffer_pt (cur_bp ()), astr_len (as), astr_len (as));
       astr_recase (as, rcase);
-      astr_nreplace_cstr (get_line_text (get_point_p (get_buffer_pt (cur_bp))), get_point_o (get_buffer_pt (cur_bp)), astr_len (as),
+      bs = astr_new_cstr (get_line_text (get_point_p (get_buffer_pt (cur_bp ()))));
+      astr_nreplace_cstr (bs, get_point_o (get_buffer_pt (cur_bp ())), astr_len (as),
                           astr_cstr (as), astr_len (as));
+      set_line_text (get_point_p (get_buffer_pt (cur_bp ())), xstrdup (astr_cstr (bs)));
+      astr_delete (bs);
     }
   astr_delete (as);
 
   forward_word ();
-  set_buffer_modified (cur_bp, true);
+  set_buffer_modified (cur_bp (), true);
 
   return true;
 }
@@ -1359,10 +1363,13 @@ setcase_region (enum casing rcase)
   i = get_point_o (get_region_start (rp));
   while (size--)
     {
-      if (i < astr_len (get_line_text (lp)))
+      if (i < strlen (get_line_text (lp)))
         {
-          char c = func (astr_get (get_line_text (lp), i));
-          astr_nreplace_cstr (get_line_text (lp), i, 1, &c, 1);
+          char c = func (get_line_text (lp)[i]);
+          astr as = astr_new_cstr (get_line_text (lp));
+          astr_nreplace_cstr (as, i, 1, &c, 1);
+          set_line_text (lp, xstrdup (astr_cstr (as)));
+          astr_delete (as);
           ++i;
         }
       else
@@ -1372,7 +1379,7 @@ setcase_region (enum casing rcase)
         }
     }
 
-  set_buffer_modified (cur_bp, true);
+  set_buffer_modified (cur_bp (), true);
   luaL_unref (L, LUA_REGISTRYINDEX, rp);
 
   return leT;
@@ -1435,12 +1442,12 @@ pipe_command (const char *cmd, const char *tempfile, bool insert, bool replace)
         {
           if (replace)
             {
-              undo_save (UNDO_START_SEQUENCE, get_buffer_pt (cur_bp), 0, 0);
+              undo_save (UNDO_START_SEQUENCE, get_buffer_pt (cur_bp ()), 0, 0);
               FUNCALL (delete_region);
             }
             insert_astr (out);
             if (replace)
-              undo_save (UNDO_END_SEQUENCE, get_buffer_pt (cur_bp), 0, 0);
+              undo_save (UNDO_END_SEQUENCE, get_buffer_pt (cur_bp ()), 0, 0);
         }
       else
         {
@@ -1650,7 +1657,7 @@ On nonblank line, delete any immediately following blank lines.
       while (is_blank_line ());
       if (forward)
         FUNCALL (forward_line);
-      if (!lua_refeq (L, get_point_p (get_buffer_pt (cur_bp)), get_point_p (get_marker_pt (m))))
+      if (!lua_refeq (L, get_point_p (get_buffer_pt (cur_bp ())), get_point_p (get_marker_pt (m))))
         {
           if (!seq_started)
             {
@@ -1675,10 +1682,10 @@ On nonblank line, delete any immediately following blank lines.
       pop_mark ();
     }
 
-  set_buffer_pt (cur_bp, point_copy (get_marker_pt (m)));
+  set_buffer_pt (cur_bp (), point_copy (get_marker_pt (m)));
 
   if (seq_started)
-    undo_save (UNDO_END_SEQUENCE, get_buffer_pt (cur_bp), 0, 0);
+    undo_save (UNDO_END_SEQUENCE, get_buffer_pt (cur_bp ()), 0, 0);
 
   free_marker (m);
   deactivate_mark ();

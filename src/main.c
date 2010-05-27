@@ -48,8 +48,30 @@ char *prog_name = PACKAGE;
 
 /* The current window; the first window in list. */
 int cur_wp = LUA_REFNIL, head_wp = LUA_REFNIL;
-/* The current buffer; the first buffer in list. */
-int cur_bp = LUA_REFNIL, head_bp = LUA_REFNIL;
+
+int cur_bp (void)
+{
+  lua_getglobal (L, "cur_bp");
+  return luaL_ref (L, LUA_REGISTRYINDEX);
+}
+
+int head_bp (void)
+{
+  lua_getglobal (L, "head_bp");
+  return luaL_ref (L, LUA_REGISTRYINDEX);
+}
+
+void set_cur_bp (int bp)
+{
+  lua_rawgeti (L, LUA_REGISTRYINDEX, bp);
+  lua_setglobal (L, "cur_bp");
+}
+
+void set_head_bp (int bp)
+{
+  lua_rawgeti (L, LUA_REGISTRYINDEX, bp);
+  lua_setglobal (L, "head_bp");
+}
 
 /* The global editor flags. */
 int thisflag = 0, lastflag = 0;
@@ -93,7 +115,7 @@ setup_main_screen (void)
   int bp, last_bp = LUA_REFNIL;
   int c = 0;
 
-  for (bp = head_bp; bp != LUA_REFNIL; bp = get_buffer_next (bp))
+  for (bp = head_bp (); bp != LUA_REFNIL; bp = get_buffer_next (bp))
     {
       /* Last buffer that isn't *scratch*. */
       if (get_buffer_next (bp) != LUA_REFNIL && get_buffer_next (get_buffer_next (bp)) == LUA_REFNIL)
@@ -318,7 +340,7 @@ main (int argc, char **argv)
   /* Create the `*scratch*' buffer, so that initialisation commands
      that act on a buffer have something to act on. */
   create_scratch_window ();
-  scratch_bp = cur_bp;
+  scratch_bp = cur_bp ();
   as = astr_new_cstr ("\
 ;; This buffer is for notes you don't want to save.\n\
 ;; If you want to create a file, visit that file with C-x C-f,\n\
@@ -326,7 +348,7 @@ main (int argc, char **argv)
 \n");
   insert_astr (as);
   astr_delete (as);
-  set_buffer_modified (cur_bp, false);
+  set_buffer_modified (cur_bp (), false);
 
   if (!qflag)
     {

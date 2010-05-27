@@ -38,12 +38,12 @@ set_variable (const char *var, const char *val)
   CLUE_GET (L, islocal, boolean, local);
   if (local)
     {
-      if (get_buffer_vars (cur_bp) == 0)
+      if (get_buffer_vars (cur_bp ()) == 0)
         {
           lua_newtable (L);
-          set_buffer_vars (cur_bp, luaL_ref (L, LUA_REGISTRYINDEX));
+          set_buffer_vars (cur_bp (), luaL_ref (L, LUA_REGISTRYINDEX));
         }
-      lua_rawgeti (L, LUA_REGISTRYINDEX, get_buffer_vars (cur_bp));
+      lua_rawgeti (L, LUA_REGISTRYINDEX, get_buffer_vars (cur_bp ()));
     }
   else
     lua_getglobal (L, "main_vars");
@@ -118,7 +118,7 @@ get_variable_bp (int bp, const char *var)
 const char *
 get_variable (const char *var)
 {
-  return get_variable_bp (cur_bp, var);
+  return get_variable_bp (cur_bp (), var);
 }
 
 long
@@ -137,7 +137,7 @@ get_variable_number_bp (int bp, const char *var)
 long
 get_variable_number (const char *var)
 {
-  return get_variable_number_bp (cur_bp, var);
+  return get_variable_number_bp (cur_bp (), var);
 }
 
 bool

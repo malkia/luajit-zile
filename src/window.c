@@ -73,13 +73,13 @@ set_current_window (int wp)
   cur_wp = wp;
 
   /* Change the current buffer.  */
-  cur_bp = get_window_bp (wp);
+  set_cur_bp (get_window_bp (wp));
 
   /* Update the buffer point with the window's saved point
      marker.  */
   if (get_window_saved_pt (cur_wp))
     {
-      set_buffer_pt (cur_bp, point_copy (get_marker_pt (get_window_saved_pt (cur_wp))));
+      set_buffer_pt (cur_bp (), point_copy (get_marker_pt (get_window_saved_pt (cur_wp))));
       free_marker (get_window_saved_pt (cur_wp));
       set_window_saved_pt (cur_wp, LUA_NOREF);
     }
@@ -292,7 +292,8 @@ create_scratch_window (void)
   set_window_fheight (wp, h - 1);
   /* Save space for status line. */
   set_window_eheight (wp, get_window_fheight (wp) - 1);
-  set_window_bp (wp, cur_bp = bp);
+  set_cur_bp (bp);
+  set_window_bp (wp, cur_bp ());
 }
 
 int
@@ -316,10 +317,10 @@ window_pt (int wp)
   assert (wp != LUA_REFNIL);
   if (wp == cur_wp)
     {
-      assert (lua_refeq (L, get_window_bp (wp), cur_bp));
+      assert (lua_refeq (L, get_window_bp (wp), cur_bp ()));
       assert (get_window_saved_pt (wp) == LUA_REFNIL);
-      assert (cur_bp);
-      return point_copy (get_buffer_pt (cur_bp));
+      assert (cur_bp ());
+      return point_copy (get_buffer_pt (cur_bp ()));
     }
   else
     {
@@ -342,8 +343,8 @@ completion_scroll_up (void)
   wp = find_window ("*Completions*");
   assert (wp != LUA_REFNIL);
   set_current_window (wp);
-  pt = get_buffer_pt (cur_bp);
-  if (get_point_n (pt) >= get_buffer_last_line (cur_bp) - get_window_eheight (cur_wp) || !FUNCALL (scroll_up))
+  pt = get_buffer_pt (cur_bp ());
+  if (get_point_n (pt) >= get_buffer_last_line (cur_bp ()) - get_window_eheight (cur_wp) || !FUNCALL (scroll_up))
     gotobob ();
   set_current_window (old_wp);
 
@@ -361,7 +362,7 @@ completion_scroll_down (void)
   wp = find_window ("*Completions*");
   assert (wp != LUA_REFNIL);
   set_current_window (wp);
-  pt = get_buffer_pt (cur_bp);
+  pt = get_buffer_pt (cur_bp ());
   if (get_point_n (pt) == 0 || !FUNCALL (scroll_down))
     {
       gotoeob ();

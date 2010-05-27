@@ -35,8 +35,8 @@ DEFUN ("beginning-of-line", beginning_of_line)
 Move point to beginning of current line.
 +*/
 {
-  set_buffer_pt (cur_bp, line_beginning_position (uniarg));
-  set_buffer_goalc (cur_bp, 0);
+  set_buffer_pt (cur_bp (), line_beginning_position (uniarg));
+  set_buffer_goalc (cur_bp (), 0);
 }
 END_DEFUN
 
@@ -45,8 +45,8 @@ DEFUN ("end-of-line", end_of_line)
 Move point to end of current line.
 +*/
 {
-  set_buffer_pt (cur_bp, line_end_position (uniarg));
-  set_buffer_goalc (cur_bp, SIZE_MAX);
+  set_buffer_pt (cur_bp (), line_end_position (uniarg));
+  set_buffer_goalc (cur_bp (), SIZE_MAX);
 }
 END_DEFUN
 
@@ -57,8 +57,8 @@ size_t
 get_goalc_bp (int bp, int pt)
 {
   size_t col = 0, t = tab_width (bp), i;
-  const char *sp = astr_cstr (get_line_text (get_point_p (pt)));
-  size_t end = MIN (get_point_o (pt), astr_len (get_line_text (get_point_p (pt))));
+  const char *sp = get_line_text (get_point_p (pt));
+  size_t end = MIN (get_point_o (pt), strlen (get_line_text (get_point_p (pt))));
 
   for (i = 0; i < end; i++)
     {
@@ -73,7 +73,7 @@ get_goalc_bp (int bp, int pt)
 size_t
 get_goalc (void)
 {
-  return get_goalc_bp (cur_bp, get_buffer_pt (cur_bp));
+  return get_goalc_bp (cur_bp (), get_buffer_pt (cur_bp ()));
 }
 
 /*
@@ -83,18 +83,18 @@ get_goalc (void)
 static void
 goto_goalc (void)
 {
-  int pt = get_buffer_pt (cur_bp);
-  size_t i, col = 0, t = tab_width (cur_bp);
+  int pt = get_buffer_pt (cur_bp ());
+  size_t i, col = 0, t = tab_width (cur_bp ());
 
-  for (i = 0; i < astr_len (get_line_text (get_point_p (pt))); i++)
+  for (i = 0; i < strlen (get_line_text (get_point_p (pt))); i++)
     {
-      if (col == get_buffer_goalc (cur_bp))
+      if (col == get_buffer_goalc (cur_bp ()))
         break;
-      else if (astr_get (get_line_text (get_point_p (pt)), i) == '\t')
+      else if (get_line_text (get_point_p (pt))[i] == '\t')
         {
           size_t w;
           for (w = t - col % t; w > 0; w--)
-            if (++col == get_buffer_goalc (cur_bp))
+            if (++col == get_buffer_goalc (cur_bp ()))
               break;
         }
       else
@@ -109,17 +109,17 @@ move_line (int n)
 {
   bool ok = true;
   int dir;
-  int pt = get_buffer_pt (cur_bp);
+  int pt = get_buffer_pt (cur_bp ());
 
   if (n == 0)
     return false;
   else if (n > 0)
     {
       dir = 1;
-      if ((size_t) n > get_buffer_last_line (cur_bp) - get_point_n (pt))
+      if ((size_t) n > get_buffer_last_line (cur_bp ()) - get_point_n (pt))
         {
           ok = false;
-          n = get_buffer_last_line (cur_bp) - get_point_n (pt);
+          n = get_buffer_last_line (cur_bp ()) - get_point_n (pt);
         }
     }
   else
@@ -135,13 +135,13 @@ move_line (int n)
 
   for (; n > 0; n--)
     {
-      int pt = get_buffer_pt (cur_bp);
+      int pt = get_buffer_pt (cur_bp ());
       set_point_p (pt, (dir > 0 ? get_line_next : get_line_prev) (get_point_p (pt)));
       set_point_n (pt, get_point_n (pt) + dir);
     }
 
   if (strcmp (last_command (), "next-line") != 0 && strcmp (last_command (), "previous-line") != 0)
-    set_buffer_goalc (cur_bp, get_goalc ());
+    set_buffer_goalc (cur_bp (), get_goalc ());
   goto_goalc ();
 
   thisflag |= FLAG_NEED_RESYNC;
@@ -245,7 +245,7 @@ Goto line arg, counting from line 1 at beginning of buffer.
     ok = leNIL;
   else
     {
-      int pt = get_buffer_pt (cur_bp);
+      int pt = get_buffer_pt (cur_bp ());
       move_line ((size_t) (MAX (n, 1) - 1) - get_point_n (pt));
       FUNCALL (beginning_of_line);
     }
@@ -258,7 +258,7 @@ END_DEFUN
 void
 gotobob (void)
 {
-  set_buffer_pt (cur_bp, point_min ());
+  set_buffer_pt (cur_bp (), point_min ());
   thisflag |= FLAG_NEED_RESYNC;
 }
 
@@ -278,7 +278,7 @@ END_DEFUN
 void
 gotoeob (void)
 {
-  set_buffer_pt (cur_bp, point_max ());
+  set_buffer_pt (cur_bp (), point_max ());
   thisflag |= FLAG_NEED_RESYNC;
 }
 
@@ -297,13 +297,13 @@ move_char (int dir)
 {
   if (dir > 0 ? !eolp () : !bolp ())
     {
-      int pt = get_buffer_pt (cur_bp);
+      int pt = get_buffer_pt (cur_bp ());
       set_point_o (pt, get_point_o (pt) + dir);
       return true;
     }
   else if (dir > 0 ? !eobp () : !bobp ())
     {
-      int pt = get_buffer_pt (cur_bp);
+      int pt = get_buffer_pt (cur_bp ());
       thisflag |= FLAG_NEED_RESYNC;
       set_point_p (pt, (dir > 0 ? get_line_next : get_line_prev) (get_point_p (pt)));
       set_point_n (pt, get_point_n (pt) + dir);

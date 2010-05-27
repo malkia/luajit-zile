@@ -95,6 +95,6 @@ point_marker (void)
   (void) CLUE_DO (L, "m = marker_new ()");
   lua_getglobal (L, "m");
   marker = luaL_ref (L, LUA_REGISTRYINDEX);
-  move_marker (marker, cur_bp, point_copy (get_buffer_pt (cur_bp)));
+  move_marker (marker, cur_bp (), point_copy (get_buffer_pt (cur_bp ())));
   return marker;
 }

@@ -43,12 +43,17 @@
 #undef FIELD
 #undef TABLE_FIELD
 
-/* Setting this variable to true stops undo_save saving the given
-   information. */
-int undo_nosave = false;
+int undo_nosave (void)
+{
+  int ret;
+  CLUE_GET (L, undo_nosave, boolean, ret);
+  return ret;
+}
 
-/* This variable is set to true when an undo is in execution. */
-static int doing_undo = false;
+void set_undo_nosave (int undo_nosave)
+{
+  CLUE_SET (L, undo_nosave, boolean, undo_nosave);
+}
 
 /*
  * Save a reverse delta for doing undo.
@@ -56,44 +61,12 @@ static int doing_undo = false;
 void
 undo_save (int type, int pt, size_t osize, size_t size)
 {
-  int up;
-
-  if (get_buffer_noundo (cur_bp) || undo_nosave)
-    return;
-
-  lua_newtable (L);
-  up = luaL_ref (L, LUA_REGISTRYINDEX);
-  set_undo_type (up, type);
-  set_undo_n (up, get_point_n (pt));
-  set_undo_o (up, get_point_o (pt));
-  if (!get_buffer_modified (cur_bp))
-    set_undo_unchanged (up, true);
-
-  if (type == UNDO_REPLACE_BLOCK)
-    {
-      int lp = get_point_p (get_buffer_pt (cur_bp));
-      size_t n = get_point_n (get_buffer_pt (cur_bp));
-
-      if (n > get_point_n (pt))
-        do
-          lp = get_line_prev (lp);
-        while (--n > get_point_n (pt));
-      else if (n < get_point_n (pt))
-        do
-          lp = get_line_next (lp);
-        while (++n < get_point_n (pt));
-
-      set_point_p (pt, lp);
-      set_undo_osize (up, osize);
-      set_undo_size (up, size);
-      set_undo_text (up, copy_text_block (point_copy (pt), osize));
-    }
-
-  set_undo_next (up, get_buffer_last_undop (cur_bp));
-  set_buffer_last_undop (cur_bp, up);
-
-  if (!doing_undo)
-    set_buffer_next_undop (cur_bp, up);
+  CLUE_SET (L, t, integer, type);
+  lua_rawgeti (L, LUA_REGISTRYINDEX, pt);
+  lua_setglobal (L, "pt");
+  CLUE_SET (L, os, integer, osize);
+  CLUE_SET (L, s, integer, size);
+  (void) CLUE_DO (L, "undo_save (t, pt, os, s)");
 }
 
 /*
@@ -108,7 +81,7 @@ revert_action (int up)
   set_point_n (pt, get_undo_n (up));
   set_point_o (pt, get_undo_o (up));
 
-  doing_undo = true;
+  CLUE_SET (L, doing_undo, boolean, true);
 
   if (get_undo_type (up) == UNDO_END_SEQUENCE)
     {
@@ -128,17 +101,17 @@ revert_action (int up)
   if (get_undo_type (up) == UNDO_REPLACE_BLOCK)
     {
       undo_save (UNDO_REPLACE_BLOCK, pt, get_undo_size (up), get_undo_osize (up));
-      undo_nosave = true;
+      set_undo_nosave (true);
       for (i = 0; i < get_undo_size (up); ++i)
         delete_char ();
-      insert_nstring (astr_cstr (get_undo_text (up)), get_undo_osize (up));
-      undo_nosave = false;
+      insert_nstring (get_undo_text (up), get_undo_osize (up));
+      set_undo_nosave (false);
     }
 
-  doing_undo = false;
+  CLUE_SET (L, doing_undo, boolean, false);
 
   if (get_undo_unchanged (up))
-    set_buffer_modified (cur_bp, false);
+    set_buffer_modified (cur_bp (), false);
 
   return get_undo_next (up);
 }
@@ -149,7 +122,7 @@ Undo some previous changes.
 Repeat this command to undo more changes.
 +*/
 {
-  if (get_buffer_noundo (cur_bp))
+  if (get_buffer_noundo (cur_bp ()))
     {
       minibuf_error ("Undo disabled in this buffer");
       return leNIL;
@@ -158,14 +131,14 @@ Repeat this command to undo more changes.
   if (warn_if_readonly_buffer ())
     return leNIL;
 
-  if (get_buffer_next_undop (cur_bp) == LUA_REFNIL)
+  if (get_buffer_next_undop (cur_bp ()) == LUA_REFNIL)
     {
       minibuf_error ("No further undo information");
-      set_buffer_next_undop (cur_bp, get_buffer_last_undop (cur_bp));
+      set_buffer_next_undop (cur_bp (), get_buffer_last_undop (cur_bp ()));
       return leNIL;
     }
 
-  set_buffer_next_undop (cur_bp, revert_action (get_buffer_next_undop (cur_bp)));
+  set_buffer_next_undop (cur_bp (), revert_action (get_buffer_next_undop (cur_bp ())));
   minibuf_write ("Undo!");
 }
 END_DEFUN
@@ -176,8 +149,8 @@ free_undo (int up)
   while (up != LUA_REFNIL)
     {
       int next_up = get_undo_next (up);
-      if (get_undo_type (up) == UNDO_REPLACE_BLOCK)
-        astr_delete (get_undo_text (up));
+      /* if (get_undo_type (up) == UNDO_REPLACE_BLOCK) */
+      /*   astr_delete (get_undo_text (up)); */
       luaL_unref (L, LUA_REGISTRYINDEX, up);
       up = next_up;
     }

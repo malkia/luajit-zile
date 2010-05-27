@@ -110,10 +110,10 @@ get_buffer_dir (void)
   astr buf;
   const char *p, *q;
 
-  if (get_buffer_filename (cur_bp) != NULL)
+  if (get_buffer_filename (cur_bp ()) != NULL)
     /* If the current buffer has a filename, get the current directory
        name from it. */
-    buf = astr_new_cstr (get_buffer_filename (cur_bp));
+    buf = astr_new_cstr (get_buffer_filename (cur_bp ()));
   else
     { /* Get the current directory name from the system. */
       buf = agetcwd ();
@@ -174,15 +174,15 @@ read_file (const char *filename)
       if (errno != ENOENT)
         {
           minibuf_write ("%s: %s", filename, strerror (errno));
-          set_buffer_readonly (cur_bp, true);
+          set_buffer_readonly (cur_bp (), true);
         }
       return;
     }
 
   if (!check_writable (filename))
-    set_buffer_readonly (cur_bp, true);
+    set_buffer_readonly (cur_bp (), true);
 
-  pt = get_buffer_pt (cur_bp);
+  pt = get_buffer_pt (cur_bp ());
   lp = get_point_p (pt);
 
   /* Read first chunk and determine EOL type. */
@@ -208,27 +208,31 @@ read_file (const char *filename)
               if (first_eol)
                 {
                   /* This is the first end-of-line. */
-                  set_buffer_eol (cur_bp, this_eol_type);
+                  set_buffer_eol (cur_bp (), this_eol_type);
                   first_eol = false;
                 }
-              else if (get_buffer_eol (cur_bp) != this_eol_type)
+              else if (get_buffer_eol (cur_bp ()) != this_eol_type)
                 {
                   /* This EOL is different from the last; arbitrarily choose
                      LF. */
-                  set_buffer_eol (cur_bp, coding_eol_lf);
+                  set_buffer_eol (cur_bp (), coding_eol_lf);
                   break;
                 }
             }
         }
 
       /* Process this and subsequent chunks into lines. */
-      eol_len = strlen (get_buffer_eol (cur_bp));
+      eol_len = strlen (get_buffer_eol (cur_bp ()));
       do
         {
           for (i = 0; i < size; i++)
             {
-              if (strncmp (get_buffer_eol (cur_bp), buf + i, eol_len) != 0)
-                astr_cat_char (get_line_text (lp), buf[i]);
+              if (strncmp (get_buffer_eol (cur_bp ()), buf + i, eol_len) != 0)
+                {
+                  astr as = astr_new_cstr (get_line_text (lp));
+                  astr_cat_char (as, buf[i]);
+                  set_line_text (lp, astr_cstr (as));
+                }
               else
                 {
                   lua_pushlightuserdata (L, astr_new ());
@@ -239,8 +243,8 @@ read_file (const char *filename)
                   lua_getglobal (L, "n");
                   luaL_unref (L, LUA_REGISTRYINDEX, lp);
                   lp = luaL_ref (L, LUA_REGISTRYINDEX);
-                  set_buffer_last_line (cur_bp,
-                                        get_buffer_last_line (cur_bp) + 1);
+                  set_buffer_last_line (cur_bp (),
+                                        get_buffer_last_line (cur_bp ()) + 1);
                   i += eol_len - 1;
                 }
             }
@@ -248,10 +252,10 @@ read_file (const char *filename)
       while ((size = fread (buf, 1, BUFSIZ, fp)) > 0);
     }
 
-  set_line_next (lp, get_buffer_lines (cur_bp));
-  set_line_prev (get_buffer_lines (cur_bp), lp);
-  pt = get_buffer_pt (cur_bp);
-  set_point_p (pt, get_line_next (get_buffer_lines (cur_bp)));
+  set_line_next (lp, get_buffer_lines (cur_bp ()));
+  set_line_prev (get_buffer_lines (cur_bp ()), lp);
+  pt = get_buffer_pt (cur_bp ());
+  set_point_p (pt, get_line_next (get_buffer_lines (cur_bp ())));
 
   fclose (fp);
 }
@@ -261,7 +265,7 @@ find_file (const char *filename)
 {
   int bp;
 
-  for (bp = head_bp; bp != LUA_REFNIL; bp = get_buffer_next (bp))
+  for (bp = head_bp (); bp != LUA_REFNIL; bp = get_buffer_next (bp))
     {
       if (get_buffer_filename (bp) != NULL &&
           !strcmp (get_buffer_filename (bp), filename))
@@ -319,7 +323,7 @@ Use @kbd{M-x toggle-read-only} to permit editing.
 {
   ok = FUNCALL (find_file);
   if (ok == leT)
-    set_buffer_readonly (cur_bp, true);
+    set_buffer_readonly (cur_bp (), true);
 }
 END_DEFUN
 
@@ -330,7 +334,7 @@ If the current buffer now contains an empty file that you just visited
 (presumably by mistake), use this command to visit the file you really want.
 +*/
 {
-  const char *buf = get_buffer_filename (cur_bp);
+  const char *buf = get_buffer_filename (cur_bp ());
   char *base = NULL;
   char *ms;
   astr as = NULL;
@@ -348,9 +352,9 @@ If the current buffer now contains an empty file that you just visited
   ok = leNIL;
   if (ms == NULL)
     ok = FUNCALL (keyboard_quit);
-  else if (ms[0] != '\0' && check_modified_buffer (cur_bp))
+  else if (ms[0] != '\0' && check_modified_buffer (cur_bp ()))
     {
-      kill_buffer (cur_bp);
+      kill_buffer (cur_bp ());
       ok = bool_to_lisp (find_file (ms));
     }
 
@@ -366,7 +370,7 @@ DEFUN_ARGS ("switch-to-buffer", switch_to_buffer,
 Select buffer @i{buffer} in the current window.
 +*/
 {
-  int bp = ((get_buffer_next (cur_bp) != LUA_REFNIL) ? get_buffer_next (cur_bp) : head_bp);
+  int bp = ((get_buffer_next (cur_bp ()) != LUA_REFNIL) ? get_buffer_next (cur_bp ()) : head_bp ());
 
   STR_INIT (buffer)
   else
@@ -409,7 +413,7 @@ insert_lines (size_t n, size_t end, size_t last, int from_lp)
 {
   for (; n < end; n++, from_lp = get_line_next (from_lp))
     {
-      insert_astr (get_line_text (from_lp));
+      insert_nstring (get_line_text (from_lp), strlen (get_line_text (from_lp)));
       if (n < last)
         insert_newline ();
     }
@@ -420,19 +424,19 @@ static void
 insert_buffer (int bp)
 {
   int old_next = get_line_next (get_point_p (get_buffer_pt (bp)));
-  astr old_cur_line = astr_cpy (astr_new (), get_line_text (get_point_p (get_buffer_pt (bp))));
+  astr old_cur_line = astr_cpy_cstr (astr_new (), get_line_text (get_point_p (get_buffer_pt (bp))));
   size_t old_cur_n = get_point_n (get_buffer_pt (bp)), old_lines = get_buffer_last_line (bp);
   size_t size = calculate_buffer_size (bp);
 
-  undo_save (UNDO_REPLACE_BLOCK, get_buffer_pt (cur_bp), 0, size);
-  undo_nosave = true;
+  undo_save (UNDO_REPLACE_BLOCK, get_buffer_pt (cur_bp ()), 0, size);
+  set_undo_nosave (true);
   insert_lines (0, old_cur_n, old_lines, get_line_next (get_buffer_lines (bp)));
   insert_astr (old_cur_line);
   if (old_cur_n < old_lines)
     insert_newline ();
   insert_lines (old_cur_n + 1, old_lines, old_lines, old_next);
   astr_delete (old_cur_line);
-  undo_nosave = false;
+  set_undo_nosave (false);
 }
 
 DEFUN_ARGS ("insert-buffer", insert_buffer,
@@ -442,7 +446,7 @@ Insert after point the contents of BUFFER.
 Puts mark after the inserted text.
 +*/
 {
-  int def_bp = ((get_buffer_next (cur_bp) != LUA_REFNIL) ? get_buffer_next (cur_bp) : head_bp);
+  int def_bp = ((get_buffer_next (cur_bp ()) != LUA_REFNIL) ? get_buffer_next (cur_bp ()) : head_bp ());
 
   if (warn_if_readonly_buffer ())
     return leNIL;
@@ -509,11 +513,11 @@ insert_file (const char *filename)
     }
 
   lseek (fd, 0, SEEK_SET);
-  undo_save (UNDO_REPLACE_BLOCK, get_buffer_pt (cur_bp), 0, size);
-  undo_nosave = true;
+  undo_save (UNDO_REPLACE_BLOCK, get_buffer_pt (cur_bp ()), 0, size);
+  set_undo_nosave (true);
   while ((size = read (fd, buf, BUFSIZ)) > 0)
     insert_nstring (buf, size);
-  undo_nosave = false;
+  set_undo_nosave (false);
   close (fd);
 
   return true;
@@ -655,9 +659,9 @@ raw_write_to_disk (int bp, const char *filename, mode_t mode)
        !lua_refeq (L, lp, get_buffer_lines (bp));
        lp = get_line_next (lp))
     {
-      ssize_t len = (ssize_t) astr_len (get_line_text (lp));
+      ssize_t len = (ssize_t) strlen (get_line_text (lp));
 
-      written = write (fd, astr_cstr (get_line_text (lp)), len);
+      written = write (fd, get_line_text (lp), len);
       if (written != len)
         {
           ret = written;
@@ -835,7 +839,7 @@ Save current buffer in visited file if modified. By default, makes the
 previous version into a backup file if this is the first save.
 +*/
 {
-  ok = save_buffer (cur_bp);
+  ok = save_buffer (cur_bp ());
 }
 END_DEFUN
 
@@ -847,7 +851,7 @@ This makes the buffer visit that file, and marks it as not modified.
 Interactively, confirmation is required unless you supply a prefix argument.
 +*/
 {
-  ok = write_buffer (cur_bp, true,
+  ok = write_buffer (cur_bp (), true,
                      !LUA_NIL (arglist) && !(lastflag & FLAG_SET_UNIARG),
                      NULL, "Write file: ");
 }
@@ -860,7 +864,7 @@ save_some_buffers (void)
   size_t i = 0;
   bool noask = false;
 
-  for (bp = head_bp; bp != LUA_REFNIL; bp = get_buffer_next (bp))
+  for (bp = head_bp (); bp != LUA_REFNIL; bp = get_buffer_next (bp))
     {
       if (get_buffer_modified (bp) && !get_buffer_nosave (bp))
         {
@@ -940,7 +944,7 @@ Offer to save each buffer, then kill this Zile process.
   if (!save_some_buffers ())
     return leNIL;
 
-  for (bp = head_bp; bp != LUA_REFNIL; bp = get_buffer_next (bp))
+  for (bp = head_bp (); bp != LUA_REFNIL; bp = get_buffer_next (bp))
     if (get_buffer_modified (bp) && !get_buffer_needname (bp))
       {
         for (;;)
@@ -972,7 +976,7 @@ zile_exit (int doabort)
   int bp;
 
   fprintf (stderr, "Trying to save modified buffers (if any)...\r\n");
-  for (bp = head_bp; bp != LUA_REFNIL; bp = get_buffer_next (bp))
+  for (bp = head_bp (); bp != LUA_REFNIL; bp = get_buffer_next (bp))
     if (get_buffer_modified (bp) && !get_buffer_nosave (bp))
       {
         astr buf = astr_new (), as;

@@ -51,10 +51,10 @@ show_file (char *filename)
     }
 
   find_file (filename);
-  set_buffer_readonly (cur_bp, true);
-  set_buffer_noundo (cur_bp, true);
-  set_buffer_needname (cur_bp, true);
-  set_buffer_nosave (cur_bp, true);
+  set_buffer_readonly (cur_bp (), true);
+  set_buffer_noundo (cur_bp (), true);
+  set_buffer_needname (cur_bp (), true);
+  set_buffer_nosave (cur_bp (), true);
 
   return leT;
 }
