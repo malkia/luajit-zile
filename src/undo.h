@@ -14,6 +14,6 @@ FIELD(size_t, integer, o)
 FIELD(bool, boolean, unchanged)
 
 /* The block to insert. */
-FIELD(astr, lightuserdata, text)
+FIELD(const char *, string, text)
 FIELD(size_t, integer, osize)		/* Original size. */
 FIELD(size_t, integer, size)		/* New block size. */

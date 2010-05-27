@@ -33,11 +33,9 @@
  * Undo action
  */
 #define FIELD(cty, lty, field)                  \
-  static LUA_GETTER (undo, cty, lty, field)     \
-  static LUA_SETTER (undo, cty, lty, field)
+  static LUA_GETTER (undo, cty, lty, field)
 #define TABLE_FIELD(field)                            \
-  static LUA_TABLE_GETTER (undo, field)               \
-  static LUA_TABLE_SETTER (undo, field)
+  static LUA_TABLE_GETTER (undo, field)
 
 #include "undo.h"
 #undef FIELD
@@ -154,14 +152,4 @@ free_undo (int up)
       luaL_unref (L, LUA_REGISTRYINDEX, up);
       up = next_up;
     }
-}
-
-/*
- * Set unchanged flags to false.
- */
-void
-undo_set_unchanged (int up)
-{
-  for (; up != LUA_REFNIL; up = get_undo_next (up))
-    set_undo_unchanged (up, false);
 }

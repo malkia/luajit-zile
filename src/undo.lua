@@ -47,3 +47,11 @@ function undo_save (ty, pt, osize, size)
     cur_bp.next_undop = up
   end
 end
+
+-- Set unchanged flags to false.
+function undo_set_unchanged (up)
+  while up do
+    up.unchanged = false
+    up = up.next
+  end
+end

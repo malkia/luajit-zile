@@ -808,7 +808,9 @@ write_buffer (int bp, bool needname, bool confirm,
         {
           minibuf_write ("Wrote %s", name);
           set_buffer_modified (bp, false);
-          undo_set_unchanged (get_buffer_last_undop (bp));
+          lua_rawgeti (L, LUA_REGISTRYINDEX, get_buffer_last_undop (bp));
+          lua_setglobal (L, "up");
+          (void) CLUE_DO (L, "undo_set_unchanged (up)");
         }
       else
         ok = leNIL;

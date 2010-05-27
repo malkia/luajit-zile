@@ -25,4 +25,4 @@
  */
 TABLE_FIELD(prev)
 TABLE_FIELD(next)
-FIELD(astr, lightuserdata, text)
+FIELD(const char *, string, text)

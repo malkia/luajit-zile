@@ -91,6 +91,7 @@ LUA_STD = std.lua
 zile_LUA =						\
 	main.lua					\
 	bind.lua					\
+	buffer.lua					\
 	completion.lua					\
 	history.lua					\
 	file.lua					\
@@ -98,6 +99,7 @@ zile_LUA =						\
 	line.lua					\
 	lisp.lua					\
 	marker.lua					\
+	undo.lua					\
 	term_curses.lua					\
 	term_redisplay.lua				\
 	tbl_vars.lua

@@ -20,6 +20,13 @@
 -- MA 02111-1301, USA.
 
 
+-- Main editor structures.
+
+-- Undo delta types.
+UNDO_REPLACE_BLOCK = 0  -- Replace a block of characters.
+UNDO_START_SEQUENCE = 1 -- Start a multi operation sequence.
+UNDO_END_SEQUENCE = 2   -- End a multi operation sequence.
+
 -- Keyboard handling
 
 GETKEY_DELAYED = 0001
@@ -85,3 +92,8 @@ end
 function bool_to_lisp (b)
   return b and leT or leNIL
 end
+
+-- The current buffer
+cur_bp = nil
+-- The first buffer in list
+head_bp = nil

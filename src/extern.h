@@ -202,7 +202,10 @@ void add_macros_to_list (int l);
 CLUE_DECLS(L);
 extern char *prog_name;
 extern int cur_wp, head_wp;
-extern int cur_bp, head_bp;
+int cur_bp (void);
+int head_bp (void);
+void set_cur_bp (int bp);
+void set_head_bp (int bp);
 extern int thisflag, lastflag, last_uniarg;
 
 /* marker.c --------------------------------------------------------------- */
@@ -282,7 +285,8 @@ void term_full_redisplay (void);
 void show_splash_screen (const char *splash);
 
 /* undo.c ----------------------------------------------------------------- */
-extern int undo_nosave;
+int undo_nosave (void);
+void set_undo_nosave (int nosave);
 void undo_start_sequence (void);
 void undo_end_sequence (void);
 void undo_save (int type, int pt, size_t arg1, size_t arg2);
