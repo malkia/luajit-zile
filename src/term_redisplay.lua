@@ -99,7 +99,7 @@ function outch (c, font, x)
 
   term_attrset (font)
 
-  if c == '\t' then
+  if c == string.byte ('\t') then
     for w = cur_tab_width - x % cur_tab_width, 1, -1 do
       term_addch (string.byte (' '))
       x = x + 1
@@ -107,7 +107,7 @@ function outch (c, font, x)
         break
       end
     end
-  elseif isprint (c) then
+  elseif isprint (string.char (c)) then
     term_addch (c)
     x = x + 1
   else

@@ -625,7 +625,7 @@ edit_tab_region (int action)
           if (lineno == get_point_n (get_region_start (rp)))
             {
               /* Region on a sole line. */
-              if (lineno == get_point_n (get_region_end (rp)))
+              if (lineno == get_point_n (get_region_finish (rp)))
                 edit_tab_line (lp, lineno, get_point_o (get_region_start (rp)), get_region_size (rp), action);
               /* Region is multi-line. */
               else
@@ -633,13 +633,13 @@ edit_tab_region (int action)
                                strlen (get_line_text (lp)) - get_point_o (get_region_start (rp)), action);
             }
           /* Last line of multi-line region. */
-          else if (lineno == get_point_n (get_region_end (rp)))
-            edit_tab_line (lp, lineno, 0, get_point_o (get_region_end (rp)), action);
+          else if (lineno == get_point_n (get_region_finish (rp)))
+            edit_tab_line (lp, lineno, 0, get_point_o (get_region_finish (rp)), action);
           /* Middle line of multi-line region. */
           else
             edit_tab_line (lp, lineno, 0, strlen (get_line_text (lp)), action);
           /* Done?  */
-          if (lineno == get_point_n (get_region_end (rp)))
+          if (lineno == get_point_n (get_region_finish (rp)))
             break;
         }
       set_buffer_pt (cur_bp (), point_copy (get_marker_pt (m)));

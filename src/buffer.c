@@ -315,17 +315,17 @@ calculate_the_region (int rp)
     {
       /* Point is before mark. */
       set_region_start (rp, point_copy (get_buffer_pt (cur_bp ())));
-      set_region_end (rp, point_copy (get_marker_pt (get_buffer_mark (cur_bp ()))));
+      set_region_finish (rp, point_copy (get_marker_pt (get_buffer_mark (cur_bp ()))));
     }
   else
     {
       /* Mark is before point. */
       set_region_start (rp, point_copy (get_marker_pt (get_buffer_mark (cur_bp ()))));
-      set_region_end (rp, point_copy (get_buffer_pt (cur_bp ())));
+      set_region_finish (rp, point_copy (get_buffer_pt (cur_bp ())));
     }
 
   {
-    int pt1 = get_region_start (rp), pt2 = get_region_end (rp);
+    int pt1 = get_region_start (rp), pt2 = get_region_finish (rp);
     int size = -get_point_o (pt1) + get_point_o (pt2), lp;
 
     for (lp = get_point_p (pt1); !lua_refeq (L, lp, get_point_p (pt2)); lp = get_line_next (lp))
@@ -356,33 +356,6 @@ delete_region (int rp)
   free_marker (m);
 
   return true;
-}
-
-bool
-in_region (size_t lineno, size_t x, int rp)
-{
-  if (lineno >= get_point_n (get_region_start (rp)) && lineno <= get_point_n (get_region_end (rp)))
-    {
-      if (get_point_n (get_region_start (rp)) == get_point_n (get_region_end (rp)))
-        {
-          if (x >= get_point_o (get_region_start (rp)) && x < get_point_o (get_region_end (rp)))
-            return true;
-        }
-      else if (lineno == get_point_n (get_region_start (rp)))
-        {
-          if (x >= get_point_o (get_region_start (rp)))
-            return true;
-        }
-      else if (lineno == get_point_n (get_region_end (rp)))
-        {
-          if (x < get_point_o (get_region_end (rp)))
-            return true;
-        }
-      else
-        return true;
-    }
-
-  return false;
 }
 
 /*

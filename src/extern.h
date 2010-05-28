@@ -76,7 +76,6 @@ int region_new (void);
 int warn_if_readonly_buffer (void);
 int calculate_the_region (int rp);
 bool delete_region (const int rp);
-bool in_region (size_t lineno, size_t x, int rp);
 void set_temporary_buffer (int bp);
 size_t calculate_buffer_size (int bp);
 int transient_mark_mode (void);

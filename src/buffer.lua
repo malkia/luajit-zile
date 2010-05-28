@@ -11,3 +11,18 @@ function copy_text_block (pt, size)
 
   return string.sub (s, 1, size)
 end
+
+function in_region (lineno, x, rp)
+  if lineno < rp.start.n or lineno > rp.finish.n then
+    return false
+  elseif rp.start.n == rp.finish.n then
+    return x >= rp.start.o and x < rp.finish.o
+  elseif lineno == rp.start.n then
+    return x >= rp.start.o
+  elseif lineno == rp.finish.n then
+    return x < rp.finish.o
+  else
+    return true
+  end
+  return false
+end

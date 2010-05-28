@@ -1,6 +1,6 @@
 /* Region fields
 
-   Copyright (c) 2009 Free Software Foundation, Inc.
+   Copyright (c) 2009, 2010 Free Software Foundation, Inc.
 
    This file is part of GNU Zile.
 
@@ -20,5 +20,5 @@
    MA 02111-1301, USA.  */
 
 TABLE_FIELD(start)			/* The region start. */
-TABLE_FIELD(end)			/* The region end. */
+TABLE_FIELD(finish)			/* The region end. */
 FIELD(size_t, integer, size)		/* The region size. */

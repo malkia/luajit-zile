@@ -49,10 +49,17 @@ draw_end_of_line (size_t line, int wp, size_t lineno, int rp,
     {
       for (; x < get_window_ewidth (wp); ++i)
         {
-          if (in_region (lineno, i, rp))
+          bool b;
+          CLUE_SET (L, lineno, integer, lineno);
+          CLUE_SET (L, i, integer, i);
+          lua_rawgeti (L, LUA_REGISTRYINDEX, rp);
+          lua_setglobal (L, "rp");
+          (void) CLUE_DO (L, "b = in_region (lineno, i, rp)");
+          CLUE_GET (L, b, boolean, b);
+          if (b)
             {
               CLUE_SET (L, x, integer, x);
-              (void) CLUE_DO (L, "x = outch (' ', FONT_REVERSE, x)");
+              (void) CLUE_DO (L, "x = outch (string.byte (' '), FONT_REVERSE, x)");
               CLUE_GET (L, x, integer, x);
             }
           else
@@ -72,9 +79,13 @@ draw_line (size_t line, size_t startcol, int wp, int lp,
   for (x = 0, i = startcol; i < strlen (get_line_text (lp)) && x < get_window_ewidth (wp); i++)
     {
       CLUE_SET (L, c, integer, get_line_text (lp)[i]);
-      CLUE_SET (L, font, integer, highlight && in_region (lineno, i, rp) ? FONT_REVERSE : FONT_NORMAL);
+      CLUE_SET (L, highlight, boolean, highlight);
+      CLUE_SET (L, lineno, integer, lineno);
+      CLUE_SET (L, i, integer, i);
+      lua_rawgeti (L, LUA_REGISTRYINDEX, rp);
+      lua_setglobal (L, "rp");
       CLUE_SET (L, x, integer, x);
-      (void) CLUE_DO (L, "x = outch (c, font, x)");
+      (void) CLUE_DO (L, "x = outch (c, highlight and in_region (lineno, i, rp) and FONT_REVERSE or FONT_NORMAL, x)");
       CLUE_GET (L, x, integer, x);
     }
 
@@ -96,12 +107,12 @@ calculate_highlight_region (int wp, int rp, int *highlight)
 
   *highlight = true;
   set_region_start (rp, window_pt (wp));
-  set_region_end (rp, get_marker_pt (get_buffer_mark (get_window_bp (wp))));
-  if (cmp_point (get_region_end (rp), get_region_start (rp)) < 0)
+  set_region_finish (rp, get_marker_pt (get_buffer_mark (get_window_bp (wp))));
+  if (cmp_point (get_region_finish (rp), get_region_start (rp)) < 0)
     {
       int pt = point_copy (get_region_start (rp));
-      set_region_start (rp, get_region_end (rp));
-      set_region_end (rp, pt);
+      set_region_start (rp, get_region_finish (rp));
+      set_region_finish (rp, pt);
     }
 }
 
