@@ -54,7 +54,8 @@ minibuf_vwrite (const char *fmt, va_list ap)
 
   if (cur_wp != LUA_REFNIL)
     {
-      term_minibuf_write (minibuf_contents);
+      CLUE_SET (L, minibuf_contents, string, minibuf_contents);
+      (void) CLUE_DO (L, "term_minibuf_write (minibuf_contents)");
 
       /* Redisplay (and leave the cursor in the correct position). */
       term_redisplay ();
@@ -356,5 +357,5 @@ minibuf_vread_completion (const char *fmt, char *value, int cp,
 void
 minibuf_clear (void)
 {
-  term_minibuf_write ("");
+  (void) CLUE_DO (L, "term_minibuf_write ('')");
 }

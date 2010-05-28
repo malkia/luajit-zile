@@ -29,66 +29,6 @@
 #include "main.h"
 #include "extern.h"
 
-void
-term_minibuf_write (const char *s)
-{
-  size_t x, w;
-
-  (void) CLUE_DO (L, "term_move (term_height () - 1, 0)");
-  (void) CLUE_DO (L, "term_clrtoeol ()");
-
-  (void) CLUE_DO (L, "w = term_width ()");
-  CLUE_GET (L, w, integer, w);
-  for (x = 0; *s != '\0' && x < w; s++)
-    {
-      CLUE_SET (L, c, integer, (int) (*(unsigned char *) s));
-      (void) CLUE_DO (L, "term_addch (c)");
-      ++x;
-    }
-}
-
-static void
-draw_minibuf_read (const char *prompt, const char *value,
-                   size_t prompt_len, char *match, size_t pointo)
-{
-  int margin = 1, n = 0;
-  size_t w, h;
-  astr as;
-
-  term_minibuf_write (prompt);
-
-  (void) CLUE_DO (L, "w, h = term_width (), term_height ()");
-  CLUE_GET (L, w, integer, w);
-  CLUE_GET (L, h, integer, h);
-  if (prompt_len + pointo + 1 >= w)
-    {
-      margin++;
-      (void) CLUE_DO (L, "term_addch (string.byte ('$'))");
-      n = pointo - pointo % (w - prompt_len - 2);
-    }
-
-  as = astr_new ();
-  astr_ncat_cstr (as, value + n, MIN (w - prompt_len - margin, strlen (value) - n));
-  CLUE_SET (L, as, string, astr_cstr (as));
-  (void) CLUE_DO (L, "term_addstr (as)");
-  CLUE_SET (L, match, string, match);
-  (void) CLUE_DO (L, "term_addstr (match)");
-
-  if (strlen (value + n) >= w - prompt_len - margin)
-    {
-      CLUE_SET (L, y, integer, h - 1);
-      CLUE_SET (L, x, integer, w - 1);
-      (void) CLUE_DO (L, "term_move (y, x)");
-      (void) CLUE_DO (L, "term_addch (string.byte ('$'))");
-    }
-
-  CLUE_SET (L, y, integer, h - 1);
-  CLUE_SET (L, x, integer, prompt_len + margin - 1 + pointo % (w - prompt_len - margin));
-  (void) CLUE_DO (L, "term_move (y, x)");
-
-  (void) CLUE_DO (L, "term_refresh ()");
-}
-
 static astr
 do_minibuf_read (const char *prompt, const char *value, size_t pos,
                  int cp, int hp)
@@ -119,7 +59,11 @@ do_minibuf_read (const char *prompt, const char *value, size_t pos,
         default:
           s = "";
         }
-      draw_minibuf_read (prompt, astr_cstr (as), prompt_len, s, pos);
+      CLUE_SET (L, prompt, string, prompt);
+      CLUE_SET (L, as, string, astr_cstr (as));
+      CLUE_SET (L, s, string, s);
+      CLUE_SET (L, pos, integer, pos);
+      (void) CLUE_DO (L, "draw_minibuf_read (prompt, as, s, pos)");
 
       thistab = -1;
 

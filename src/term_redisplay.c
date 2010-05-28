@@ -30,66 +30,6 @@
 #include "config.h"
 #include "extern.h"
 
-static size_t cur_tab_width;
-static size_t cur_topline;
-static size_t point_screen_column;
-
-static int
-make_char_printable (char **buf, int c)
-{
-  if (c == '\0')
-    return xasprintf (buf, "^@");
-  else if (c > 0 && c <= '\32')
-    return xasprintf (buf, "^%c", 'A' + c - 1);
-  else
-    return xasprintf (buf, "\\%o", c & 0xff);
-}
-
-static void
-outch (int c, size_t font, size_t * x)
-{
-  int j, w;
-  char *buf;
-  size_t tw;
-
-  (void) CLUE_DO (L, "w = term_width ()");
-  CLUE_GET (L, w, integer, tw);
-
-  if (*x >= tw)
-    return;
-
-  CLUE_SET (L, font, integer, font);
-  (void) CLUE_DO (L, "term_attrset (font)");
-
-  if (c == '\t')
-    {
-      for (w = cur_tab_width - *x % cur_tab_width; w > 0 && *x < tw; w--)
-        {
-          (void) CLUE_DO (L, "term_addch (string.byte (' '))");
-          ++(*x);
-        }
-    }
-  else if (isprint (c))
-    {
-      CLUE_SET (L, c, integer, c);
-      (void) CLUE_DO (L, "term_addch (c)");
-      ++(*x);
-    }
-  else
-    {
-      j = make_char_printable (&buf, c);
-      for (w = 0; w < j && *x < tw; ++w)
-        {
-          CLUE_SET (L, c, integer, buf[w]);
-          (void) CLUE_DO (L, "term_addch (c)");
-          ++(*x);
-        }
-      free (buf);
-    }
-
-  (void) CLUE_DO (L, "term_attrset (FONT_NORMAL)");
-}
-
 static void
 draw_end_of_line (size_t line, int wp, size_t lineno, int rp,
                   int highlight, size_t x, size_t i)
@@ -110,7 +50,11 @@ draw_end_of_line (size_t line, int wp, size_t lineno, int rp,
       for (; x < get_window_ewidth (wp); ++i)
         {
           if (in_region (lineno, i, rp))
-            outch (' ', FONT_REVERSE, &x);
+            {
+              CLUE_SET (L, x, integer, x);
+              (void) CLUE_DO (L, "x = outch (' ', FONT_REVERSE, x)");
+              CLUE_GET (L, x, integer, x);
+            }
           else
             x++;
         }
@@ -126,9 +70,13 @@ draw_line (size_t line, size_t startcol, int wp, int lp,
   CLUE_SET (L, y, integer, line);
   (void) CLUE_DO (L, "term_move (y, 0)");
   for (x = 0, i = startcol; i < strlen (get_line_text (lp)) && x < get_window_ewidth (wp); i++)
-    outch (get_line_text (lp)[i],
-           highlight && in_region (lineno, i, rp) ? FONT_REVERSE : FONT_NORMAL,
-           &x);
+    {
+      CLUE_SET (L, c, integer, get_line_text (lp)[i]);
+      CLUE_SET (L, font, integer, highlight && in_region (lineno, i, rp) ? FONT_REVERSE : FONT_NORMAL);
+      CLUE_SET (L, x, integer, x);
+      (void) CLUE_DO (L, "x = outch (c, font, x)");
+      CLUE_GET (L, x, integer, x);
+    }
 
   draw_end_of_line (line, wp, lineno, rp, highlight, x, i);
 }
@@ -173,7 +121,7 @@ draw_window (size_t topline, int wp)
        lp = get_line_prev (lp), --i, --lineno)
     ;
 
-  cur_tab_width = tab_width (get_window_bp (wp));
+  CLUE_SET (L, cur_tab_width, integer, tab_width (get_window_bp (wp)));
 
   /* Draw the window lines. */
   for (i = topline; i < get_window_eheight (wp) + topline; ++i, ++lineno)
@@ -221,6 +169,8 @@ make_mode_line_flags (int wp)
   return buf;
 }
 
+static size_t point_screen_column;
+
 /*
  * This function calculates the best start column to draw if the line
  * needs to get truncated.
@@ -230,13 +180,11 @@ static void
 calculate_start_column (int wp)
 {
   size_t col = 0, lastcol = 0, t = tab_width (get_window_bp (wp));
-  int rpfact, lpfact;
-  char *buf;
-  size_t rp, lp, p;
+  int lpfact;
+  size_t lp, p;
   int pt = window_pt (wp);
-
-  rp = get_point_o (pt);
-  rpfact = get_point_o (pt) / (get_window_ewidth (wp) / 3);
+  size_t rp = get_point_o (pt);
+  int rpfact = get_point_o (pt) / (get_window_ewidth (wp) / 3);
 
   for (lp = rp; lp != SIZE_MAX; --lp)
     {
@@ -250,8 +198,12 @@ calculate_start_column (int wp)
           ++col;
         else
           {
-            col += make_char_printable (&buf, get_line_text (get_point_p (pt))[p]);
-            free (buf);
+            const char *buf;
+            char c = get_line_text (get_point_p (pt))[p];
+            CLUE_SET (L, c, integer, c);
+            (void) CLUE_DO (L, "s = make_char_printable (c)");
+            CLUE_GET (L, s, string, buf);
+            col += strlen (buf);
           }
 
       lpfact = lp / (get_window_ewidth (wp) / 3);
@@ -342,6 +294,8 @@ draw_status_line (size_t line, int wp)
 
   (void) CLUE_DO (L, "term_attrset (FONT_NORMAL)");
 }
+
+static size_t cur_topline;
 
 void
 term_redisplay (void)

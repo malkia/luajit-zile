@@ -75,3 +75,54 @@ function show_splash_screen (splash)
     i = i + 1
   end
 end
+
+-- FIXME: local
+function make_char_printable (c)
+  if c == 0 then
+    return "^@"
+  elseif c > 0 and c <= 27 then
+    return string.format ("^%c", string.byte ("A") + c - 1)
+  else
+    return string.format ("\\%o", bit.band (c, 0xff))
+  end
+end
+
+local cur_tab_width = 0
+
+-- FIXME: local
+function outch (c, font, x)
+  local tw = term_width ()
+
+  if x >= tw then
+    return x
+  end
+
+  term_attrset (font)
+
+  if c == '\t' then
+    for w = cur_tab_width - x % cur_tab_width, 1, -1 do
+      term_addch (string.byte (' '))
+      x = x + 1
+      if x >= tw then
+        break
+      end
+    end
+  elseif isprint (c) then
+    term_addch (c)
+    x = x + 1
+  else
+    local s = make_char_printable (c)
+    local j = #s
+    for i = 1, j do
+      term_addch (string.byte (s, i))
+      x = x + 1
+      if x >= tw then
+        break
+      end
+    end
+  end
+
+  term_attrset (FONT_NORMAL)
+
+  return x
+end

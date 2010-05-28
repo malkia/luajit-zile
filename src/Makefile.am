@@ -101,6 +101,7 @@ zile_LUA =						\
 	marker.lua					\
 	undo.lua					\
 	term_curses.lua					\
+	term_minibuf.lua				\
 	term_redisplay.lua				\
 	tbl_vars.lua
 
