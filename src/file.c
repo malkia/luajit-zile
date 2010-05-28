@@ -235,11 +235,9 @@ read_file (const char *filename)
                 }
               else
                 {
-                  lua_pushlightuserdata (L, astr_new ());
-                  lua_setglobal (L, "s");
                   lua_rawgeti (L, LUA_REGISTRYINDEX, lp);
                   lua_setglobal (L, "l");
-                  (void) CLUE_DO (L, "n = line_insert (l, s)");
+                  (void) CLUE_DO (L, "n = line_insert (l, '')");
                   lua_getglobal (L, "n");
                   luaL_unref (L, LUA_REGISTRYINDEX, lp);
                   lp = luaL_ref (L, LUA_REGISTRYINDEX);
