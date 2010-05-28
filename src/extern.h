@@ -78,7 +78,6 @@ int calculate_the_region (int rp);
 bool delete_region (const int rp);
 void set_temporary_buffer (int bp);
 size_t calculate_buffer_size (int bp);
-int transient_mark_mode (void);
 void activate_mark (void);
 void deactivate_mark (void);
 size_t tab_width (int bp);

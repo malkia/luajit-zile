@@ -36,8 +36,8 @@ calculate_highlight_region (int wp, int rp, int *highlight)
   if ((wp != cur_wp
        && !get_variable_bool ("highlight-nonselected-windows"))
       || (get_buffer_mark (get_window_bp (wp)) == LUA_REFNIL)
-      || (!transient_mark_mode ())
-      || (transient_mark_mode () && !get_buffer_mark_active (get_window_bp (wp))))
+      || (!get_variable_bool ("transient-mark-mode"))
+      || (get_variable_bool ("transient-mark-mode") && !get_buffer_mark_active (get_window_bp (wp))))
     {
       *highlight = false;
       return;
