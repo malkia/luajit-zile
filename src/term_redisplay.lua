@@ -126,3 +126,34 @@ function outch (c, font, x)
 
   return x
 end
+
+local function draw_end_of_line (line, wp, lineno, rp, highlight, x, i)
+  if x >= term_width () then
+    term_move (line, term_width () - 1)
+    term_addch (string.byte ('$'))
+  elseif highlight == true then
+    while x < wp.ewidth do
+      if in_region (lineno, i, rp) then
+        x = outch (string.byte (' '), FONT_REVERSE, x)
+      else
+        x = x + 1
+      end
+      i = i + 1
+    end
+  end
+end
+
+-- FIXME: local
+function draw_line (line, startcol, wp, lp, lineno, rp, highlight)
+  term_move (line, 0)
+
+  local x = 0
+  for i = startcol, #lp.text do
+    if x >= wp.ewidth then
+      break
+    end
+    x = outch (string.byte (lp.text, i + 1), highlight and in_region (lineno, i, rp) and FONT_REVERSE or FONT_NORMAL, x)
+  end
+
+  draw_end_of_line (line, wp, lineno, rp, highlight, x, i)
+end

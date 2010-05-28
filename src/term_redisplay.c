@@ -31,68 +31,6 @@
 #include "extern.h"
 
 static void
-draw_end_of_line (size_t line, int wp, size_t lineno, int rp,
-                  int highlight, size_t x, size_t i)
-{
-  size_t tw;
-
-  (void) CLUE_DO (L, "tw = term_width ()");
-  CLUE_GET (L, w, integer, tw);
-  if (x >= tw)
-    {
-      CLUE_SET (L, y, integer, line);
-      CLUE_SET (L, x, integer, tw - 1);
-      (void) CLUE_DO (L, "term_move (y, x)");
-      (void) CLUE_DO (L, "term_addch (string.byte ('$'))");
-    }
-  else if (highlight)
-    {
-      for (; x < get_window_ewidth (wp); ++i)
-        {
-          bool b;
-          CLUE_SET (L, lineno, integer, lineno);
-          CLUE_SET (L, i, integer, i);
-          lua_rawgeti (L, LUA_REGISTRYINDEX, rp);
-          lua_setglobal (L, "rp");
-          (void) CLUE_DO (L, "b = in_region (lineno, i, rp)");
-          CLUE_GET (L, b, boolean, b);
-          if (b)
-            {
-              CLUE_SET (L, x, integer, x);
-              (void) CLUE_DO (L, "x = outch (string.byte (' '), FONT_REVERSE, x)");
-              CLUE_GET (L, x, integer, x);
-            }
-          else
-            x++;
-        }
-    }
-}
-
-static void
-draw_line (size_t line, size_t startcol, int wp, int lp,
-           size_t lineno, int rp, int highlight)
-{
-  size_t x, i;
-
-  CLUE_SET (L, y, integer, line);
-  (void) CLUE_DO (L, "term_move (y, 0)");
-  for (x = 0, i = startcol; i < strlen (get_line_text (lp)) && x < get_window_ewidth (wp); i++)
-    {
-      CLUE_SET (L, c, integer, get_line_text (lp)[i]);
-      CLUE_SET (L, highlight, boolean, highlight);
-      CLUE_SET (L, lineno, integer, lineno);
-      CLUE_SET (L, i, integer, i);
-      lua_rawgeti (L, LUA_REGISTRYINDEX, rp);
-      lua_setglobal (L, "rp");
-      CLUE_SET (L, x, integer, x);
-      (void) CLUE_DO (L, "x = outch (c, highlight and in_region (lineno, i, rp) and FONT_REVERSE or FONT_NORMAL, x)");
-      CLUE_GET (L, x, integer, x);
-    }
-
-  draw_end_of_line (line, wp, lineno, rp, highlight, x, i);
-}
-
-static void
 calculate_highlight_region (int wp, int rp, int *highlight)
 {
   if ((wp != cur_wp
@@ -148,7 +86,17 @@ draw_window (size_t topline, int wp)
 
       startcol = get_window_start_column (wp);
 
-      draw_line (i, startcol, wp, lp, lineno, rp, highlight);
+      CLUE_SET (L, i, integer, i);
+      CLUE_SET (L, startcol, integer, startcol);
+      CLUE_SET (L, lineno, integer, lineno);
+      CLUE_SET (L, highlight, boolean, highlight);
+      lua_rawgeti (L, LUA_REGISTRYINDEX, wp);
+      lua_setglobal (L, "wp");
+      lua_rawgeti (L, LUA_REGISTRYINDEX, lp);
+      lua_setglobal (L, "lp");
+      lua_rawgeti (L, LUA_REGISTRYINDEX, rp);
+      lua_setglobal (L, "rp");
+      (void) CLUE_DO (L, "draw_line (i, startcol, wp, lp, lineno, rp, highlight)");
 
       if (get_window_start_column (wp) > 0)
         {
