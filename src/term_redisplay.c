@@ -30,68 +30,6 @@
 #include "config.h"
 #include "extern.h"
 
-static void
-draw_window (size_t topline, int wp)
-{
-  size_t i, startcol, lineno;
-  int lp, highlight;
-  int rp = region_new ();
-  int pt = window_pt (wp);
-
-  lua_rawgeti (L, LUA_REGISTRYINDEX, wp);
-  lua_setglobal (L, "wp");
-  lua_rawgeti (L, LUA_REGISTRYINDEX, rp);
-  lua_setglobal (L, "rp");
-  (void) CLUE_DO (L, "highlight = calculate_highlight_region (wp, rp)");
-  CLUE_GET (L, highlight, boolean, highlight);
-
-  /* Find the first line to display on the first screen line. */
-  for (lp = get_point_p (pt), lineno = get_point_n (pt), i = get_window_topdelta (wp);
-       i > 0 && !lua_refeq (L, get_line_prev (lp), get_buffer_lines (get_window_bp (wp)));
-       lp = get_line_prev (lp), --i, --lineno)
-    ;
-
-  CLUE_SET (L, cur_tab_width, integer, tab_width (get_window_bp (wp)));
-
-  /* Draw the window lines. */
-  for (i = topline; i < get_window_eheight (wp) + topline; ++i, ++lineno)
-    {
-      /* Clear the line. */
-      CLUE_SET (L, y, integer, i);
-      (void) CLUE_DO (L, "term_move (y, 0)");
-      (void) CLUE_DO (L, "term_clrtoeol ()");
-
-      /* If at the end of the buffer, don't write any text. */
-      if (lua_refeq (L, lp, get_buffer_lines (get_window_bp (wp))))
-        continue;
-
-      startcol = get_window_start_column (wp);
-
-      CLUE_SET (L, i, integer, i);
-      CLUE_SET (L, startcol, integer, startcol);
-      CLUE_SET (L, lineno, integer, lineno);
-      CLUE_SET (L, highlight, boolean, highlight);
-      lua_rawgeti (L, LUA_REGISTRYINDEX, wp);
-      lua_setglobal (L, "wp");
-      lua_rawgeti (L, LUA_REGISTRYINDEX, lp);
-      lua_setglobal (L, "lp");
-      lua_rawgeti (L, LUA_REGISTRYINDEX, rp);
-      lua_setglobal (L, "rp");
-      (void) CLUE_DO (L, "draw_line (i, startcol, wp, lp, lineno, rp, highlight)");
-
-      if (get_window_start_column (wp) > 0)
-        {
-          CLUE_SET (L, y, integer, i);
-          (void) CLUE_DO (L, "term_move (y, 0)");
-          (void) CLUE_DO (L, "term_addch (string.byte ('$'))");
-        }
-
-      lp = get_line_next (lp);
-    }
-
-  luaL_unref (L, LUA_REGISTRYINDEX, rp);
-}
-
 static char *
 make_mode_line_flags (int wp)
 {
@@ -252,7 +190,10 @@ term_redisplay (void)
       if (wp == cur_wp ())
         cur_topline = topline;
 
-      draw_window (topline, wp);
+      CLUE_SET (L, topline, integer, topline);
+      lua_rawgeti (L, LUA_REGISTRYINDEX, wp);
+      lua_setglobal (L, "wp");
+      (void) CLUE_DO (L, "draw_window (topline, wp)");
 
       /* Draw the status line only if there is available space after the
          buffer text space. */

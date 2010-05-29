@@ -179,3 +179,42 @@ function calculate_highlight_region (wp, rp)
   end
   return true
 end
+
+-- FIXME: local
+function draw_window (topline, wp)
+  local rp = {}
+  local highlight = calculate_highlight_region (wp, rp)
+
+  -- Find the first line to display on the first screen line.
+  local pt = window_pt (wp)
+  local lp, lineno = pt.p, pt.n
+  for i = wp.topdelta, 1, -1 do
+    if lp.prev == wp.bp.lines then
+      break
+    end
+    lp = lp.prev
+    lineno = lineno - 1
+  end
+
+  cur_tab_width = tab_width (wp.bp)
+
+  -- Draw the window lines.
+  for i = topline, wp.eheight + topline do
+    -- Clear the line.
+    term_move (i, 0)
+    term_clrtoeol ()
+
+    -- If at the end of the buffer, don't write any text.
+    if lp ~= wp.bp.lines then
+      draw_line (i, wp.start_column, wp, lp, lineno, rp, highlight)
+
+      if wp.start_column > 0 then
+        term_move (i, 0)
+        term_addch (string.byte ('$'))
+      end
+
+      lp = lp.next
+      lineno = lineno + 1
+    end
+  end
+end

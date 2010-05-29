@@ -94,38 +94,26 @@ init_variables (void)
 }
 
 const char *
-get_variable_bp (int bp, const char *var)
-{
-  const char *ret = NULL;
-  bool ok;
-
-  (void) CLUE_DO (L, "vars = nil");
-  if (bp != LUA_REFNIL && get_buffer_vars (bp))
-    {
-      lua_rawgeti (L, LUA_REGISTRYINDEX, get_buffer_vars (bp));
-      lua_setglobal (L, "vars");
-    }
-
-  CLUE_SET (L, var, string, var);
-  (void) CLUE_DO (L, "vars = vars or {}; s = nil; s = (vars[var] or main_vars[var] or {}).val; ok = s ~= nil");
-  CLUE_GET (L, ok, boolean, ok);
-  if (ok)
-    CLUE_GET (L, s, string, ret);
-
-  return ret;
-}
-
-const char *
 get_variable (const char *var)
 {
-  return get_variable_bp (cur_bp (), var);
+  const char *val;
+  CLUE_SET (L, var, string, var);
+  (void) CLUE_DO (L, "val = get_variable_bp (cur_bp, var)");
+  CLUE_GET (L, val, string, val);
+  return val;
 }
 
 long
 get_variable_number_bp (int bp, const char *var)
 {
   long t = 0;
-  const char *s = get_variable_bp (bp, var);
+  const char *s;
+
+  lua_rawgeti (L, LUA_REGISTRYINDEX, bp);
+  lua_setglobal (L, "bp");
+  CLUE_SET (L, var, string, var);
+  (void) CLUE_DO (L, "val = get_variable_bp (bp, var)");
+  CLUE_GET (L, val, string, s);
 
   if (s)
     t = strtol (s, NULL, 10);

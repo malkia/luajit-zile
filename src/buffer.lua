@@ -1,3 +1,8 @@
+-- Return a safe tab width for the given buffer.
+function tab_width (bp)
+  return math.max (get_variable_number_bp (bp, "tab-width"), 1)
+end
+
 -- Copy a region of text into a string.
 function copy_text_block (pt, size)
   local lp = pt.p

@@ -295,7 +295,6 @@ void undo_save (int type, int pt, size_t arg1, size_t arg2);
 /* variables.c ------------------------------------------------------------ */
 void init_variables (void);
 void set_variable (const char *var, const char *val);
-const char *get_variable_bp (int bp, const char *var);
 const char *get_variable (const char *var);
 long get_variable_number_bp (int bp, const char *var);
 long get_variable_number (const char *var);
