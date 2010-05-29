@@ -431,9 +431,7 @@ deactivate_mark (void)
 size_t
 tab_width (int bp)
 {
-  size_t t = get_variable_number_bp (bp, "tab-width");
-
-  return t ? t : 1;
+  return MAX (get_variable_number_bp (bp, "tab-width"), 1);
 }
 
 /*
