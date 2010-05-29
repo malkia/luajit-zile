@@ -199,7 +199,10 @@ void add_macros_to_list (int l);
 /* main.c ----------------------------------------------------------------- */
 CLUE_DECLS(L);
 extern char *prog_name;
-extern int cur_wp, head_wp;
+int cur_wp (void);
+int head_wp (void);
+void set_cur_wp (int wp);
+void set_head_wp (int wp);
 int cur_bp (void);
 int head_bp (void);
 void set_cur_bp (int bp);

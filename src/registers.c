@@ -145,7 +145,7 @@ write_registers_list (va_list ap GCC_UNUSED)
 
         while (*s == ' ' || *s == '\t' || *s == '\n')
           s++;
-        len = MIN (20, MAX (0, ((int) get_window_ewidth (cur_wp)) - 6)) + 1;
+        len = MIN (20, MAX (0, ((int) get_window_ewidth (cur_wp ())) - 6)) + 1;
 
         bprintf ("Register %s contains ", astr_cstr (as));
         if (strlen (s) > 0)

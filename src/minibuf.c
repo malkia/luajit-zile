@@ -52,7 +52,7 @@ minibuf_vwrite (const char *fmt, va_list ap)
 
   xvasprintf (&minibuf_contents, fmt, ap);
 
-  if (cur_wp != LUA_REFNIL)
+  if (cur_wp () != LUA_REFNIL)
     {
       CLUE_SET (L, minibuf_contents, string, minibuf_contents);
       (void) CLUE_DO (L, "term_minibuf_write (minibuf_contents)");

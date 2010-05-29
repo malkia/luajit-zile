@@ -99,7 +99,10 @@ zile_LUA =						\
 	line.lua					\
 	lisp.lua					\
 	marker.lua					\
+	point.lua					\
 	undo.lua					\
+	variables.lua					\
+	window.lua					\
 	term_curses.lua					\
 	term_minibuf.lua				\
 	term_redisplay.lua				\

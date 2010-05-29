@@ -93,6 +93,11 @@ function bool_to_lisp (b)
   return b and leT or leNIL
 end
 
+-- The current window
+cur_wp = nil
+-- The first window in list
+head_wp = nil
+
 -- The current buffer
 cur_bp = nil
 -- The first buffer in list

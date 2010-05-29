@@ -188,7 +188,7 @@ goto_linep (int lp)
 {
   int pt;
   set_buffer_pt (cur_bp (), point_min ());
-  resync_redisplay (cur_wp);
+  resync_redisplay (cur_wp ());
   for (pt = get_buffer_pt (cur_bp ()); !lua_refeq (L, get_point_p (pt), lp); pt = get_buffer_pt (cur_bp ()))
     next_line ();
 }
@@ -372,13 +372,13 @@ isearch (int dir, int regexp)
   astr buf = astr_new ();
   astr pattern = astr_new ();
   int start, cur;
-  int old_mark = copy_marker (get_buffer_mark (get_window_bp (cur_wp)));
+  int old_mark = copy_marker (get_buffer_mark (get_window_bp (cur_wp ())));
 
   start = point_copy (get_buffer_pt (cur_bp ()));
   cur = point_copy (start);
 
   /* I-search mode. */
-  set_buffer_isearch (get_window_bp (cur_wp), true);
+  set_buffer_isearch (get_window_bp (cur_wp ()), true);
 
   for (;;)
     {
@@ -513,11 +513,11 @@ isearch (int dir, int regexp)
         last = true;
 
       if (thisflag & FLAG_NEED_RESYNC)
-        resync_redisplay (cur_wp);
+        resync_redisplay (cur_wp ());
     }
 
   /* done */
-  set_buffer_isearch (get_window_bp (cur_wp), false);
+  set_buffer_isearch (get_window_bp (cur_wp ()), false);
 
   astr_delete (buf);
   astr_delete (pattern);
@@ -617,7 +617,7 @@ what to do with it.
       if (!noask)
         {
           if (thisflag & FLAG_NEED_RESYNC)
-            resync_redisplay (cur_wp);
+            resync_redisplay (cur_wp ());
           for (;;)
             {
               minibuf_write
@@ -660,7 +660,7 @@ what to do with it.
   free (repl);
 
   if (thisflag & FLAG_NEED_RESYNC)
-    resync_redisplay (cur_wp);
+    resync_redisplay (cur_wp ());
 
   if (ok)
     minibuf_write ("Replaced %d occurrences", count);

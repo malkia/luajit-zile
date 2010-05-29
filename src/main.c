@@ -46,8 +46,29 @@ CLUE_DEFS(L);
 /* The executable name. */
 char *prog_name = PACKAGE;
 
-/* The current window; the first window in list. */
-int cur_wp = LUA_REFNIL, head_wp = LUA_REFNIL;
+int cur_wp (void)
+{
+  lua_getglobal (L, "cur_wp");
+  return luaL_ref (L, LUA_REGISTRYINDEX);
+}
+
+int head_wp (void)
+{
+  lua_getglobal (L, "head_wp");
+  return luaL_ref (L, LUA_REGISTRYINDEX);
+}
+
+void set_cur_wp (int wp)
+{
+  lua_rawgeti (L, LUA_REGISTRYINDEX, wp);
+  lua_setglobal (L, "cur_wp");
+}
+
+void set_head_wp (int wp)
+{
+  lua_rawgeti (L, LUA_REGISTRYINDEX, wp);
+  lua_setglobal (L, "head_wp");
+}
 
 int cur_bp (void)
 {
@@ -425,7 +446,7 @@ main (int argc, char **argv)
   while (!(thisflag & FLAG_QUIT))
     {
       if (lastflag & FLAG_NEED_RESYNC)
-        resync_redisplay (cur_wp);
+        resync_redisplay (cur_wp ());
       term_redisplay ();
       (void) CLUE_DO (L, "term_refresh ()");
       process_command ();

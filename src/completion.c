@@ -63,10 +63,10 @@ popup_completion (int cp)
   lua_rawgeti (L, LUA_REGISTRYINDEX, cp);
   lua_setglobal (L, "cp");
   (void) CLUE_DO (L, "cp.poppedup = true");
-  if (get_window_next (head_wp) == LUA_REFNIL)
+  if (get_window_next (head_wp ()) == LUA_REFNIL)
     (void) CLUE_DO (L, "cp.close = true");
 
-  write_temp_buffer ("*Completions*", true, write_completion, cp, get_window_ewidth (cur_wp));
+  write_temp_buffer ("*Completions*", true, write_completion, cp, get_window_ewidth (cur_wp ()));
 
   if (!get_completion_close (cp))
     (void) CLUE_DO (L, "cp.old_bp = cur_bp");

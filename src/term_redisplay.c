@@ -31,30 +31,6 @@
 #include "extern.h"
 
 static void
-calculate_highlight_region (int wp, int rp, int *highlight)
-{
-  if ((wp != cur_wp
-       && !get_variable_bool ("highlight-nonselected-windows"))
-      || (get_buffer_mark (get_window_bp (wp)) == LUA_REFNIL)
-      || (!get_variable_bool ("transient-mark-mode"))
-      || (get_variable_bool ("transient-mark-mode") && !get_buffer_mark_active (get_window_bp (wp))))
-    {
-      *highlight = false;
-      return;
-    }
-
-  *highlight = true;
-  set_region_start (rp, window_pt (wp));
-  set_region_finish (rp, get_marker_pt (get_buffer_mark (get_window_bp (wp))));
-  if (cmp_point (get_region_finish (rp), get_region_start (rp)) < 0)
-    {
-      int pt = point_copy (get_region_start (rp));
-      set_region_start (rp, get_region_finish (rp));
-      set_region_finish (rp, pt);
-    }
-}
-
-static void
 draw_window (size_t topline, int wp)
 {
   size_t i, startcol, lineno;
@@ -62,7 +38,12 @@ draw_window (size_t topline, int wp)
   int rp = region_new ();
   int pt = window_pt (wp);
 
-  calculate_highlight_region (wp, rp, &highlight);
+  lua_rawgeti (L, LUA_REGISTRYINDEX, wp);
+  lua_setglobal (L, "wp");
+  lua_rawgeti (L, LUA_REGISTRYINDEX, rp);
+  lua_setglobal (L, "rp");
+  (void) CLUE_DO (L, "highlight = calculate_highlight_region (wp, rp)");
+  CLUE_GET (L, highlight, boolean, highlight);
 
   /* Find the first line to display on the first screen line. */
   for (lp = get_point_p (pt), lineno = get_point_n (pt), i = get_window_topdelta (wp);
@@ -264,11 +245,11 @@ term_redisplay (void)
 
   cur_topline = topline = 0;
 
-  calculate_start_column (cur_wp);
+  calculate_start_column (cur_wp ());
 
-  for (wp = head_wp; wp != LUA_REFNIL; wp = get_window_next (wp))
+  for (wp = head_wp (); wp != LUA_REFNIL; wp = get_window_next (wp))
     {
-      if (wp == cur_wp)
+      if (wp == cur_wp ())
         cur_topline = topline;
 
       draw_window (topline, wp);
@@ -282,7 +263,7 @@ term_redisplay (void)
     }
 
   /* Redraw cursor. */
-  CLUE_SET (L, y, integer, cur_topline + get_window_topdelta (cur_wp));
+  CLUE_SET (L, y, integer, cur_topline + get_window_topdelta (cur_wp ()));
   CLUE_SET (L, x, integer, point_screen_column);
   (void) CLUE_DO (L, "term_move (y, x)");
 }

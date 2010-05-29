@@ -114,7 +114,7 @@ print_buf (int old_bp, int bp)
 void
 write_temp_buffer (const char *name, bool show, void (*func) (va_list ap), ...)
 {
-  int wp, old_wp = cur_wp;
+  int wp, old_wp = cur_wp ();
   int new_bp, old_bp = cur_bp ();
   va_list ap;
 
@@ -140,7 +140,7 @@ write_temp_buffer (const char *name, bool show, void (*func) (va_list ap), ...)
   set_buffer_name (new_bp, get_buffer_name (cur_bp ()));
   kill_buffer (cur_bp ());
   set_cur_bp (new_bp);
-  set_window_bp (cur_wp, cur_bp ());
+  set_window_bp (cur_wp (), cur_bp ());
 
   /* Make the buffer a temporary one. */
   set_buffer_needname (cur_bp (), true);
@@ -200,7 +200,7 @@ The @samp{R} column contains a @samp{%} for buffers that are read-only.
 @end itemize
 +*/
 {
-  write_temp_buffer ("*Buffer List*", true, write_buffers_list, cur_wp);
+  write_temp_buffer ("*Buffer List*", true, write_buffers_list, cur_wp ());
 }
 END_DEFUN
 

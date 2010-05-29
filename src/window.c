@@ -64,24 +64,24 @@ void
 set_current_window (int wp)
 {
   /* Save buffer's point in a new marker.  */
-  if (get_window_saved_pt (cur_wp))
-    free_marker (get_window_saved_pt (cur_wp));
+  if (get_window_saved_pt (cur_wp ()))
+    free_marker (get_window_saved_pt (cur_wp ()));
 
-  set_window_saved_pt (cur_wp, point_marker ());
+  set_window_saved_pt (cur_wp (), point_marker ());
 
   /* Change the current window.  */
-  cur_wp = wp;
+  set_cur_wp (wp);
 
   /* Change the current buffer.  */
   set_cur_bp (get_window_bp (wp));
 
   /* Update the buffer point with the window's saved point
      marker.  */
-  if (get_window_saved_pt (cur_wp))
+  if (get_window_saved_pt (cur_wp ()))
     {
-      set_buffer_pt (cur_bp (), point_copy (get_marker_pt (get_window_saved_pt (cur_wp))));
-      free_marker (get_window_saved_pt (cur_wp));
-      set_window_saved_pt (cur_wp, LUA_NOREF);
+      set_buffer_pt (cur_bp (), point_copy (get_marker_pt (get_window_saved_pt (cur_wp ()))));
+      free_marker (get_window_saved_pt (cur_wp ()));
+      set_window_saved_pt (cur_wp (), LUA_NOREF);
     }
 }
 
@@ -94,26 +94,26 @@ Both windows display the same buffer now current.
   int newwp;
 
   /* Windows smaller than 4 lines cannot be split. */
-  if (get_window_fheight (cur_wp) < 4)
+  if (get_window_fheight (cur_wp ()) < 4)
     {
       minibuf_error ("Window height %d too small for splitting",
-                     get_window_fheight (cur_wp));
+                     get_window_fheight (cur_wp ()));
       return leNIL;
     }
 
   newwp = window_new ();
-  set_window_fwidth (newwp, get_window_fwidth (cur_wp));
-  set_window_ewidth (newwp, get_window_ewidth (cur_wp));
-  set_window_fheight (newwp, get_window_fheight (cur_wp) / 2 + get_window_fheight (cur_wp) % 2);
+  set_window_fwidth (newwp, get_window_fwidth (cur_wp ()));
+  set_window_ewidth (newwp, get_window_ewidth (cur_wp ()));
+  set_window_fheight (newwp, get_window_fheight (cur_wp ()) / 2 + get_window_fheight (cur_wp ()) % 2);
   set_window_eheight (newwp, get_window_fheight (newwp) - 1);
-  set_window_fheight (cur_wp, get_window_fheight (cur_wp) / 2);
-  set_window_eheight (cur_wp, get_window_fheight (cur_wp) - 1);
-  if (get_window_topdelta (cur_wp) >= get_window_eheight (cur_wp))
-    recenter (cur_wp);
-  set_window_bp (newwp, get_window_bp (cur_wp));
+  set_window_fheight (cur_wp (), get_window_fheight (cur_wp ()) / 2);
+  set_window_eheight (cur_wp (), get_window_fheight (cur_wp ()) - 1);
+  if (get_window_topdelta (cur_wp ()) >= get_window_eheight (cur_wp ()))
+    recenter (cur_wp ());
+  set_window_bp (newwp, get_window_bp (cur_wp ()));
   set_window_saved_pt (newwp, point_marker ());
-  set_window_next (newwp, get_window_next (cur_wp));
-  set_window_next (cur_wp, newwp);
+  set_window_next (newwp, get_window_next (cur_wp ()));
+  set_window_next (cur_wp (), newwp);
 }
 END_DEFUN
 
@@ -122,10 +122,13 @@ delete_window (int del_wp)
 {
   int wp;
 
-  if (del_wp == head_wp)
-    wp = head_wp = get_window_next (head_wp);
+  if (del_wp == head_wp ())
+    {
+      wp = get_window_next (head_wp ());
+      set_head_wp (wp);
+    }
   else
-    for (wp = head_wp; wp != LUA_REFNIL; wp = get_window_next (wp))
+    for (wp = head_wp (); wp != LUA_REFNIL; wp = get_window_next (wp))
       if (get_window_next (wp) == del_wp)
         {
           set_window_next (wp, get_window_next (get_window_next (wp)));
@@ -150,13 +153,13 @@ DEFUN ("delete-window", delete_window)
 Remove the current window from the screen.
 +*/
 {
-  if (cur_wp == head_wp && get_window_next (cur_wp) == LUA_REFNIL)
+  if (cur_wp () == head_wp () && get_window_next (cur_wp ()) == LUA_REFNIL)
     {
       minibuf_error ("Attempt to delete sole ordinary window");
       return leNIL;
     }
 
-  delete_window (cur_wp);
+  delete_window (cur_wp ());
 }
 END_DEFUN
 
@@ -167,28 +170,28 @@ Make current window one line bigger.
 {
   int wp;
 
-  if (cur_wp == head_wp && get_window_next (cur_wp) == LUA_REFNIL)
+  if (cur_wp () == head_wp () && get_window_next (cur_wp ()) == LUA_REFNIL)
     return leNIL;
 
-  wp = get_window_next (cur_wp);
+  wp = get_window_next (cur_wp ());
   if (wp == LUA_REFNIL || get_window_fheight (wp) < 3)
-    for (wp = head_wp; wp != LUA_REFNIL; wp = get_window_next (wp))
-      if (get_window_next (wp) == cur_wp)
+    for (wp = head_wp (); wp != LUA_REFNIL; wp = get_window_next (wp))
+      if (get_window_next (wp) == cur_wp ())
         {
           if (get_window_fheight (wp) < 3)
             return leNIL;
           break;
         }
 
-  if (cur_wp == head_wp && get_window_fheight (get_window_next (cur_wp)) < 3)
+  if (cur_wp () == head_wp () && get_window_fheight (get_window_next (cur_wp ())) < 3)
     return leNIL;
 
   set_window_fheight (wp, get_window_fheight (wp) - 1);
   set_window_eheight (wp, get_window_eheight (wp) - 1);
   if (get_window_topdelta (wp) >= get_window_eheight (wp))
     recenter (wp);
-  set_window_fheight (cur_wp, get_window_fheight (cur_wp) + 1);
-  set_window_eheight (cur_wp, get_window_eheight (cur_wp) + 1);
+  set_window_fheight (cur_wp (), get_window_fheight (cur_wp ()) + 1);
+  set_window_eheight (cur_wp (), get_window_eheight (cur_wp ()) + 1);
 }
 END_DEFUN
 
@@ -199,42 +202,42 @@ Make current window one line smaller.
 {
   int wp;
 
-  if ((cur_wp == head_wp && get_window_next (cur_wp) == LUA_REFNIL) || get_window_fheight (cur_wp) < 3)
+  if ((cur_wp () == head_wp () && get_window_next (cur_wp ()) == LUA_REFNIL) || get_window_fheight (cur_wp ()) < 3)
     return leNIL;
 
-  wp = get_window_next (cur_wp);
+  wp = get_window_next (cur_wp ());
   if (wp == LUA_REFNIL)
     {
-      for (wp = head_wp; wp != LUA_REFNIL; wp = get_window_next (wp))
-        if (get_window_next (wp) == cur_wp)
+      for (wp = head_wp (); wp != LUA_REFNIL; wp = get_window_next (wp))
+        if (get_window_next (wp) == cur_wp ())
           break;
     }
 
   set_window_fheight (wp, get_window_fheight (wp) + 1);
   set_window_eheight (wp, get_window_eheight (wp) + 1);
-  set_window_fheight (cur_wp, get_window_fheight (cur_wp) - 1);
-  set_window_eheight (cur_wp, get_window_eheight (cur_wp) - 1);
-  if (get_window_topdelta (cur_wp) >= get_window_eheight (cur_wp))
-    recenter (cur_wp);
+  set_window_fheight (cur_wp (), get_window_fheight (cur_wp ()) - 1);
+  set_window_eheight (cur_wp (), get_window_eheight (cur_wp ()) - 1);
+  if (get_window_topdelta (cur_wp ()) >= get_window_eheight (cur_wp ()))
+    recenter (cur_wp ());
 }
 END_DEFUN
 
 int
 popup_window (void)
 {
-  if (get_window_next (head_wp) == LUA_REFNIL)
+  if (get_window_next (head_wp ()) == LUA_REFNIL)
     {
       /* There is only one window on the screen, so split it. */
       FUNCALL (split_window);
-      return get_window_next (cur_wp);
+      return get_window_next (cur_wp ());
     }
 
   /* Use the window after the current one. */
-  if (get_window_next (cur_wp) != LUA_REFNIL)
-    return get_window_next (cur_wp);
+  if (get_window_next (cur_wp ()) != LUA_REFNIL)
+    return get_window_next (cur_wp ());
 
   /* Use the first window. */
-  return head_wp;
+  return head_wp ();
 }
 
 DEFUN ("delete-other-windows", delete_other_windows)
@@ -249,10 +252,10 @@ Make the selected window fill the screen.
   CLUE_GET (L, w, integer, w);
   CLUE_GET (L, h, integer, h);
 
-  for (wp = head_wp; wp != LUA_REFNIL; wp = nextwp)
+  for (wp = head_wp (); wp != LUA_REFNIL; wp = nextwp)
     {
       nextwp = get_window_next (wp);
-      if (wp != cur_wp)
+      if (wp != cur_wp ())
         delete_window (wp);
     }
 }
@@ -265,7 +268,7 @@ All windows are arranged in a cyclic order.
 This command selects the window one step away in that order.
 +*/
 {
-  set_current_window ((get_window_next (cur_wp) != LUA_REFNIL) ? get_window_next (cur_wp) : head_wp);
+  set_current_window ((get_window_next (cur_wp ()) != LUA_REFNIL) ? get_window_next (cur_wp ()) : head_wp ());
 }
 END_DEFUN
 
@@ -285,7 +288,8 @@ create_scratch_window (void)
   CLUE_GET (L, h, integer, h);
 
   wp = window_new ();
-  cur_wp = head_wp = wp;
+  set_cur_wp (wp);
+  set_head_wp (wp);
   set_window_fwidth (wp, w);
   set_window_ewidth (wp, w);
   /* Save space for minibuffer. */
@@ -301,7 +305,7 @@ find_window (const char *name)
 {
   int wp;
 
-  for (wp = head_wp; wp != LUA_REFNIL; wp = get_window_next (wp))
+  for (wp = head_wp (); wp != LUA_REFNIL; wp = get_window_next (wp))
     if (!strcmp (get_buffer_name (get_window_bp (wp)), name))
       return wp;
 
@@ -315,7 +319,7 @@ window_pt (int wp)
      windows have a saved point, except that if a window has just been
      killed, it needs to use its new buffer's current point. */
   assert (wp != LUA_REFNIL);
-  if (wp == cur_wp)
+  if (wp == cur_wp ())
     {
       assert (lua_refeq (L, get_window_bp (wp), cur_bp ()));
       assert (get_window_saved_pt (wp) == LUA_REFNIL);
@@ -324,7 +328,7 @@ window_pt (int wp)
     }
   else
     {
-      if (get_window_saved_pt (wp) != LUA_NOREF)
+      if (get_window_saved_pt (wp) != LUA_REFNIL)
         return point_copy (get_marker_pt (get_window_saved_pt (wp)));
       else
         return point_copy (get_buffer_pt (get_window_bp (wp)));
@@ -337,14 +341,14 @@ window_pt (int wp)
 void
 completion_scroll_up (void)
 {
-  int wp, old_wp = cur_wp;
+  int wp, old_wp = cur_wp ();
   int pt;
 
   wp = find_window ("*Completions*");
   assert (wp != LUA_REFNIL);
   set_current_window (wp);
   pt = get_buffer_pt (cur_bp ());
-  if (get_point_n (pt) >= get_buffer_last_line (cur_bp ()) - get_window_eheight (cur_wp) || !FUNCALL (scroll_up))
+  if (get_point_n (pt) >= get_buffer_last_line (cur_bp ()) - get_window_eheight (cur_wp ()) || !FUNCALL (scroll_up))
     gotobob ();
   set_current_window (old_wp);
 
@@ -357,7 +361,7 @@ completion_scroll_up (void)
 void
 completion_scroll_down (void)
 {
-  int pt, wp, old_wp = cur_wp;
+  int pt, wp, old_wp = cur_wp ();
 
   wp = find_window ("*Completions*");
   assert (wp != LUA_REFNIL);
@@ -366,7 +370,7 @@ completion_scroll_down (void)
   if (get_point_n (pt) == 0 || !FUNCALL (scroll_down))
     {
       gotoeob ();
-      resync_redisplay (cur_wp);
+      resync_redisplay (cur_wp ());
     }
   set_current_window (old_wp);
 

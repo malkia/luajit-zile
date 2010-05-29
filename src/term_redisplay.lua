@@ -89,8 +89,7 @@ end
 
 local cur_tab_width = 0
 
--- FIXME: local
-function outch (c, font, x)
+local function outch (c, font, x)
   local tw = term_width ()
 
   if x >= tw then
@@ -148,12 +147,35 @@ function draw_line (line, startcol, wp, lp, lineno, rp, highlight)
   term_move (line, 0)
 
   local x = 0
-  for i = startcol, #lp.text do
+  for i = startcol, #lp.text - 1 do
     if x >= wp.ewidth then
       break
     end
-    x = outch (string.byte (lp.text, i + 1), highlight and in_region (lineno, i, rp) and FONT_REVERSE or FONT_NORMAL, x)
+    local font = FONT_NORMAL
+    if highlight and in_region (lineno, i, rp) then
+      font = FONT_REVERSE
+    end
+    x = outch (string.byte (lp.text, i + 1), font, x)
   end
 
-  draw_end_of_line (line, wp, lineno, rp, highlight, x, i)
+  draw_end_of_line (line, wp, lineno, rp, highlight, x, x + startcol)
+end
+
+-- FIXME: local
+function calculate_highlight_region (wp, rp)
+  if (wp ~= cur_wp and not get_variable_bool ("highlight-nonselected-windows"))
+    or (wp.bp.mark == nil)
+    or (not get_variable_bool ("transient-mark-mode"))
+    or (get_variable_bool ("transient-mark-mode") and not wp.bp.mark_active) then
+    return false
+  end
+
+  rp.start = window_pt (wp)
+  rp.finish = wp.bp.mark.pt
+  if cmp_point (rp.finish, rp.start) < 0 then
+    local pt = rp.start
+    rp.start = rp.finish
+    rp.finish = pt
+  end
+  return true
 end

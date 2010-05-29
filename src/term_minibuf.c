@@ -270,7 +270,7 @@ char *
 term_minibuf_read (const char *prompt, const char *value, size_t pos,
                    int cp, int hp)
 {
-  int wp, old_wp = cur_wp;
+  int wp, old_wp = cur_wp ();
   char *s = NULL;
   astr as;
 

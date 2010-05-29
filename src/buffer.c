@@ -245,7 +245,7 @@ move_buffer_to_head (int bp)
 void
 switch_to_buffer (int bp)
 {
-  assert (lua_refeq (L, get_window_bp (cur_wp), cur_bp ()));
+  assert (lua_refeq (L, get_window_bp (cur_wp ()), cur_bp ()));
 
   /* The buffer is the current buffer; return safely.  */
   if (cur_bp () == bp)
@@ -253,7 +253,7 @@ switch_to_buffer (int bp)
 
   /* Set current buffer.  */
   set_cur_bp (bp);
-  set_window_bp (cur_wp, cur_bp ());
+  set_window_bp (cur_wp (), cur_bp ());
 
   /* Move the buffer to head.  */
   move_buffer_to_head (bp);
@@ -484,7 +484,7 @@ kill_buffer (int kill_bp)
     next_bp = (head_bp () == kill_bp) ? LUA_REFNIL : head_bp ();
 
   /* Search for windows displaying the buffer to kill. */
-  for (wp = head_wp; wp != LUA_REFNIL; wp = get_window_next (wp))
+  for (wp = head_wp (); wp != LUA_REFNIL; wp = get_window_next (wp))
     if (get_window_bp (wp) == kill_bp)
       {
         set_window_bp (wp, next_bp);
@@ -513,12 +513,12 @@ kill_buffer (int kill_bp)
       next_bp = create_scratch_buffer ();
       set_cur_bp (next_bp);
       set_head_bp (next_bp);
-      for (wp = head_wp; wp != LUA_REFNIL; wp = get_window_next (wp))
+      for (wp = head_wp (); wp != LUA_REFNIL; wp = get_window_next (wp))
         set_window_bp (wp, head_bp ());
     }
 
   /* Resync windows that need it. */
-  for (wp = head_wp; wp != LUA_REFNIL; wp = get_window_next (wp))
+  for (wp = head_wp (); wp != LUA_REFNIL; wp = get_window_next (wp))
     if (get_window_bp (wp) == next_bp)
       resync_redisplay (wp);
 }
