@@ -122,7 +122,7 @@ end
 --   @param x: object to convert to string
 -- @returns
 --   @param s: string representation
-_tostring = tostring -- make original tostring available
+_G._tostring = tostring -- make original tostring available
 local _tostring = tostring
 function _G.tostring (x)
   return render (x,
