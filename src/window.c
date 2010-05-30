@@ -53,6 +53,7 @@ window_new (void)
   lua_newtable (L);
   wp = luaL_ref (L, LUA_REGISTRYINDEX);
   set_window_next (wp, LUA_REFNIL);
+  set_window_topdelta (wp, 0);
 
   return wp;
 }
