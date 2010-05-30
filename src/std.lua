@@ -1,6 +1,6 @@
 -- Lua stdlib
 --
--- Copyright (c) 2000-2009 stdlib authors.
+-- Copyright (c) 2000-2010 stdlib authors.
 --
 -- See http://luaforge.net/projects/stdlib/ for more information.
 --
@@ -30,8 +30,12 @@ end
 
 module ("base", package.seeall)
 
+-- Functional forms of infix operators
+-- Defined here so that other modules can write to it.
+_G.op = {}
+
 require "table_ext"
---require "list" FIXME: sort out op table
+require "list"
 require "string_ext"
 --require "io_ext" FIXME: allow loops
 
@@ -118,6 +122,7 @@ end
 --   @param x: object to convert to string
 -- @returns
 --   @param s: string representation
+_tostring = tostring -- make original tostring available
 local _tostring = tostring
 function _G.tostring (x)
   return render (x,
@@ -133,18 +138,6 @@ function _G.tostring (x)
                    end
                    return ""
                  end)
-end
-
--- @func print: Make print use tostring, so that improvements to tostring
--- are picked up
---   @param arg: objects to print
-local _print = print
-function _G.print (...)
-  local arg = {...}
-  for i = 1, select ("#", ...) do
-    arg[i] = tostring (arg[i])
-  end
-  _print (...)
 end
 
 -- @func prettytostring: pretty-print a table
@@ -488,61 +481,68 @@ function _G.die (...)
 end
 
 -- Function forms of operators
-_G.op = {
-  ["+"] = function (...)
-            return list.foldr (function (a, b)
-                                 return a + b
-                               end,
-                               0, {...})
-          end,
-  ["-"] = function (...)
-            return list.foldr (function (a, b)
-                                 return a - b
-                               end,
-                               0, {...})
-          end,
-  ["*"] = function (...)
-            return list.foldr (function (a, b)
-                                 return a * b
-                               end,
-                               1, {...})
-          end,
-  ["/"] = function (a, b)
-            return a / b
-          end,
-  ["and"] = function (...)
-              return list.foldl (function (a, b)
-                                   return a and b
-                                 end, true, {...})
-            end,
-  ["or"] = function (...)
-             return list.foldl (function (a, b)
-                                  return a or b
-                                end,
-                                false, {...})
-           end,
-  ["not"] = function (x)
-              return not x
-            end,
-  ["=="] = function (x, ...)
-             for _, v in ipairs ({...}) do
-               if v ~= x then
-                 return false
-               end
-             end
-             return true
-           end,
-  ["~="] = function (...)
-             local t = {}
-             for _, v in ipairs ({...}) do
-               if t[v] then
-                 return false
-               end
-               t[v] = true
-             end
-             return true
-           end,
-}
+_G.op["+"] =
+  function (...)
+    return list.foldr (function (a, b)
+                         return a + b
+                       end,
+                       0, {...})
+  end
+_G.op["-"] =
+  function (...)
+    return list.foldr (function (a, b)
+                         return a - b
+                       end,
+                       0, {...})
+  end
+_G.op["*"] =
+  function (...)
+    return list.foldr (function (a, b)
+                         return a * b
+                       end,
+                       1, {...})
+  end
+_G.op["/"] =
+  function (a, b)
+    return a / b
+  end
+_G.op["and"] =
+  function (...)
+    return list.foldl (function (a, b)
+                         return a and b
+                       end, true, {...})
+  end
+_G.op  ["or"] =
+  function (...)
+    return list.foldl (function (a, b)
+                         return a or b
+                       end,
+                       false, {...})
+  end
+_G.op["not"] =
+  function (x)
+    return not x
+  end
+_G.op["=="] =
+  function (x, ...)
+    for _, v in ipairs ({...}) do
+      if v ~= x then
+        return false
+      end
+    end
+    return true
+  end
+_G.op["~="] =
+  function (...)
+    local t = {}
+    for _, v in ipairs ({...}) do
+      if t[v] then
+        return false
+      end
+      t[v] = true
+    end
+    return true
+  end
 -- @module debug
 
 -- Adds to the existing debug module
@@ -1255,63 +1255,6 @@ _G.Object = {
            end,
 }
 setmetatable (Object, Object)
--- @module lcs
--- LCS algorithm
-
--- After pseudo-code in
--- http://www.ics.uci.edu/~eppstein/161/960229.html
--- Lecture notes by David Eppstein, eppstein@ics.uci.edu
-
-module ("lcs", package.seeall)
-
-
--- @func commonSubseqs: find common subsequences
---   @param a, b: two sequences
--- @returns
---   @param l: list of common subsequences
---   @param m: the length of a
---   @param n: the length of b
-function commonSubseqs (a, b)
-  local l, m, n = {}, #a, #b
-  for i = m + 1, 1, -1 do
-    l[i] = {}
-    for j = n + 1, 1, -1 do
-      if i > m or j > n then
-        l[i][j] = 0
-      elseif a[i] == b[j] then
-        l[i][j] = 1 + l[i + 1][j + 1]
-      else
-        l[i][j] = math.max (l[i + 1][j], l[i][j + 1])
-      end
-    end
-  end
-  return l, m, n
-end
-
--- @func longestCommonSubseq: find the LCS of two sequences
--- The sequence type must have an __append metamethod. This is
--- provided by string_ext for strings, and by list for lists.
---   @param a, b: two sequences
---   @param s: an empty sequence of the same type
--- @returns
---   @param s_: the LCS of a and b
-function longestCommonSubseq (a, b, s)
-  local l, m, n = lcs.commonSubseqs (a, b)
-  local i, j = 1, 1
-  local f = getmetatable (s).__append
-  while i <= m and j <= n do
-    if a[i] == b[j] then
-      s = f (s, a[i])
-      i = i + 1
-      j = j + 1
-    elseif l[i + 1][j] >= l[i][j + 1] then
-      i = i + 1
-    else
-      j = j + 1
-    end
-  end
-  return s
-end
 -- String
 
 module ("string", package.seeall)
@@ -1514,7 +1457,6 @@ function numbertosi (n)
   return tostring (man) .. s
 end
 
-
 -- @func findl: Do find, returning captures as a list
 --   @param s: target string
 --   @param p: pattern
@@ -1620,8 +1562,7 @@ function rtrim (r, s)
   return (r.gsub (s, r .. "$", ""))
 end
 
--- @func trim: Remove leading and trailing matter from a
--- string
+-- @func trim: Remove leading and trailing matter from a string
 --   @param [r]: leading/trailing regex ["%s+"]
 --   @param s: string
 -- @returns
@@ -1756,6 +1697,7 @@ end
 module ("getopt", package.seeall)
 
 require "base"
+require "list"
 require "string_ext"
 require "object"
 require "io_ext"
@@ -2019,7 +1961,7 @@ end
 
 -- A small and hopefully enlightening example:
 if type (_DEBUG) == "table" and _DEBUG.std then
-  
+
   function out (o)
     return o or io.stdout
   end
