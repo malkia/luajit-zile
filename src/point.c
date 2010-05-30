@@ -48,7 +48,8 @@
 int
 point_new (void)
 {
-  lua_newtable (L);
+  (void) CLUE_DO (L, "pt = {o = 0, n = 0, p = {}}");
+  lua_getglobal (L, "pt");
   return luaL_ref (L, LUA_REGISTRYINDEX);
 }
 
