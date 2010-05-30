@@ -11,9 +11,9 @@ function window_pt (wp)
     return table.clone (cur_bp.pt)
   else
     if wp.saved_pt ~= nil then
-      return point_copy (wp.saved_pt.pt)
+      return table.clone (wp.saved_pt.pt)
     else
-      return point_copy (wp.bp.pt)
+      return table.clone (wp.bp.pt)
     end
   end
 end
