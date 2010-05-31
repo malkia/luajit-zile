@@ -142,8 +142,7 @@ local function draw_end_of_line (line, wp, lineno, rp, highlight, x, i)
   end
 end
 
--- FIXME: local
-function draw_line (line, startcol, wp, lp, lineno, rp, highlight)
+local function draw_line (line, startcol, wp, lp, lineno, rp, highlight)
   term_move (line, 0)
 
   local x = 0
@@ -161,8 +160,7 @@ function draw_line (line, startcol, wp, lp, lineno, rp, highlight)
   draw_end_of_line (line, wp, lineno, rp, highlight, x, x + startcol)
 end
 
--- FIXME: local
-function calculate_highlight_region (wp, rp)
+local function calculate_highlight_region (wp, rp)
   if (wp ~= cur_wp and not get_variable_bool ("highlight-nonselected-windows"))
     or (wp.bp.mark == nil)
     or (not get_variable_bool ("transient-mark-mode"))
@@ -217,4 +215,57 @@ function draw_window (topline, wp)
       lineno = lineno + 1
     end
   end
+end
+
+function make_mode_line_flags (wp)
+  if wp.bp.modified and wp.bp.readonly then
+    return "%*"
+  elseif wp.bp.modified then
+    return "**"
+  elseif wp.bp.readonly then
+    return "%%"
+  end
+  return "--"
+end
+
+-- FIXME: local
+point_screen_column = 0
+
+-- This function calculates the best start column to draw if the line
+-- at point has to be truncated.
+-- FIXME: local
+function calculate_start_column (wp)
+  local col = 0
+  local t = tab_width (wp.bp)
+  local pt = window_pt (wp)
+  local rp = pt.o
+  local rpfact = math.floor (rp / math.floor (wp.ewidth / 3))
+  local lastcol = 0
+
+  for lp = rp, 0, -1 do
+    col = 0
+    for p = lp, rp - 1 do
+      local c = string.sub (pt.p.text, p + 1, 1)
+      if c == '\t' then
+        col = bit.bor (col, t - 1) + 1
+      elseif isprint (c) then
+        col = col + 1
+      else
+        col = col + #make_char_printable (string.byte (c))
+      end
+    end
+
+    local lpfact = math.floor (lp / math.floor (wp.ewidth / 3))
+
+    if col >= wp.ewidth - 1 or lpfact < rpfact - 2 then
+      wp.start_column = lp + 1
+      point_screen_column = lastcol
+      return
+    end
+
+    lastcol = col
+  end
+
+  wp.start_column = 0
+  point_screen_column = col
 end

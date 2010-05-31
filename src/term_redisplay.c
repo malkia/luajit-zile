@@ -31,76 +31,6 @@
 #include "extern.h"
 
 static char *
-make_mode_line_flags (int wp)
-{
-  static char buf[3];
-
-  if (get_buffer_modified (get_window_bp (wp)) && get_buffer_readonly (get_window_bp (wp)))
-    buf[0] = '%', buf[1] = '*';
-  else if (get_buffer_modified (get_window_bp (wp)))
-    buf[0] = buf[1] = '*';
-  else if (get_buffer_readonly (get_window_bp (wp)))
-    buf[0] = buf[1] = '%';
-  else
-    buf[0] = buf[1] = '-';
-
-  return buf;
-}
-
-static size_t point_screen_column;
-
-/*
- * This function calculates the best start column to draw if the line
- * needs to get truncated.
- * Called only for the line where is the point.
- */
-static void
-calculate_start_column (int wp)
-{
-  size_t col = 0, lastcol = 0, t = tab_width (get_window_bp (wp));
-  int lpfact;
-  size_t lp, p;
-  int pt = window_pt (wp);
-  size_t rp = get_point_o (pt);
-  int rpfact = get_point_o (pt) / (get_window_ewidth (wp) / 3);
-
-  for (lp = rp; lp != SIZE_MAX; --lp)
-    {
-      for (col = 0, p = lp; p < rp; ++p)
-        if (get_line_text (get_point_p (pt))[p] == '\t')
-          {
-            col |= t - 1;
-            ++col;
-          }
-        else if (isprint ((int) get_line_text (get_point_p (pt))[p]))
-          ++col;
-        else
-          {
-            const char *buf;
-            char c = get_line_text (get_point_p (pt))[p];
-            CLUE_SET (L, c, integer, c);
-            (void) CLUE_DO (L, "s = make_char_printable (c)");
-            CLUE_GET (L, s, string, buf);
-            col += strlen (buf);
-          }
-
-      lpfact = lp / (get_window_ewidth (wp) / 3);
-
-      if (col >= get_window_ewidth (wp) - 1 || lpfact < (rpfact - 2))
-        {
-          set_window_start_column (wp, lp + 1);
-          point_screen_column = lastcol;
-          return;
-        }
-
-      lastcol = col;
-    }
-
-  set_window_start_column (wp, 0);
-  point_screen_column = col;
-}
-
-static char *
 make_screen_pos (int wp, char **buf)
 {
   bool tv = window_top_visible (wp);
@@ -127,6 +57,12 @@ draw_status_line (size_t line, int wp)
   int pt = window_pt (wp);
   int bp = get_window_bp (wp);
   astr as, bs;
+  const char *mlf;
+
+  lua_rawgeti (L, LUA_REGISTRYINDEX, wp);
+  lua_setglobal (L, "wp");
+  (void) CLUE_DO (L, "mlf = make_mode_line_flags (wp)");
+  CLUE_GET (L, mlf, string, mlf);
 
   (void) CLUE_DO (L, "tw = term_width ()");
   CLUE_GET (L, w, integer, tw);
@@ -150,7 +86,7 @@ draw_status_line (size_t line, int wp)
   bs = astr_afmt (astr_new (), "(%d,%d)", get_point_n (pt) + 1,
                   get_goalc_bp (bp, pt));
   as = astr_afmt (astr_new (), "--%s%2s  %-15s   %s %-9s (Fundamental",
-                  eol_type, make_mode_line_flags (wp), get_buffer_name (bp),
+                  eol_type, mlf, get_buffer_name (bp),
                   make_screen_pos (wp, &buf), astr_cstr (bs));
   free (buf);
   astr_delete (bs);
@@ -183,7 +119,8 @@ term_redisplay (void)
 
   cur_topline = topline = 0;
 
-  calculate_start_column (cur_wp ());
+  (void) CLUE_DO (L, "calculate_start_column (cur_wp)");
+  fprintf (stderr, "startcol %d\n", get_window_start_column (cur_wp ()));
 
   for (wp = head_wp (); wp != LUA_REFNIL; wp = get_window_next (wp))
     {
@@ -205,8 +142,7 @@ term_redisplay (void)
 
   /* Redraw cursor. */
   CLUE_SET (L, y, integer, cur_topline + get_window_topdelta (cur_wp ()));
-  CLUE_SET (L, x, integer, point_screen_column);
-  (void) CLUE_DO (L, "term_move (y, x)");
+  (void) CLUE_DO (L, "term_move (y, point_screen_column)");
 }
 
 void
