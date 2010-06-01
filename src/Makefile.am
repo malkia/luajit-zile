@@ -90,6 +90,7 @@ LUA_STD = std.lua
 
 zile_LUA =						\
 	main.lua					\
+	basic.lua					\
 	bind.lua					\
 	buffer.lua					\
 	completion.lua					\

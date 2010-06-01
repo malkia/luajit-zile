@@ -20,6 +20,12 @@
 -- MA 02111-1301, USA.
 
 
+-- Formats of end-of-line
+coding_eol_lf = "\n";
+coding_eol_crlf = "\r\n"
+coding_eol_cr = "\r"
+
+
 -- This functions makes the passed path an absolute path:
 --
 --  * expands `~/' and `~name/' expressions;

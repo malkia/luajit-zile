@@ -60,7 +60,7 @@ Toggle Transient Mark mode.
 With arg, turn Transient Mark mode on if arg is positive, off otherwise.
 +*/
 {
-  if (!(lastflag & FLAG_SET_UNIARG))
+  if (!(lastflag () & FLAG_SET_UNIARG))
     {
       if (get_variable_bool ("transient-mark-mode"))
         set_variable ("transient-mark-mode", "nil");
@@ -218,7 +218,7 @@ is supposed to make it easier to insert characters when necessary.
 +*/
 {
   INT_OR_UNIARG_INIT (arg);
-  set_buffer_overwrite (cur_bp (), lastflag & FLAG_SET_UNIARG ? uniarg > 0 :
+  set_buffer_overwrite (cur_bp (), lastflag () & FLAG_SET_UNIARG ? uniarg > 0 :
                         !get_buffer_overwrite (cur_bp ()));
 }
 END_DEFUN
@@ -250,11 +250,11 @@ Use C-u followed by a number to specify a column.
 Just C-u as argument means to use the current column.
 +*/
 {
-  long fill_col = (lastflag & FLAG_UNIARG_EMPTY) ?
+  long fill_col = (lastflag () & FLAG_UNIARG_EMPTY) ?
     get_point_o (get_buffer_pt (cur_bp ())) : (unsigned long) uniarg;
   char *buf;
 
-  if (!(lastflag & FLAG_SET_UNIARG) && LUA_NIL (arglist))
+  if (!(lastflag () & FLAG_SET_UNIARG) && LUA_NIL (arglist))
     {
       fill_col = minibuf_read_number ("Set fill-column to (default %d): ", get_point_o (get_buffer_pt (cur_bp ())));
       if (fill_col == LONG_MAX)
@@ -342,7 +342,7 @@ Put the mark where point is now, and point where the mark is now.
   if (get_variable_bool ("transient-mark-mode"))
     activate_mark ();
 
-  thisflag |= FLAG_NEED_RESYNC;
+  set_thisflag (thisflag () | FLAG_NEED_RESYNC);
 }
 END_DEFUN
 
@@ -423,7 +423,7 @@ by 4 each time.
   /* Need to process key used to invoke universal-argument. */
   pushkey (lastkey ());
 
-  thisflag |= FLAG_UNIARG_EMPTY;
+  set_thisflag (thisflag () | FLAG_UNIARG_EMPTY);
 
   for (;;)
     {
@@ -443,7 +443,7 @@ by 4 each time.
       else if (isdigit (key & 0xff))
         {
           int digit = (key & 0xff) - '0';
-          thisflag &= ~FLAG_UNIARG_EMPTY;
+          set_thisflag (thisflag () & ~FLAG_UNIARG_EMPTY);
 
           if (key & KBD_META)
             astr_cat_cstr (as, "ESC");
@@ -473,7 +473,7 @@ by 4 each time.
               astr_cat_cstr (as, " -");
               /* The default negative arg is -1, not -4. */
               arg = 1;
-              thisflag &= ~FLAG_UNIARG_EMPTY;
+              set_thisflag (thisflag () & ~FLAG_UNIARG_EMPTY);
             }
         }
       else
@@ -486,7 +486,7 @@ by 4 each time.
   if (ok == leT)
     {
       last_uniarg = arg * sgn;
-      thisflag |= FLAG_SET_UNIARG;
+      set_thisflag (thisflag () | FLAG_SET_UNIARG);
       minibuf_clear ();
       astr_delete (as);
     }
@@ -1503,7 +1503,7 @@ says to insert the output in the current buffer.
     cmd = minibuf_read_shell_command ();
   BOOL_INIT (insert)
   else
-    insert = lastflag & FLAG_SET_UNIARG;
+    insert = lastflag () & FLAG_SET_UNIARG;
 
   if (cmd != NULL)
     ok = bool_to_lisp (pipe_command (cmd, "/dev/null", insert, false));
@@ -1539,7 +1539,7 @@ The output is available in that buffer in both cases.
     cmd = minibuf_read_shell_command ();
   BOOL_INIT (insert)
   else
-    insert = lastflag & FLAG_SET_UNIARG;
+    insert = lastflag () & FLAG_SET_UNIARG;
 
   if (cmd != NULL)
     {

@@ -50,30 +50,13 @@ Move point to end of current line.
 }
 END_DEFUN
 
-/*
- * Get the goal column.  Take care of expanding tabulations.
- */
-size_t
-get_goalc_bp (int bp, int pt)
-{
-  size_t col = 0, t = tab_width (bp), i;
-  const char *sp = get_line_text (get_point_p (pt));
-  size_t end = MIN (get_point_o (pt), strlen (get_line_text (get_point_p (pt))));
-
-  for (i = 0; i < end; i++)
-    {
-      if (sp[i] == '\t')
-        col |= t - 1;
-      ++col;
-    }
-
-  return col;
-}
-
 size_t
 get_goalc (void)
 {
-  return get_goalc_bp (cur_bp (), get_buffer_pt (cur_bp ()));
+  size_t goalc;
+  (void) CLUE_DO (L, "goalc = get_goalc_bp (cur_bp, cur_bp.pt)");
+  CLUE_GET (L, goalc, integer, goalc);
+  return goalc;
 }
 
 /*
@@ -144,7 +127,7 @@ move_line (int n)
     set_buffer_goalc (cur_bp (), get_goalc ());
   goto_goalc ();
 
-  thisflag |= FLAG_NEED_RESYNC;
+  set_thisflag (thisflag () | FLAG_NEED_RESYNC);
 
   return ok;
 }
@@ -259,7 +242,7 @@ void
 gotobob (void)
 {
   set_buffer_pt (cur_bp (), point_min ());
-  thisflag |= FLAG_NEED_RESYNC;
+  set_thisflag (thisflag () | FLAG_NEED_RESYNC);
 }
 
 DEFUN ("beginning-of-buffer", beginning_of_buffer)
@@ -279,7 +262,7 @@ void
 gotoeob (void)
 {
   set_buffer_pt (cur_bp (), point_max ());
-  thisflag |= FLAG_NEED_RESYNC;
+  set_thisflag (thisflag () | FLAG_NEED_RESYNC);
 }
 
 DEFUN ("end-of-buffer", end_of_buffer)
@@ -304,7 +287,7 @@ move_char (int dir)
   else if (dir > 0 ? !eobp () : !bobp ())
     {
       int pt = get_buffer_pt (cur_bp ());
-      thisflag |= FLAG_NEED_RESYNC;
+      set_thisflag (thisflag () | FLAG_NEED_RESYNC);
       set_point_p (pt, (dir > 0 ? get_line_next : get_line_prev) (get_point_p (pt)));
       set_point_n (pt, get_point_n (pt) + dir);
       if (dir > 0)

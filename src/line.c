@@ -242,7 +242,7 @@ intercalate_newline (void)
   adjust_markers (get_line_next (get_point_p (get_buffer_pt (cur_bp ()))), get_point_p (get_buffer_pt (cur_bp ())), get_point_o (get_buffer_pt (cur_bp ())), 1, 0);
 
   set_buffer_modified (cur_bp (), true);
-  thisflag |= FLAG_NEED_RESYNC;
+  set_thisflag (thisflag () | FLAG_NEED_RESYNC);
 
   return true;
 }
@@ -497,7 +497,7 @@ delete_char (void)
 
       adjust_markers (get_point_p (get_buffer_pt (cur_bp ())), oldlp, oldlen, -1, 0);
       set_buffer_last_line (cur_bp (), get_buffer_last_line (cur_bp ()) - 1);
-      thisflag |= FLAG_NEED_RESYNC;
+      set_thisflag (thisflag () | FLAG_NEED_RESYNC);
     }
   else
     {

@@ -94,8 +94,36 @@ void set_head_bp (int bp)
   lua_setglobal (L, "head_bp");
 }
 
-/* The global editor flags. */
-int thisflag = 0, lastflag = 0;
+int thisflag (void)
+{
+  int ret;
+  lua_getglobal (L, "thisflag ()");
+  ret = lua_tointeger (L, -1);
+  lua_pop (L, 1);
+  return ret;
+}
+
+int lastflag (void)
+{
+  int ret;
+  lua_getglobal (L, "lastflag ()");
+  ret = lua_tointeger (L, -1);
+  lua_pop (L, 1);
+  return ret;
+}
+
+void set_thisflag (int f)
+{
+  lua_pushinteger (L, f);
+  lua_setglobal (L, "thisflag ()");
+}
+
+void set_lastflag (int f)
+{
+  lua_pushinteger (L, f);
+  lua_setglobal (L, "lastflag ()");
+}
+
 /* The universal argument repeat count. */
 int last_uniarg = 1;
 
@@ -416,17 +444,17 @@ main (int argc, char **argv)
             ok = find_file (arg);
             if (ok)
               FUNCALL_ARG (goto_line, (size_t) gl_list_get_at (arg_line, i));
-            lastflag |= FLAG_NEED_RESYNC;
+            set_lastflag (lastflag () | FLAG_NEED_RESYNC);
           }
           break;
         }
-      if (thisflag & FLAG_QUIT)
+      if (thisflag () & FLAG_QUIT)
         break;
     }
   gl_list_free (arg_type);
   gl_list_free (arg_arg);
   gl_list_free (arg_line);
-  lastflag |= FLAG_NEED_RESYNC;
+  set_lastflag (lastflag () | FLAG_NEED_RESYNC);
 
   /* Reinitialise the scratch buffer to catch settings */
   init_buffer (scratch_bp);
@@ -443,9 +471,9 @@ main (int argc, char **argv)
     }
 
   /* Run the main loop. */
-  while (!(thisflag & FLAG_QUIT))
+  while (!(thisflag () & FLAG_QUIT))
     {
-      if (lastflag & FLAG_NEED_RESYNC)
+      if (lastflag () & FLAG_NEED_RESYNC)
         resync_redisplay (cur_wp ());
       term_redisplay ();
       (void) CLUE_DO (L, "term_refresh ()");

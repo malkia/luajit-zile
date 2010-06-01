@@ -258,7 +258,7 @@ switch_to_buffer (int bp)
   /* Move the buffer to head.  */
   move_buffer_to_head (bp);
 
-  thisflag |= FLAG_NEED_RESYNC;
+  set_thisflag (thisflag () | FLAG_NEED_RESYNC);
 }
 
 /*

@@ -411,7 +411,7 @@ isearch (int dir, int regexp)
       if (c == KBD_CANCEL)
         {
           set_buffer_pt (cur_bp (), start);
-          thisflag |= FLAG_NEED_RESYNC;
+          set_thisflag (thisflag () | FLAG_NEED_RESYNC);
 
           /* Quit. */
           FUNCALL (keyboard_quit);
@@ -430,7 +430,7 @@ isearch (int dir, int regexp)
               astr_truncate (pattern, astr_len (pattern) - 1);
               cur = point_copy (start);
               set_buffer_pt (cur_bp (), start);
-              thisflag |= FLAG_NEED_RESYNC;
+              set_thisflag (thisflag () | FLAG_NEED_RESYNC);
             }
           else
             ding ();
@@ -512,7 +512,7 @@ isearch (int dir, int regexp)
       else
         last = true;
 
-      if (thisflag & FLAG_NEED_RESYNC)
+      if (thisflag () & FLAG_NEED_RESYNC)
         resync_redisplay (cur_wp ());
     }
 
@@ -538,7 +538,7 @@ Type @kbd{C-s} to search again forward, @kbd{C-r} to search again backward.
 @kbd{C-g} when search is successful aborts and moves point to starting point.
 +*/
 {
-  ok = isearch (ISEARCH_FORWARD, lastflag & FLAG_SET_UNIARG);
+  ok = isearch (ISEARCH_FORWARD, lastflag () & FLAG_SET_UNIARG);
 }
 END_DEFUN
 
@@ -552,7 +552,7 @@ Type @kbd{C-r} to search again backward, @kbd{C-s} to search again forward.
 @kbd{C-g} when search is successful aborts and moves point to starting point.
 +*/
 {
-  ok = isearch (ISEARCH_BACKWARD, lastflag & FLAG_SET_UNIARG);
+  ok = isearch (ISEARCH_BACKWARD, lastflag () & FLAG_SET_UNIARG);
 }
 END_DEFUN
 
@@ -564,7 +564,7 @@ Like ordinary incremental search except that your input
 is treated as a regexp.  See @kbd{M-x isearch-forward} for more info.
 +*/
 {
-  ok = isearch (ISEARCH_FORWARD, !(lastflag & FLAG_SET_UNIARG));
+  ok = isearch (ISEARCH_FORWARD, !(lastflag () & FLAG_SET_UNIARG));
 }
 END_DEFUN
 
@@ -576,7 +576,7 @@ Like ordinary incremental search except that your input
 is treated as a regexp.  See @kbd{M-x isearch-forward} for more info.
 +*/
 {
-  ok = isearch (ISEARCH_BACKWARD, !(lastflag & FLAG_SET_UNIARG));
+  ok = isearch (ISEARCH_BACKWARD, !(lastflag () & FLAG_SET_UNIARG));
 }
 END_DEFUN
 
@@ -616,7 +616,7 @@ what to do with it.
 
       if (!noask)
         {
-          if (thisflag & FLAG_NEED_RESYNC)
+          if (thisflag () & FLAG_NEED_RESYNC)
             resync_redisplay (cur_wp ());
           for (;;)
             {
@@ -659,7 +659,7 @@ what to do with it.
   free (find);
   free (repl);
 
-  if (thisflag & FLAG_NEED_RESYNC)
+  if (thisflag () & FLAG_NEED_RESYNC)
     resync_redisplay (cur_wp ());
 
   if (ok)

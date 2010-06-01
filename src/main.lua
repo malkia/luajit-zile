@@ -68,6 +68,20 @@ KBD_F11 = 282
 KBD_F12 = 283
 
 
+-- Miscellaneous stuff.
+
+-- Global flags, stored in thisflag and lastflag.
+FLAG_NEED_RESYNC    = 0x01 -- A resync is required.
+FLAG_QUIT           = 0x02 -- The user has asked to quit.
+FLAG_SET_UNIARG     = 0x04 -- The last command modified the universal arg variable `uniarg'.
+FLAG_UNIARG_EMPTY   = 0x08 -- Current universal arg is just C-u's with no number.
+FLAG_DEFINING_MACRO = 0x10 -- We are defining a macro.
+
+-- Zile font codes
+FONT_NORMAL = 0
+FONT_REVERSE = 1
+
+
 -- Zile command to Lua bindings
 
 leT = {data = "t"}
@@ -102,3 +116,7 @@ head_wp = nil
 cur_bp = nil
 -- The first buffer in list
 head_bp = nil
+
+-- The global editor flags.
+thisflag = 0
+lastflag = 0

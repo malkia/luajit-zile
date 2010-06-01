@@ -285,7 +285,7 @@ find_file (const char *filename)
   switch_to_buffer (bp);
   read_file (filename);
 
-  thisflag |= FLAG_NEED_RESYNC;
+  set_thisflag (thisflag () | FLAG_NEED_RESYNC);
 
   return true;
 }
@@ -852,7 +852,7 @@ Interactively, confirmation is required unless you supply a prefix argument.
 +*/
 {
   ok = write_buffer (cur_bp (), true,
-                     !LUA_NIL (arglist) && !(lastflag & FLAG_SET_UNIARG),
+                     !LUA_NIL (arglist) && !(lastflag () & FLAG_SET_UNIARG),
                      NULL, "Write file: ");
 }
 END_DEFUN
@@ -960,7 +960,7 @@ Offer to save each buffer, then kill this Zile process.
         break; /* We have found a modified buffer, so stop. */
       }
 
-  thisflag |= FLAG_QUIT;
+  set_thisflag (thisflag () | FLAG_QUIT);
 }
 END_DEFUN
 

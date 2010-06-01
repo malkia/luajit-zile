@@ -45,9 +45,6 @@ function term_addch (c)
   curses.stdscr ():addch (bit.band (c, bit.bnot (curses.A_ATTRIBUTES)))
 end
 
--- FIXME: Put next two lines in a better place
-FONT_NORMAL = 0
-FONT_REVERSE = 1
 function term_attrset (attr)
   curses.stdscr ():attrset (attr == FONT_REVERSE and curses.A_REVERSE or 0)
 end

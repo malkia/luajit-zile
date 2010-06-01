@@ -17,3 +17,11 @@ function window_pt (wp)
     end
   end
 end
+
+function window_top_visible (wp)
+  return window_pt (wp).n == wp.topdelta
+end
+
+function window_bottom_visible (wp)
+  return window_pt (wp).n + wp.eheight - wp.topdelta > wp.bp.last_line
+end

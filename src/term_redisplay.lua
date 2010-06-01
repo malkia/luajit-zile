@@ -217,7 +217,7 @@ function draw_window (topline, wp)
   end
 end
 
-function make_mode_line_flags (wp)
+function make_modeline_flags (wp)
   if wp.bp.modified and wp.bp.readonly then
     return "%*"
   elseif wp.bp.modified then
@@ -268,4 +268,60 @@ function calculate_start_column (wp)
 
   wp.start_column = 0
   point_screen_column = col
+end
+
+local function make_screen_pos (wp)
+  local tv = window_top_visible (wp)
+  local bv = window_bottom_visible (wp)
+
+  if tv and bv then
+    return "All"
+  elseif tv then
+    return "Top"
+  elseif bv then
+    return "Bot"
+  end
+  return string.fmt ("%2d%%", wp.pt.n / wp.bp.last_line * 100)
+end
+
+-- FIXME: local
+function draw_status_line (line, wp)
+  local pt = window_pt (wp)
+  term_attrset (FONT_REVERSE)
+  term_move (line, 0)
+  for i = 1, wp.ewidth do
+    term_addch (string.byte ('-'))
+  end
+
+  local eol_type
+  if cur_bp.eol == coding_eol_cr then
+    eol_type = "(Mac)"
+  elseif cur_bp.eol == coding_eol_crlf then
+    eol_type = "(DOS)"
+  else
+    eol_type = ":"
+  end
+
+  term_move (line, 0)
+
+  local bs = string.format ("(%d,%d)", pt.n + 1, get_goalc_bp (wp.bp, pt))
+  local as = string.format ("--%s%2s  %-15s   %s %-9s (Fundamental",
+                            eol_type, make_modeline_flags (wp), bp.name, make_screen_pos (wp), bs)
+
+  if bp.autofill then
+    as = as .. " Fill"
+  end
+  if bp.overwrite then
+    as = as .. " Ovwrt"
+  end
+  if bit.band (thisflag, FLAG_DEFINING_MACRO) ~= 0 then
+    as = as .. " Def"
+  end
+  if bp.isearch then
+    as = as .. " Isearch"
+  end
+  as = as .. ")"
+
+  term_addstr (string.sub (as, 1, term_width ()))
+  term_attrset (FONT_NORMAL)
 end

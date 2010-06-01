@@ -121,7 +121,7 @@ cancel_kbd_macro (void)
   macro_delete (cmd_mp);
   macro_delete (cur_mp);
   cmd_mp = cur_mp = LUA_REFNIL;
-  thisflag &= ~FLAG_DEFINING_MACRO;
+  set_thisflag (thisflag () & ~FLAG_DEFINING_MACRO);
 }
 
 DEFUN ("start-kbd-macro", start_kbd_macro)
@@ -132,7 +132,7 @@ Use @kbd{C-x )} to finish recording and make the macro available.
 Use @kbd{M-x name-last-kbd-macro} to give it a permanent name.
 +*/
 {
-  if (thisflag & FLAG_DEFINING_MACRO)
+  if (thisflag () & FLAG_DEFINING_MACRO)
     {
       minibuf_error ("Already defining a keyboard macro");
       return leNIL;
@@ -143,7 +143,7 @@ Use @kbd{M-x name-last-kbd-macro} to give it a permanent name.
 
   minibuf_write ("Defining keyboard macro...");
 
-  thisflag |= FLAG_DEFINING_MACRO;
+  set_thisflag (thisflag () | FLAG_DEFINING_MACRO);
   cur_mp = macro_new ();
 }
 END_DEFUN
@@ -155,13 +155,13 @@ The definition was started by @kbd{C-x (}.
 The macro is now available for use via @kbd{C-x e}.
 +*/
 {
-  if (!(thisflag & FLAG_DEFINING_MACRO))
+  if (!(thisflag () & FLAG_DEFINING_MACRO))
     {
       minibuf_error ("Not defining a keyboard macro");
       return leNIL;
     }
 
-  thisflag &= ~FLAG_DEFINING_MACRO;
+  set_thisflag (thisflag () & ~FLAG_DEFINING_MACRO);
 }
 END_DEFUN
 

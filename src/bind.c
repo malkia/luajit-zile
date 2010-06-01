@@ -152,7 +152,7 @@ do_binding_completion (astr as)
   size_t key;
   astr bs = astr_new ();
 
-  if (lastflag & FLAG_SET_UNIARG)
+  if (lastflag () & FLAG_SET_UNIARG)
     {
       int arg = last_uniarg;
 
@@ -170,7 +170,7 @@ do_binding_completion (astr as)
     }
 
   minibuf_write ("%s%s%s",
-                 lastflag & (FLAG_SET_UNIARG | FLAG_UNIARG_EMPTY) ? "C-u " : "",
+                 lastflag () & (FLAG_SET_UNIARG | FLAG_UNIARG_EMPTY) ? "C-u " : "",
                  astr_cstr (bs),
                  astr_cstr (as));
   astr_delete (bs);
@@ -281,13 +281,13 @@ process_command (void)
   gl_list_t keys = get_key_sequence ();
   const char * name = get_function_by_keys (keys);
 
-  thisflag = lastflag & FLAG_DEFINING_MACRO;
+  set_thisflag (lastflag () & FLAG_DEFINING_MACRO);
   minibuf_clear ();
 
   if (function_exists (name))
     {
       set_this_command (name);
-      execute_function (name, last_uniarg, (lastflag & FLAG_SET_UNIARG) != 0, LUA_NOREF);
+      execute_function (name, last_uniarg, (lastflag () & FLAG_SET_UNIARG) != 0, LUA_NOREF);
       _last_command = _this_command;
     }
   else
@@ -300,16 +300,16 @@ process_command (void)
 
   /* Only add keystrokes if we were already in macro defining mode
      before the function call, to cope with start-kbd-macro. */
-  if (lastflag & FLAG_DEFINING_MACRO && thisflag & FLAG_DEFINING_MACRO)
+  if (lastflag () & FLAG_DEFINING_MACRO && thisflag () & FLAG_DEFINING_MACRO)
     add_cmd_to_macro ();
 
-  if (!(thisflag & FLAG_SET_UNIARG))
+  if (!(thisflag () & FLAG_SET_UNIARG))
     last_uniarg = 1;
 
   if (strcmp (last_command (), "undo") != 0)
     set_buffer_next_undop (cur_bp (), get_buffer_last_undop (cur_bp ()));
 
-  lastflag = thisflag;
+  set_lastflag (thisflag ());
 }
 
 void
@@ -477,7 +477,7 @@ message in the buffer.
         {
           astr as = astr_new ();
           astr_afmt (as, "%s is on %s", name, bindings);
-          if (lastflag & FLAG_SET_UNIARG)
+          if (lastflag () & FLAG_SET_UNIARG)
             bprintf ("%s", astr_cstr (as));
           else
             minibuf_write ("%s", astr_cstr (as));

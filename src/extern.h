@@ -207,7 +207,11 @@ int cur_bp (void);
 int head_bp (void);
 void set_cur_bp (int bp);
 void set_head_bp (int bp);
-extern int thisflag, lastflag, last_uniarg;
+int thisflag (void);
+int lastflag (void);
+void set_thisflag (int f);
+void set_lastflag (int f);
+extern int last_uniarg;
 
 /* marker.c --------------------------------------------------------------- */
 #define FIELD(cty, lty, field)                  \

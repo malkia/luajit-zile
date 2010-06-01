@@ -127,9 +127,9 @@ Read function name, then read its arguments and call it.
   const char *name;
   astr msg = astr_new ();
 
-  if (lastflag & FLAG_SET_UNIARG)
+  if (lastflag () & FLAG_SET_UNIARG)
     {
-      if (lastflag & FLAG_UNIARG_EMPTY)
+      if (lastflag () & FLAG_UNIARG_EMPTY)
         astr_afmt (msg, "C-u ");
       else
         astr_afmt (msg, "%d ", uniarg);

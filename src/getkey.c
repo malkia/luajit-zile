@@ -51,7 +51,7 @@ xgetkey (int mode, size_t timeout)
   (void) CLUE_DO (L, "key = term_xgetkey (mode, timeout)");
   CLUE_GET (L, key, integer, _last_key);
 
-  if (thisflag & FLAG_DEFINING_MACRO)
+  if (thisflag () & FLAG_DEFINING_MACRO)
     add_key_to_cmd (_last_key);
 
   return _last_key;
@@ -94,6 +94,6 @@ void ungetkey (size_t key)
 {
   pushkey (key);
 
-  if (thisflag & FLAG_DEFINING_MACRO)
+  if (thisflag () & FLAG_DEFINING_MACRO)
     remove_key_from_cmd ();
 }

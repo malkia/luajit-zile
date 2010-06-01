@@ -177,7 +177,7 @@ enum
   INT_INIT (name)                                                       \
   else                                                                  \
     {                                                                   \
-      if (!(lastflag & FLAG_SET_UNIARG) && !is_uniarg &&                \
+      if (!(lastflag () & FLAG_SET_UNIARG) && !is_uniarg &&             \
           arglist != LUA_NOREF)                                         \
         noarg = true;                                                   \
       name = uniarg;                                                    \

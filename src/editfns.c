@@ -166,7 +166,7 @@ eolp (void)
 void
 ding (void)
 {
-  if (thisflag & FLAG_DEFINING_MACRO)
+  if (thisflag () & FLAG_DEFINING_MACRO)
     cancel_kbd_macro ();
 
   if (get_variable_bool ("ring-bell") && cur_wp () != LUA_REFNIL)
