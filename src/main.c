@@ -461,7 +461,7 @@ main (int argc, char **argv)
 
   /* Refresh minibuffer in case there was an error that couldn't be
      written during startup */
-  minibuf_refresh ();
+  (void) CLUE_DO (L, "minibuf_refresh ()");
 
   /* Run the main loop. */
   while (!(thisflag () & FLAG_QUIT))

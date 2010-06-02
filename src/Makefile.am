@@ -99,6 +99,7 @@ zile_LUA =						\
 	line.lua					\
 	lisp.lua					\
 	marker.lua					\
+	minibuf.lua					\
 	point.lua					\
 	undo.lua					\
 	variables.lua					\
