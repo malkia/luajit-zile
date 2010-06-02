@@ -76,8 +76,7 @@ function show_splash_screen (splash)
   end
 end
 
--- FIXME: local
-function make_char_printable (c)
+local function make_char_printable (c)
   if c == 0 then
     return "^@"
   elseif c > 0 and c <= 27 then
@@ -178,8 +177,7 @@ local function calculate_highlight_region (wp, rp)
   return true
 end
 
--- FIXME: local
-function draw_window (topline, wp)
+local function draw_window (topline, wp)
   local rp = {}
   local highlight = calculate_highlight_region (wp, rp)
 
@@ -232,8 +230,7 @@ local point_screen_column = 0
 
 -- This function calculates the best start column to draw if the line
 -- at point has to be truncated.
--- FIXME: local
-function calculate_start_column (wp)
+local function calculate_start_column (wp)
   local col = 0
   local t = tab_width (wp.bp)
   local pt = window_pt (wp)
@@ -283,8 +280,7 @@ local function make_screen_pos (wp)
   return string.fmt ("%2d%%", wp.pt.n / wp.bp.last_line * 100)
 end
 
--- FIXME: local
-function draw_status_line (line, wp)
+local function draw_status_line (line, wp)
   local pt = window_pt (wp)
   term_attrset (FONT_REVERSE)
   term_move (line, 0)
