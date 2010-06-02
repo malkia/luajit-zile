@@ -71,7 +71,7 @@ popup_completion (int cp)
   if (!get_completion_close (cp))
     (void) CLUE_DO (L, "cp.old_bp = cur_bp");
 
-  term_redisplay ();
+  (void) CLUE_DO (L, "term_redisplay ()");
 }
 
 char *

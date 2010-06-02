@@ -73,8 +73,7 @@ zile_BASE_SOURCES =					\
 	minibuf.c					\
 	point.c						\
 	window.h					\
-	term_minibuf.c					\
-	term_redisplay.c
+	term_minibuf.c
 
 clue_SOURCES =						\
 	clue.h

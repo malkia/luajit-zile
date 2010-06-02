@@ -475,7 +475,7 @@ main (int argc, char **argv)
     {
       if (lastflag () & FLAG_NEED_RESYNC)
         resync_redisplay (cur_wp ());
-      term_redisplay ();
+      (void) CLUE_DO (L, "term_redisplay ()");
       (void) CLUE_DO (L, "term_refresh ()");
       process_command ();
     }

@@ -283,12 +283,6 @@ void term_minibuf_write (const char *fmt);
 char *term_minibuf_read (const char *prompt, const char *value, size_t pos,
                          int cp, int hp);
 
-/* term_redisplay.c ------------------------------------------------------- */
-void term_set_size (size_t cols, size_t rows);
-void term_redisplay (void);
-void term_full_redisplay (void);
-void show_splash_screen (const char *splash);
-
 /* undo.c ----------------------------------------------------------------- */
 int undo_nosave (void);
 void set_undo_nosave (int nosave);

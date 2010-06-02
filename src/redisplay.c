@@ -128,6 +128,6 @@ The desired position of point is always relative to the current window.
 +*/
 {
   recenter (cur_wp ());
-  term_full_redisplay ();
+  (void) CLUE_DO (L, "term_full_redisplay ()");
 }
 END_DEFUN

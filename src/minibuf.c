@@ -58,7 +58,7 @@ minibuf_vwrite (const char *fmt, va_list ap)
       (void) CLUE_DO (L, "term_minibuf_write (minibuf_contents)");
 
       /* Redisplay (and leave the cursor in the correct position). */
-      term_redisplay ();
+      (void) CLUE_DO (L, "term_redisplay ()");
       (void) CLUE_DO (L, "term_refresh ()");
     }
 }

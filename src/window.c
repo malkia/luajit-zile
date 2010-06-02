@@ -353,7 +353,7 @@ completion_scroll_up (void)
     gotobob ();
   set_current_window (old_wp);
 
-  term_redisplay ();
+  (void) CLUE_DO (L, "term_redisplay ()");
 }
 
 /*
@@ -375,7 +375,7 @@ completion_scroll_down (void)
     }
   set_current_window (old_wp);
 
-  term_redisplay ();
+  (void) CLUE_DO (L, "term_redisplay ()");
 }
 
 bool

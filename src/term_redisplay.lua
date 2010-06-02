@@ -228,8 +228,7 @@ function make_modeline_flags (wp)
   return "--"
 end
 
--- FIXME: local
-point_screen_column = 0
+local point_screen_column = 0
 
 -- This function calculates the best start column to draw if the line
 -- at point has to be truncated.
@@ -324,4 +323,40 @@ function draw_status_line (line, wp)
 
   term_addstr (string.sub (as, 1, term_width ()))
   term_attrset (FONT_NORMAL)
+end
+
+local cur_topline
+
+function term_redisplay ()
+  local topline = 0
+
+  cur_topline = topline
+
+  calculate_start_column (cur_wp)
+
+  local wp = head_wp
+  while wp do
+    if wp == cur_wp then
+      cur_topline = topline
+    end
+
+    draw_window (topline, wp)
+
+    -- Draw the status line only if there is available space after the
+    -- buffer text space.
+    if wp.fheight > wp.eheight then
+      draw_status_line (topline + wp.eheight, wp)
+    end
+
+    topline = topline + wp.fheight
+    wp = wp.next
+  end
+
+  -- Redraw cursor.
+  term_move (cur_topline + cur_wp.topdelta, point_screen_column)
+end
+
+function term_full_redisplay ()
+  term_clear ()
+  term_redisplay ()
 end

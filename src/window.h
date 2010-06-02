@@ -19,7 +19,7 @@
    Free Software Foundation, Fifth Floor, 51 Franklin Street, Boston,
    MA 02111-1301, USA.  */
 
-FIELD(int, integer, next)		/* The next window in window list. */
+TABLE_FIELD(next)			/* The next window in window list. */
 TABLE_FIELD(bp)				/* The buffer displayed in window. */
 FIELD(size_t, integer, topdelta)	/* The top line delta. */
 FIELD(int, integer, lastpointn)		/* The last point line number. */
