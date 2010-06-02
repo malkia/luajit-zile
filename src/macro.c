@@ -59,17 +59,6 @@ macro_new (void)
 }
 
 static void
-macro_delete (int mp)
-{
-  if (mp)
-    {
-      gl_list_free (get_macro_keys (mp));
-      free ((char *) get_macro_name (mp));
-      luaL_unref (L, LUA_REGISTRYINDEX, mp);
-    }
-}
-
-static void
 add_macro_key (int mp, size_t key)
 {
   gl_list_add_last (get_macro_keys (mp), (void *) key);
@@ -95,7 +84,6 @@ add_cmd_to_macro (void)
 {
   assert (cmd_mp);
   append_key_list (cur_mp, cmd_mp);
-  macro_delete (cmd_mp);
   cmd_mp = LUA_REFNIL;
 }
 
@@ -118,8 +106,6 @@ remove_key_from_cmd (void)
 void
 cancel_kbd_macro (void)
 {
-  macro_delete (cmd_mp);
-  macro_delete (cur_mp);
   cmd_mp = cur_mp = LUA_REFNIL;
   set_thisflag (thisflag () & ~FLAG_DEFINING_MACRO);
 }
