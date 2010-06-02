@@ -69,7 +69,7 @@ search_node (int tree, size_t key)
   CLUE_SET (L, key, integer, key);
   lua_rawgeti (L, LUA_REGISTRYINDEX, tree);
   lua_setglobal (L, "tree");
-  (void) CLUE_DO (L, "b = nil; for i = 1, #tree.vec do if tree.vec[i].key == key then b = tree.vec[i] end end");
+  CLUE_DO (L, "b = nil; for i = 1, #tree.vec do if tree.vec[i].key == key then b = tree.vec[i] end end");
   lua_getglobal (L, "b");
   return luaL_ref (L, LUA_REGISTRYINDEX);
 }
@@ -84,7 +84,7 @@ add_node (int tree, int p)
   lua_setglobal (L, "tree");
   lua_rawgeti (L, LUA_REGISTRYINDEX, p);
   lua_setglobal (L, "p");
-  (void) CLUE_DO (L, "tree.func = nil; table.insert (tree.vec, p)");
+  CLUE_DO (L, "tree.func = nil; table.insert (tree.vec, p)");
 }
 
 static void
@@ -336,7 +336,7 @@ init_default_bindings (void)
   gl_list_free (keys);
 
   /* FIXME: Load from path */
-  (void) CLUE_DO (L, "lisp_loadfile (\"default-bindings.el\")");
+  CLUE_DO (L, "lisp_loadfile (\"default-bindings.el\")");
 }
 
 DEFUN_ARGS ("global-set-key", global_set_key,
@@ -400,13 +400,13 @@ walk_bindings_tree (int tree, gl_list_t keys,
 
   lua_rawgeti (L, LUA_REGISTRYINDEX, tree);
   lua_setglobal (L, "tree");
-  (void) CLUE_DO (L, "s = nil; if tree.key then s = chordtostr (tree.key) end");
+  CLUE_DO (L, "s = nil; if tree.key then s = chordtostr (tree.key) end");
   CLUE_GET (L, s, string, s);
   if (s != NULL)
     gl_list_add_last (keys, astr_new_cstr (s));
 
   lua_rawgeti (L, LUA_REGISTRYINDEX, tree);
-  (void) CLUE_DO (L, "vecnum = #tree.vec");
+  CLUE_DO (L, "vecnum = #tree.vec");
   CLUE_GET (L, vecnum, integer, vecnum);
   for (i = 1; i <= vecnum; ++i)
     {
@@ -414,7 +414,7 @@ walk_bindings_tree (int tree, gl_list_t keys,
       CLUE_SET (L, i, integer, i);
       lua_rawgeti (L, LUA_REGISTRYINDEX, tree);
       lua_setglobal (L, "tree");
-      (void) CLUE_DO (L, "p = tree.vec[i]");
+      CLUE_DO (L, "p = tree.vec[i]");
       lua_getglobal (L, "p");
       p = luaL_ref (L, LUA_REGISTRYINDEX);
       if (get_binding_func (p) != NULL)
@@ -466,9 +466,9 @@ message in the buffer.
   if (name && function_exists (name))
     {
       CLUE_SET (L, name, string, name);
-      (void) CLUE_DO (L, "g = {f = name, bindings = \"\"}");
-      (void) CLUE_DO (L, "walk_bindings (root_bindings, gather_bindings, g)");
-      (void) CLUE_DO (L, "bindings = g.bindings");
+      CLUE_DO (L, "g = {f = name, bindings = \"\"}");
+      CLUE_DO (L, "walk_bindings (root_bindings, gather_bindings, g)");
+      CLUE_DO (L, "bindings = g.bindings");
       CLUE_GET (L, bindings, string, bindings);
 
       if (strlen (bindings) == 0)

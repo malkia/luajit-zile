@@ -34,7 +34,7 @@ set_variable (const char *var, const char *val)
   bool local = false;
 
   CLUE_SET (L, var, string, var);
-  (void) CLUE_DO (L, "islocal = main_vars[var].islocal");
+  CLUE_DO (L, "islocal = main_vars[var].islocal");
   CLUE_GET (L, islocal, boolean, local);
   if (local)
     {
@@ -98,7 +98,7 @@ get_variable (const char *var)
 {
   const char *val;
   CLUE_SET (L, var, string, var);
-  (void) CLUE_DO (L, "val = get_variable_bp (cur_bp, var)");
+  CLUE_DO (L, "val = get_variable_bp (cur_bp, var)");
   CLUE_GET (L, val, string, val);
   return val;
 }
@@ -112,7 +112,7 @@ get_variable_number_bp (int bp, const char *var)
   lua_rawgeti (L, LUA_REGISTRYINDEX, bp);
   lua_setglobal (L, "bp");
   CLUE_SET (L, var, string, var);
-  (void) CLUE_DO (L, "val = get_variable_bp (bp, var)");
+  CLUE_DO (L, "val = get_variable_bp (bp, var)");
   CLUE_GET (L, val, string, s);
 
   if (s)

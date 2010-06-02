@@ -46,7 +46,7 @@ push_mark (void)
   else
     { /* Save an invalid mark.  */
       int m;
-      (void) CLUE_DO (L, "m = marker_new ()");
+      CLUE_DO (L, "m = marker_new ()");
       lua_getglobal (L, "m");
       m = luaL_ref (L, LUA_REGISTRYINDEX);
       move_marker (m, cur_bp (), point_min ());
@@ -170,5 +170,5 @@ ding (void)
     cancel_kbd_macro ();
 
   if (get_variable_bool ("ring-bell") && cur_wp () != LUA_REFNIL)
-    (void) CLUE_DO (L, "term_beep ()");
+    CLUE_DO (L, "term_beep ()");
 }

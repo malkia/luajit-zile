@@ -64,7 +64,7 @@ undo_save (int type, int pt, size_t osize, size_t size)
   lua_setglobal (L, "pt");
   CLUE_SET (L, os, integer, osize);
   CLUE_SET (L, s, integer, size);
-  (void) CLUE_DO (L, "undo_save (t, pt, os, s)");
+  CLUE_DO (L, "undo_save (t, pt, os, s)");
 }
 
 /*

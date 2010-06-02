@@ -249,7 +249,7 @@ Make the selected window fill the screen.
   int wp, nextwp;
   size_t w, h;
 
-  (void) CLUE_DO (L, "w, h = term_width (), term_height ()");
+  CLUE_DO (L, "w, h = term_width (), term_height ()");
   CLUE_GET (L, w, integer, w);
   CLUE_GET (L, h, integer, h);
 
@@ -284,7 +284,7 @@ create_scratch_window (void)
   int bp = create_scratch_buffer ();
   size_t w, h;
 
-  (void) CLUE_DO (L, "w, h = term_width (), term_height ()");
+  CLUE_DO (L, "w, h = term_width (), term_height ()");
   CLUE_GET (L, w, integer, w);
   CLUE_GET (L, h, integer, h);
 
@@ -353,7 +353,7 @@ completion_scroll_up (void)
     gotobob ();
   set_current_window (old_wp);
 
-  (void) CLUE_DO (L, "term_redisplay ()");
+  CLUE_DO (L, "term_redisplay ()");
 }
 
 /*
@@ -375,7 +375,7 @@ completion_scroll_down (void)
     }
   set_current_window (old_wp);
 
-  (void) CLUE_DO (L, "term_redisplay ()");
+  CLUE_DO (L, "term_redisplay ()");
 }
 
 bool

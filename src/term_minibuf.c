@@ -63,7 +63,7 @@ do_minibuf_read (const char *prompt, const char *value, size_t pos,
       CLUE_SET (L, as, string, astr_cstr (as));
       CLUE_SET (L, s, string, s);
       CLUE_SET (L, pos, integer, pos);
-      (void) CLUE_DO (L, "draw_minibuf_read (prompt, as, s, pos)");
+      CLUE_DO (L, "draw_minibuf_read (prompt, as, s, pos)");
 
       thistab = -1;
 
@@ -75,14 +75,14 @@ do_minibuf_read (const char *prompt, const char *value, size_t pos,
           FUNCALL (suspend_emacs);
           break;
         case KBD_RET:
-          (void) CLUE_DO (L, "term_move (term_height () - 1, 0)");
-          (void) CLUE_DO (L, "term_clrtoeol ()");
+          CLUE_DO (L, "term_move (term_height () - 1, 0)");
+          CLUE_DO (L, "term_clrtoeol ()");
           if (saved)
             astr_delete (saved);
           return as;
         case KBD_CANCEL:
-          (void) CLUE_DO (L, "term_move (term_height () - 1, 0)");
-          (void) CLUE_DO (L, "term_clrtoeol ()");
+          CLUE_DO (L, "term_move (term_height () - 1, 0)");
+          CLUE_DO (L, "term_clrtoeol ()");
           if (saved)
             astr_delete (saved);
           astr_delete (as);
@@ -168,7 +168,7 @@ do_minibuf_read (const char *prompt, const char *value, size_t pos,
 
               lua_rawgeti (L, LUA_REGISTRYINDEX, hp);
               lua_setglobal (L, "hp");
-              (void) CLUE_DO (L, "elem = previous_history_element (hp)");
+              CLUE_DO (L, "elem = previous_history_element (hp)");
               CLUE_GET (L, elem, string, elem);
 
               if (elem)
@@ -188,7 +188,7 @@ do_minibuf_read (const char *prompt, const char *value, size_t pos,
 
               lua_rawgeti (L, LUA_REGISTRYINDEX, hp);
               lua_setglobal (L, "hp");
-              (void) CLUE_DO (L, "elem = next_history_element (hp)");
+              CLUE_DO (L, "elem = next_history_element (hp)");
               CLUE_GET (L, elem, string, elem);
 
               if (elem)
@@ -220,7 +220,7 @@ do_minibuf_read (const char *prompt, const char *value, size_t pos,
               lua_rawgeti (L, LUA_REGISTRYINDEX, cp);
               lua_setglobal (L, "cp");
               CLUE_SET (L, search, string, astr_cstr (as));
-              (void) CLUE_DO (L, "ret = completion_try (cp, search)");
+              CLUE_DO (L, "ret = completion_try (cp, search)");
               CLUE_GET (L, ret, integer, thistab);
 
               switch (thistab)
@@ -278,7 +278,7 @@ term_minibuf_read (const char *prompt, const char *value, size_t pos,
     {
       lua_rawgeti (L, LUA_REGISTRYINDEX, hp);
       lua_setglobal (L, "hp");
-      (void) CLUE_DO (L, "prepare_history (hp)");
+      CLUE_DO (L, "prepare_history (hp)");
     }
 
   as = do_minibuf_read (prompt, value, pos, cp, hp);

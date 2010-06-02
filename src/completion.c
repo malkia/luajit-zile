@@ -49,7 +49,7 @@ write_completion (va_list ap)
   lua_rawgeti (L, LUA_REGISTRYINDEX, cp);
   lua_setglobal (L, "cp");
   CLUE_SET (L, width, integer, width);
-  (void) CLUE_DO (L, "s = completion_write (cp, width)");
+  CLUE_DO (L, "s = completion_write (cp, width)");
   CLUE_GET (L, s, string, s);
   bprintf ("%s", s);
 }
@@ -62,16 +62,16 @@ popup_completion (int cp)
 {
   lua_rawgeti (L, LUA_REGISTRYINDEX, cp);
   lua_setglobal (L, "cp");
-  (void) CLUE_DO (L, "cp.poppedup = true");
+  CLUE_DO (L, "cp.poppedup = true");
   if (get_window_next (head_wp ()) == LUA_REFNIL)
-    (void) CLUE_DO (L, "cp.close = true");
+    CLUE_DO (L, "cp.close = true");
 
   write_temp_buffer ("*Completions*", true, write_completion, cp, get_window_ewidth (cur_wp ()));
 
   if (!get_completion_close (cp))
-    (void) CLUE_DO (L, "cp.old_bp = cur_bp");
+    CLUE_DO (L, "cp.old_bp = cur_bp");
 
-  (void) CLUE_DO (L, "term_redisplay ()");
+  CLUE_DO (L, "term_redisplay ()");
 }
 
 char *
@@ -81,8 +81,8 @@ minibuf_read_variable_name (char *fmt, ...)
   char *ms;
   int cp;
 
-  (void) CLUE_DO (L, "cp = completion_new ()");
-  (void) CLUE_DO (L, "for v in pairs (main_vars) do table.insert (cp.completions, v) end");
+  CLUE_DO (L, "cp = completion_new ()");
+  CLUE_DO (L, "for v in pairs (main_vars) do table.insert (cp.completions, v) end");
 
   lua_getglobal (L, "cp");
   cp = luaL_ref (L, LUA_REGISTRYINDEX);
@@ -102,11 +102,11 @@ make_buffer_completion (void)
 {
   int bp;
 
-  (void) CLUE_DO (L, "cp = completion_new ()");
+  CLUE_DO (L, "cp = completion_new ()");
   for (bp = head_bp (); bp != LUA_REFNIL; bp = get_buffer_next (bp))
     {
       CLUE_SET (L, s, string, get_buffer_name (bp));
-      (void) CLUE_DO (L, "table.insert (cp.completions, s)");
+      CLUE_DO (L, "table.insert (cp.completions, s)");
     }
 
   lua_getglobal (L, "cp");

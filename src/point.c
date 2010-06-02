@@ -48,7 +48,7 @@
 int
 point_new (void)
 {
-  (void) CLUE_DO (L, "pt = {o = 0, n = 0, p = {}}");
+  CLUE_DO (L, "pt = {o = 0, n = 0, p = {}}");
   lua_getglobal (L, "pt");
   return luaL_ref (L, LUA_REGISTRYINDEX);
 }
@@ -73,7 +73,7 @@ point_copy (int pt)
 {
   lua_rawgeti (L, LUA_REGISTRYINDEX, pt);
   lua_setglobal (L, "pt");
-  (void) CLUE_DO (L, "newpt = table.clone (pt)");
+  CLUE_DO (L, "newpt = table.clone (pt)");
   lua_getglobal (L, "newpt");
   return luaL_ref (L, LUA_REGISTRYINDEX);
 }

@@ -38,7 +38,7 @@ function_exists (const char *name)
 {
   bool exists;
   CLUE_SET (L, name, string, name);
-  (void) CLUE_DO (L, "exists = usercmd[name] ~= nil");
+  CLUE_DO (L, "exists = usercmd[name] ~= nil");
   CLUE_GET (L, exists, boolean, exists);
   return exists;
 }
@@ -49,7 +49,7 @@ get_function_interactive (const char *name)
 {
   bool i;
   CLUE_SET (L, name, string, name);
-  (void) CLUE_DO (L, "i = usercmd[name].interactive");
+  CLUE_DO (L, "i = usercmd[name].interactive");
   CLUE_GET (L, i, boolean, i);
   return i;
   /* FIXME: return f ? f->interactive : -1; */
@@ -60,7 +60,7 @@ get_function_doc (const char *name)
 {
   const char *doc;
   CLUE_SET (L, name, string, name);
-  (void) CLUE_DO (L, "doc = usercmd[name].doc");
+  CLUE_DO (L, "doc = usercmd[name].doc");
   CLUE_GET (L, doc, string, doc);
   return doc;
   /* FIXME: return f ? f->doc : NULL; */
@@ -102,7 +102,7 @@ execute_function (const char *name, int uniarg, bool is_uniarg, le list)
 
   assert (name);
   CLUE_SET (L, name, string, name);
-  (void) CLUE_DO (L, "func = usercmd[name] and usercmd[name].func or nil");
+  CLUE_DO (L, "func = usercmd[name] and usercmd[name].func or nil");
   CLUE_GET (L, func, lightuserdata, func);
 
   if (func)
@@ -157,11 +157,11 @@ minibuf_read_function_name (const char *fmt, ...)
   char *ms;
   int cp;
 
-  (void) CLUE_DO (L, "cp = completion_new ()");
+  CLUE_DO (L, "cp = completion_new ()");
   lua_getglobal (L, "cp");
   cp = luaL_ref (L, LUA_REGISTRYINDEX);
 
-  (void) CLUE_DO (L, "for name, func in pairs (usercmd) do if func.interactive then table.insert (cp.completions, name) end end");
+  CLUE_DO (L, "for name, func in pairs (usercmd) do if func.interactive then table.insert (cp.completions, name) end end");
   add_macros_to_list (cp);
 
   va_start (ap, fmt);
@@ -208,7 +208,7 @@ init_lisp (void)
   lua_pushlightuserdata (L, F_ ## c_name);              \
   lua_setglobal (L, "ptr");                             \
   CLUE_SET (L, name, string, zile_name);                \
-  (void) CLUE_DO (L, "usercmd[name].func = ptr");
+  CLUE_DO (L, "usercmd[name].func = ptr");
 #include "tbl_funcs.h"
 #undef X
 }

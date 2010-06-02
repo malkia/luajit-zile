@@ -233,7 +233,7 @@ intercalate_newline (void)
   CLUE_SET (L, o, integer, get_point_o (get_buffer_pt (cur_bp ())));
   lua_rawgeti (L, LUA_REGISTRYINDEX, get_point_p (get_buffer_pt (cur_bp ())));
   lua_setglobal (L, "l");
-  (void) CLUE_DO (L, "line_insert (l, string.sub (s, o + 1))");
+  CLUE_DO (L, "line_insert (l, string.sub (s, o + 1))");
   set_buffer_last_line (cur_bp (), get_buffer_last_line (cur_bp ()) + 1);
   as = astr_new_cstr (get_line_text (get_point_p (get_buffer_pt (cur_bp ()))));
   astr_truncate (as, get_point_o (get_buffer_pt (cur_bp ())));
@@ -493,7 +493,7 @@ delete_char (void)
       astr_delete (bs);
       lua_rawgeti (L, LUA_REGISTRYINDEX, oldlp);
       lua_setglobal (L, "l");
-      (void) CLUE_DO (L, "line_remove (l)");
+      CLUE_DO (L, "line_remove (l)");
 
       adjust_markers (get_point_p (get_buffer_pt (cur_bp ())), oldlp, oldlen, -1, 0);
       set_buffer_last_line (cur_bp (), get_buffer_last_line (cur_bp ()) - 1);

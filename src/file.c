@@ -81,7 +81,7 @@ expand_path (astr path)
   const char *s;
 
   CLUE_SET (L, path, string, astr_cstr (path));
-  (void) CLUE_DO (L, "path = normalize_path (path)");
+  CLUE_DO (L, "path = normalize_path (path)");
   CLUE_GET (L, path, string, s);
   astr_cpy_cstr (path, s);
 
@@ -94,7 +94,7 @@ compact_path (astr path)
   const char *s;
 
   CLUE_SET (L, path, string, astr_cstr (path));
-  (void) CLUE_DO (L, "path = compact_path (path)");
+  CLUE_DO (L, "path = compact_path (path)");
   CLUE_GET (L, path, string, s);
   astr_cpy_cstr (path, s);
 
@@ -237,7 +237,7 @@ read_file (const char *filename)
                 {
                   lua_rawgeti (L, LUA_REGISTRYINDEX, lp);
                   lua_setglobal (L, "l");
-                  (void) CLUE_DO (L, "n = line_insert (l, '')");
+                  CLUE_DO (L, "n = line_insert (l, '')");
                   lua_getglobal (L, "n");
                   luaL_unref (L, LUA_REGISTRYINDEX, lp);
                   lp = luaL_ref (L, LUA_REGISTRYINDEX);
@@ -808,7 +808,7 @@ write_buffer (int bp, bool needname, bool confirm,
           set_buffer_modified (bp, false);
           lua_rawgeti (L, LUA_REGISTRYINDEX, get_buffer_last_undop (bp));
           lua_setglobal (L, "up");
-          (void) CLUE_DO (L, "undo_set_unchanged (up)");
+          CLUE_DO (L, "undo_set_unchanged (up)");
         }
       else
         ok = leNIL;

@@ -152,8 +152,8 @@ about_screen (void)
   if (!get_variable_bool ("inhibit-splash-screen"))
     {
       CLUE_SET (L, splash, string, about_splash_str);
-      (void) CLUE_DO (L, "show_splash_screen (splash)");
-      (void) CLUE_DO (L, "term_refresh ()");
+      CLUE_DO (L, "show_splash_screen (splash)");
+      CLUE_DO (L, "term_refresh ()");
       waitkey (20 * 10);
     }
 }
@@ -268,16 +268,9 @@ main (int argc, char **argv)
 
   /* Load Lua files. */
   /* FIXME: Use a single absolute path for either the build or install directory. */
-  (void) CLUE_DO (L, "package.path = \"" PATH_DATA "/?.lua;?.lua\"");
+  CLUE_DO (L, "package.path = \"" PATH_DATA "/?.lua;?.lua\"");
 #define X(file)                                                   \
-  if (CLUE_DO (L, "require (\"" file "\")"))                      \
-    {                                                             \
-      fprintf (stderr,                                            \
-               "%s: " PACKAGE_NAME                                \
-               " could not load Lua library `" file "'\n",        \
-               prog_name);                                        \
-      zile_exit (false);                                          \
-    }
+  CLUE_DO (L, "require (\"" file "\")");
 #include "loadlua.h"
 #undef X
 
@@ -384,7 +377,7 @@ main (int argc, char **argv)
   init_default_bindings ();
   init_minibuf ();
 
-  (void) CLUE_DO (L, "term_init ()");
+  CLUE_DO (L, "term_init ()");
 
   /* Create the `*scratch*' buffer, so that initialisation commands
      that act on a buffer have something to act on. */
@@ -406,7 +399,7 @@ main (int argc, char **argv)
         {
           astr_cat_cstr (as, "/." PACKAGE);
           CLUE_SET (L, arg, string, astr_cstr (as));
-          (void) CLUE_DO (L, "lisp_loadfile (arg)");
+          CLUE_DO (L, "lisp_loadfile (arg)");
           astr_delete (as);
         }
     }
@@ -434,7 +427,7 @@ main (int argc, char **argv)
           break;
         case ARG_LOADFILE:
           CLUE_SET (L, arg, string, arg);
-          (void) CLUE_DO (L, "ok = lisp_loadfile (arg)");
+          CLUE_DO (L, "ok = lisp_loadfile (arg)");
           CLUE_GET (L, ok, boolean, ok);
           if (!ok)
             minibuf_error ("Cannot open load file: %s\n", arg);
@@ -461,20 +454,20 @@ main (int argc, char **argv)
 
   /* Refresh minibuffer in case there was an error that couldn't be
      written during startup */
-  (void) CLUE_DO (L, "minibuf_refresh ()");
+  CLUE_DO (L, "minibuf_refresh ()");
 
   /* Run the main loop. */
   while (!(thisflag () & FLAG_QUIT))
     {
       if (lastflag () & FLAG_NEED_RESYNC)
         resync_redisplay (cur_wp ());
-      (void) CLUE_DO (L, "term_redisplay ()");
-      (void) CLUE_DO (L, "term_refresh ()");
+      CLUE_DO (L, "term_redisplay ()");
+      CLUE_DO (L, "term_refresh ()");
       process_command ();
     }
 
   /* Tidy and close the terminal. */
-  (void) CLUE_DO (L, "term_finish ()");
+  CLUE_DO (L, "term_finish ()");
 
   return 0;
 }

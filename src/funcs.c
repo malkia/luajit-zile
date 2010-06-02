@@ -286,7 +286,7 @@ Just C-u as argument means to use the current column.
       astr as = astr_new ();
       astr_afmt (as, "(set-variable \"fill-column\" \"%s\")", buf);
       CLUE_SET (L, lisp, string, astr_cstr (as));
-      (void) CLUE_DO (L, "lisp_loadstring (lisp)");
+      CLUE_DO (L, "lisp_loadstring (lisp)");
       astr_delete (as);
     }
 

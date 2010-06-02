@@ -54,7 +54,7 @@ size_t
 get_goalc (void)
 {
   size_t goalc;
-  (void) CLUE_DO (L, "goalc = get_goalc_bp (cur_bp, cur_bp.pt)");
+  CLUE_DO (L, "goalc = get_goalc_bp (cur_bp, cur_bp.pt)");
   CLUE_GET (L, goalc, integer, goalc);
   return goalc;
 }

@@ -49,14 +49,14 @@ resize_windows (void)
   int wp;
   int hdelta;
   size_t h;
-  (void) CLUE_DO (L, "w = term_height ()");
+  CLUE_DO (L, "w = term_height ()");
   CLUE_GET (L, h, integer, h);
 
   /* Resize windows horizontally. */
   for (wp = head_wp (); wp != LUA_REFNIL; wp = get_window_next (wp))
     {
       size_t w;
-      (void) CLUE_DO (L, "w = term_width ()");
+      CLUE_DO (L, "w = term_width ()");
       CLUE_GET (L, w, integer, w);
       set_window_fwidth (wp,  w);
       set_window_ewidth (wp, get_window_fwidth (wp));
@@ -128,6 +128,6 @@ The desired position of point is always relative to the current window.
 +*/
 {
   recenter (cur_wp ());
-  (void) CLUE_DO (L, "term_full_redisplay ()");
+  CLUE_DO (L, "term_full_redisplay ()");
 }
 END_DEFUN

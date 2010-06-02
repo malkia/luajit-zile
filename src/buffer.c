@@ -82,13 +82,13 @@ buffer_new (void)
   set_buffer_pt (bp, point_new ());
 
   /* Allocate a line. */
-  (void) CLUE_DO (L, "l = line_new ()");
+  CLUE_DO (L, "l = line_new ()");
   lua_getglobal (L, "l");
   set_point_p (get_buffer_pt (bp), luaL_ref (L, LUA_REGISTRYINDEX));
   set_line_text (get_point_p (get_buffer_pt (bp)), "");
 
   /* Allocate the limit marker. */
-  (void) CLUE_DO (L, "l = line_new ()");
+  CLUE_DO (L, "l = line_new ()");
   lua_getglobal (L, "l");
   set_buffer_lines (bp, luaL_ref (L, LUA_REGISTRYINDEX));
 

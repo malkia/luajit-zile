@@ -39,7 +39,7 @@ static int files_history = LUA_NOREF;
 void
 init_minibuf (void)
 {
-  (void) CLUE_DO (L, "hp = history_new ()");
+  CLUE_DO (L, "hp = history_new ()");
   lua_getglobal (L, "hp");
   files_history = luaL_ref (L, LUA_REGISTRYINDEX);
 }
@@ -58,7 +58,7 @@ minibuf_vwrite (const char *fmt, va_list ap)
   char *s;
   xvasprintf (&s, fmt, ap);
   CLUE_SET (L, minibuf_contents, string, s);
-  (void) CLUE_DO (L, "minibuf_refresh ()");
+  CLUE_DO (L, "minibuf_refresh ()");
 }
 
 /*
@@ -165,8 +165,8 @@ minibuf_read_filename (const char *fmt, const char *value,
 
       as = compact_path (as);
 
-      (void) CLUE_DO (L, "cp = completion_new ()");
-      (void) CLUE_DO (L, "cp.filename = true");
+      CLUE_DO (L, "cp = completion_new ()");
+      CLUE_DO (L, "cp.filename = true");
       lua_getglobal (L, "cp");
 
       pos = astr_len (as);
@@ -183,7 +183,7 @@ minibuf_read_filename (const char *fmt, const char *value,
               lua_rawgeti (L, LUA_REGISTRYINDEX, files_history);
               lua_setglobal (L, "hp");
               CLUE_SET (L, s, string, p);
-              (void) CLUE_DO (L, "add_history_element (hp, s)");
+              CLUE_DO (L, "add_history_element (hp, s)");
               free (p);
               p = xstrdup (astr_cstr (as));
             }
@@ -204,7 +204,7 @@ minibuf_test_in_completions (const char *ms, int cp)
   lua_rawgeti (L, LUA_REGISTRYINDEX, cp);
   lua_setglobal (L, "cp");
   CLUE_SET (L, s, string, ms);
-  (void) CLUE_DO (L, "found = false; for i, v in pairs (cp.completions) do if v == s then found = true end end");
+  CLUE_DO (L, "found = false; for i, v in pairs (cp.completions) do if v == s then found = true end end");
   CLUE_GET (L, found, boolean, found);
   return found;
 }
@@ -246,8 +246,8 @@ minibuf_read_yesno (const char *fmt, ...)
   const char *errmsg = "Please answer yes or no.";
   int ret = -1;
 
-  (void) CLUE_DO (L, "cp = completion_new ()");
-  (void) CLUE_DO (L, "cp.completions = {'no', 'yes'}");
+  CLUE_DO (L, "cp = completion_new ()");
+  CLUE_DO (L, "cp.completions = {'no', 'yes'}");
   lua_getglobal (L, "cp");
 
   va_start (ap, fmt);
@@ -314,7 +314,7 @@ minibuf_vread_completion (const char *fmt, char *value, int cp,
           lua_rawgeti (L, LUA_REGISTRYINDEX, cp);
           lua_setglobal (L, "cp");
           CLUE_SET (L, search, string, ms);
-          (void) CLUE_DO (L, "ret = completion_try (cp, search)");
+          CLUE_DO (L, "ret = completion_try (cp, search)");
           CLUE_GET (L, ret, integer, comp);
           if (comp == COMPLETION_MATCHED)
             {
@@ -331,7 +331,7 @@ minibuf_vread_completion (const char *fmt, char *value, int cp,
                   lua_rawgeti (L, LUA_REGISTRYINDEX, hp);
                   lua_setglobal (L, "hp");
                   CLUE_SET (L, s, string, ms);
-                  (void) CLUE_DO (L, "add_history_element (hp, s)");
+                  CLUE_DO (L, "add_history_element (hp, s)");
                 }
               minibuf_clear ();
               break;
@@ -355,5 +355,5 @@ minibuf_vread_completion (const char *fmt, char *value, int cp,
 void
 minibuf_clear (void)
 {
-  (void) CLUE_DO (L, "term_minibuf_write ('')");
+  CLUE_DO (L, "term_minibuf_write ('')");
 }

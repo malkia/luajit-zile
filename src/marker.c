@@ -48,7 +48,7 @@ free_marker (int marker)
 {
   lua_rawgeti (L, LUA_REGISTRYINDEX, marker);
   lua_setglobal (L, "marker");
-  (void) CLUE_DO (L, "unchain_marker (marker)");
+  CLUE_DO (L, "unchain_marker (marker)");
   luaL_unref (L, LUA_REGISTRYINDEX, marker);
 }
 
@@ -60,7 +60,7 @@ move_marker (int marker, int bp, int pt)
       /* Unchain with the previous pointed buffer.  */
       lua_rawgeti (L, LUA_REGISTRYINDEX, marker);
       lua_setglobal (L, "marker");
-      (void) CLUE_DO (L, "unchain_marker (marker)");
+      CLUE_DO (L, "unchain_marker (marker)");
 
       /* Change the buffer.  */
       set_marker_bp (marker, bp);
@@ -80,7 +80,7 @@ copy_marker (int m)
   int marker = LUA_NOREF;
   if (m != LUA_NOREF)
     {
-      (void) CLUE_DO (L, "m = marker_new ()");
+      CLUE_DO (L, "m = marker_new ()");
       lua_getglobal (L, "m");
       marker = luaL_ref (L, LUA_REGISTRYINDEX);
       move_marker (marker, get_marker_bp (m), get_marker_pt (m));
@@ -92,7 +92,7 @@ int
 point_marker (void)
 {
   int marker;
-  (void) CLUE_DO (L, "m = marker_new ()");
+  CLUE_DO (L, "m = marker_new ()");
   lua_getglobal (L, "m");
   marker = luaL_ref (L, LUA_REGISTRYINDEX);
   move_marker (marker, cur_bp (), point_copy (get_buffer_pt (cur_bp ())));
