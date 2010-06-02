@@ -443,7 +443,7 @@ copy_text_block (int pt, size_t size)
   int lp = get_point_p (pt);
   astr as = astr_new_cstr (get_line_text (get_point_p (pt)));
 
-  as = astr_substr (as, get_point_o (pt), strlen (get_line_text (get_point_p (pt))) - get_point_o (pt));
+  as = astr_substr (as, get_point_o (pt), strlen (get_line_text (lp)) - get_point_o (pt));
 
   astr_cat_char (as, '\n');
   for (lp = get_line_next (lp); astr_len (as) < size; lp = get_line_next (lp))
