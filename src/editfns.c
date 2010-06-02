@@ -41,7 +41,7 @@ push_mark (void)
                                       NULL, NULL, NULL, true);
 
   /* Save the mark.  */
-  if (get_buffer_mark (cur_bp ()))
+  if (get_buffer_mark (cur_bp ()) != LUA_REFNIL)
     gl_list_add_last (mark_ring, (void *) copy_marker (get_buffer_mark (cur_bp ())));
   else
     { /* Save an invalid mark.  */
