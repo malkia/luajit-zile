@@ -31,7 +31,7 @@
 #include "extern.h"
 
 static int files_history = LUA_NOREF;
-char *minibuf_contents = NULL;
+static char *minibuf_contents = NULL;
 
 /*--------------------------------------------------------------------------
  * Minibuffer wrapper functions.
@@ -45,13 +45,15 @@ init_minibuf (void)
   files_history = luaL_ref (L, LUA_REGISTRYINDEX);
 }
 
-static void
-minibuf_vwrite (const char *fmt, va_list ap)
+int
+minibuf_no_error (void)
 {
-  free (minibuf_contents);
+  return minibuf_contents == NULL;
+}
 
-  xvasprintf (&minibuf_contents, fmt, ap);
-
+void
+minibuf_refresh (void)
+{
   if (cur_wp () != LUA_REFNIL)
     {
       CLUE_SET (L, minibuf_contents, string, minibuf_contents);
@@ -61,6 +63,14 @@ minibuf_vwrite (const char *fmt, va_list ap)
       (void) CLUE_DO (L, "term_redisplay ()");
       (void) CLUE_DO (L, "term_refresh ()");
     }
+}
+
+static void
+minibuf_vwrite (const char *fmt, va_list ap)
+{
+  free (minibuf_contents);
+  xvasprintf (&minibuf_contents, fmt, ap);
+  minibuf_refresh ();
 }
 
 /*

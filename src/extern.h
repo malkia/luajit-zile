@@ -114,10 +114,9 @@ bool eolp (void);
 void ding (void);
 
 /* file.c ----------------------------------------------------------------- */
-extern char coding_eol_lf[3];
-extern char coding_eol_crlf[3];
-extern char coding_eol_cr[3];
-extern char coding_eol_undecided[3];
+extern const char *coding_eol_lf;
+extern const char *coding_eol_crlf;
+extern const char *coding_eol_cr;
 int exist_file (const char *filename);
 astr get_home_dir (void);
 astr agetcwd (void);
@@ -229,10 +228,11 @@ int copy_marker (int marker);
 int point_marker (void);
 
 /* minibuf.c -------------------------------------------------------------- */
-extern char *minibuf_contents;
 void init_minibuf (void);
-void minibuf_error (const char *fmt, ...);
+int minibuf_no_error (void);
+void minibuf_refresh (void);
 void minibuf_write (const char *fmt, ...);
+void minibuf_error (const char *fmt, ...);
 char *minibuf_read (const char *fmt, const char *value, ...);
 unsigned long minibuf_read_number (const char *fmt, ...);
 bool minibuf_test_in_completions (const char *ms, int cp);
