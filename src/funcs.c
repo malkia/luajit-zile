@@ -179,13 +179,13 @@ write_buffers_list (va_list ap)
   do
     {
       /* Print all buffers except this one (the *Buffer List*). */
-      if (cur_bp () != bp)
+      if (!lua_refeq (L, cur_bp (), bp))
         print_buf (get_window_bp (old_wp), bp);
       bp = get_buffer_next (bp);
       if (bp == LUA_REFNIL)
         bp = head_bp ();
     }
-  while (bp != get_window_bp (old_wp));
+  while (!lua_refeq (L, bp, get_window_bp (old_wp)));
 }
 
 DEFUN ("list-buffers", list_buffers)
