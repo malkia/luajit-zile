@@ -8,19 +8,20 @@ local function unchain_marker (marker)
     return
   end
 
+  local prev
   local m = marker.bp.markers
   while m do
-    local next = m.next
     if m == marker then
       if prev then
-        prev.next = next
+        prev.next = m.next
       else
-        m.bp.markers = next
+        m.bp.markers = m.next
       end
-        m.bp = nil
+      m.bp = nil
       break
     end
     prev = m
+    m = m.next
   end
 end
 

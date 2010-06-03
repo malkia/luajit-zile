@@ -115,11 +115,9 @@ buffer_new (void)
 void
 free_buffer (int bp)
 {
-  while (get_buffer_markers (bp))
+  while (get_buffer_markers (bp) != LUA_REFNIL)
     free_marker (get_buffer_markers (bp));
 
-  free ((char *) get_buffer_name (bp));
-  free ((char *) get_buffer_filename (bp));
   luaL_unref (L, LUA_REGISTRYINDEX, bp);
 }
 
@@ -479,11 +477,11 @@ kill_buffer (int kill_bp)
   if (get_buffer_next (kill_bp) != LUA_REFNIL)
     next_bp = get_buffer_next (kill_bp);
   else
-    next_bp = (head_bp () == kill_bp) ? LUA_REFNIL : head_bp ();
+    next_bp = (lua_refeq (L, head_bp (), kill_bp)) ? LUA_REFNIL : head_bp ();
 
   /* Search for windows displaying the buffer to kill. */
   for (wp = head_wp (); wp != LUA_REFNIL; wp = get_window_next (wp))
-    if (get_window_bp (wp) == kill_bp)
+    if (lua_refeq (L, get_window_bp (wp), kill_bp))
       {
         set_window_bp (wp, next_bp);
         set_window_topdelta (wp, 0);
@@ -491,12 +489,12 @@ kill_buffer (int kill_bp)
       }
 
   /* Remove the buffer from the buffer list. */
-  if (cur_bp () == kill_bp)
+  if (lua_refeq (L, cur_bp (), kill_bp))
     set_cur_bp (next_bp);
-  if (head_bp () == kill_bp)
+  if (lua_refeq (L, head_bp (), kill_bp))
     set_head_bp (get_buffer_next (head_bp ()));
   for (bp = head_bp (); bp != LUA_REFNIL && get_buffer_next (bp) != LUA_REFNIL; bp = get_buffer_next (bp))
-    if (get_buffer_next (bp) == kill_bp)
+    if (lua_refeq (L, get_buffer_next (bp), kill_bp))
       {
         set_buffer_next (bp, get_buffer_next (get_buffer_next (bp)));
         break;
@@ -517,7 +515,7 @@ kill_buffer (int kill_bp)
 
   /* Resync windows that need it. */
   for (wp = head_wp (); wp != LUA_REFNIL; wp = get_window_next (wp))
-    if (get_window_bp (wp) == next_bp)
+    if (lua_refeq (L, get_window_bp (wp), next_bp))
       resync_redisplay (wp);
 }
 

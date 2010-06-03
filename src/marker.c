@@ -48,7 +48,7 @@ free_marker (int marker)
 {
   lua_rawgeti (L, LUA_REGISTRYINDEX, marker);
   lua_setglobal (L, "marker");
-  CLUE_DO (L, "unchain_marker (marker)");
+  CLUE_DO (L, "free_marker (marker)");
   luaL_unref (L, LUA_REGISTRYINDEX, marker);
 }
 
