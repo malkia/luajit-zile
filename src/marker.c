@@ -77,8 +77,8 @@ move_marker (int marker, int bp, int pt)
 int
 copy_marker (int m)
 {
-  int marker = LUA_NOREF;
-  if (m != LUA_NOREF)
+  int marker = LUA_REFNIL;
+  if (m != LUA_REFNIL)
     {
       CLUE_DO (L, "m = marker_new ()");
       lua_getglobal (L, "m");
