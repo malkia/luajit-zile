@@ -175,7 +175,7 @@ Such a \"function\" cannot be called from Lisp, but it is a valid editor command
     }
 
   mp = get_macro (ms);
-  if (mp)
+  if (mp != LUA_REFNIL)
     /* If a macro with this name already exists, update its key list */
     free (get_macro_keys (mp));
   else
@@ -200,7 +200,6 @@ process_keys (gl_list_t keys)
   size_t i, len = gl_list_size (keys), cur;
 
   CLUE_DO (L, "cur = term_buf_len ()");
-  CLUE_DO (L, "io.stderr:write ('term_buf_len ' .. tostring(cur) .. '\\n')");
   CLUE_GET (L, cur, integer, cur);
 
   for (i = 0; i < len; i++)
@@ -278,7 +277,7 @@ get_macro (const char *name)
 {
   int mp;
   assert (name);
-  for (mp = head_mp; mp; mp = get_macro_next (mp))
+  for (mp = head_mp; mp != LUA_REFNIL; mp = get_macro_next (mp))
     if (!strcmp (get_macro_name (mp), name))
       return mp;
   return LUA_REFNIL;
