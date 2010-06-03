@@ -282,13 +282,7 @@ Just C-u as argument means to use the current column.
     }
 
   if (ok == leT)
-    {
-      astr as = astr_new ();
-      astr_afmt (as, "(set-variable \"fill-column\" \"%s\")", buf);
-      CLUE_SET (L, lisp, string, astr_cstr (as));
-      CLUE_DO (L, "lisp_loadstring (lisp)");
-      astr_delete (as);
-    }
+    set_variable ("fill-column", buf);
 
   if (LUA_NIL (arglist))
     free (buf);
