@@ -38,7 +38,7 @@ set_variable (const char *var, const char *val)
   CLUE_GET (L, islocal, boolean, local);
   if (local)
     {
-      if (get_buffer_vars (cur_bp ()) == 0)
+      if (get_buffer_vars (cur_bp ()) == LUA_REFNIL)
         {
           lua_newtable (L);
           set_buffer_vars (cur_bp (), luaL_ref (L, LUA_REGISTRYINDEX));
