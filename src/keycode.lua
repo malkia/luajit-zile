@@ -111,6 +111,7 @@ local function strtokey (s)
 end
 
 -- Convert a key chord string to its key code.
+-- FIXME: Make return values' order consistent with strtokey
 function strtochord (s)
   local key = 0
 
@@ -118,7 +119,7 @@ function strtochord (s)
   repeat
     k, s = strtokey (s)
     if k == KBD_NOKEY then
-      return KBD_NOKEY
+      return "", KBD_NOKEY
     end
     key = bit.bor (key, k)
   until k ~= KBD_CTRL and k ~= KBD_META
