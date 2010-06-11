@@ -97,12 +97,13 @@ local function strtokey (s)
   if string.sub (s, 1, 1) == '\\' then
     local p
     for i in pairs (keynametocode_map) do
-      if i == string.sub (s, 2, #i + 1) then
+      if i == string.sub (s, 1, #i) then
         p = i
+        break
       end
     end
     if p then
-      return keynametocode_map [p], string.sub (s, #p + 2)
+      return keynametocode_map [p], string.sub (s, #p + 1)
     end
     return KBD_NOKEY, ""
   end
@@ -133,7 +134,8 @@ function keystrtovec (s)
   local keys = {}
 
   while s ~= "" do
-    local s, code = strtochord (s)
+    local code
+    s, code = strtochord (s)
     if code == KBD_NOKEY then
       return nil
     end
