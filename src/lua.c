@@ -37,7 +37,8 @@
 #include <lauxlib.h>
 #include <lualib.h>
 
-static lua_State *globalL = NULL;
+#include "main.h"
+#include "extern.h"
 
 
 static void lstop (lua_State *L, lua_Debug *ar) {
@@ -50,7 +51,7 @@ static void lstop (lua_State *L, lua_Debug *ar) {
 static void laction (int i) {
   signal(i, SIG_DFL); /* if another SIGINT happens before lstop,
                               terminate process (default action) */
-  lua_sethook(globalL, lstop, LUA_MASKCALL | LUA_MASKRET | LUA_MASKCOUNT, 1);
+  lua_sethook(L, lstop, LUA_MASKCALL | LUA_MASKRET | LUA_MASKCOUNT, 1);
 }
 
 
@@ -190,7 +191,6 @@ static void dotty (lua_State *L) {
 
 
 static int pmain (lua_State *L) {
-  globalL = L;
   assert(lua_stdin_is_tty());
   dotty(L);
   return 0;
@@ -200,7 +200,8 @@ static int pmain (lua_State *L) {
 #include "main.h"
 #include "extern.h"
 
-/* N.B. Following code written by Reuben Thomas */
+/* FIXME: Put this somewhere else. */
+/* The following is by Reuben Thomas. */
 
 int lua_debug (lua_State *L) {
   int status;
@@ -222,26 +223,45 @@ int lua_refeq (lua_State *L, int r1, int r2) {
 
 /* FIXME: Package this properly */
 static int
-zlua_isprint (lua_State *L)
+zlua_isdigit (lua_State *L)
 {
-    const char *s = lua_tostring (L, -1);
+    char c = *lua_tostring (L, -1);
     lua_pop (L, 1);
-    lua_pushinteger (L, isprint (*s));
+    lua_pushboolean (L, isdigit ((int) c));
     return 1;
 }
 
 static int
 zlua_isgraph (lua_State *L)
 {
-    const char *s = lua_tostring (L, -1);
+    char c = *lua_tostring (L, -1);
     lua_pop (L, 1);
-    lua_pushnumber (L, isgraph (*s));
+    lua_pushboolean (L, isgraph ((int) c));
+    return 1;
+}
+
+static int
+zlua_isprint (lua_State *L)
+{
+    char c = *lua_tostring (L, -1);
+    lua_pop (L, 1);
+    lua_pushboolean (L, isprint ((int) c));
     return 1;
 }
 
 void
 lua_init (lua_State *L)
 {
-  lua_register (L, "isprint", zlua_isprint);
+  lua_register (L, "isdigit", zlua_isdigit);
   lua_register (L, "isgraph", zlua_isgraph);
+  lua_register (L, "isprint", zlua_isprint);
+}
+
+int lua_docall (lua_State *L, int narg, int clear) {
+  int status = docall (L, narg, clear);
+  if (status) {
+    report(L, status);
+    raise(SIGABRT);
+  }
+  return status;
 }
