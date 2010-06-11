@@ -25,6 +25,49 @@
 local function require (f)
   package.loaded[f] = true
 end
+--
+-- strict.lua
+-- checks uses of undeclared global variables
+-- All global variables must be 'declared' through a regular assignment
+-- (even assigning nil will do) in a main chunk before being used
+-- anywhere or assigned to inside a function.
+--
+-- From Lua distribution (etc/strict.lua)
+--
+
+local getinfo, error, rawset, rawget = debug.getinfo, error, rawset, rawget
+
+local mt = getmetatable(_G)
+if mt == nil then
+  mt = {}
+  setmetatable(_G, mt)
+end
+
+mt.__declared = {}
+
+local function what ()
+  local d = getinfo(3, "S")
+  return d and d.what or "C"
+end
+
+mt.__newindex = function (t, n, v)
+  if not mt.__declared[n] then
+    local w = what()
+    if w ~= "main" and w ~= "C" then
+      error("assign to undeclared variable '"..n.."'", 2)
+    end
+    mt.__declared[n] = true
+  end
+  rawset(t, n, v)
+end
+
+mt.__index = function (t, n)
+  if not mt.__declared[n] and what() ~= "C" then
+    error("variable '"..n.."' is not declared", 2)
+  end
+  return rawget(t, n)
+end
+
 -- @module base
 -- Adds to the existing global functions
 
@@ -328,6 +371,33 @@ function _G.ripairs (t)
   t, #t + 1
 end
 
+-- @func nodes: tree iterator
+--   @param tr: tree to iterate over
+-- @returns
+--   @param f: iterator function
+--     @param n: current node
+--     @param p: path to node within the tree
+--   @yields
+--     @param ty: type ("leaf", "branch" (pre-order) or "join" (post-order))
+--     @param p_: path to node ({i1...ik})
+--     @param n_: node
+function _G.nodes (tr)
+  local function visit (n, p)
+    if type (n) == "table" then
+      coroutine.yield ("branch", p, n)
+      for i, v in pairs (n) do
+        table.insert (p, i)
+        visit (v, p)
+        table.remove (p)
+      end
+      coroutine.yield ("join", p, n)
+    else
+      coroutine.yield ("leaf", p, n)
+    end
+  end
+  return coroutine.wrap (visit), tr, {}
+end
+
 -- @func collect: collect the results of an iterator
 --   @param i: iterator
 --   @param ...: arguments
@@ -374,71 +444,20 @@ function _G.filter (p, i, ...)
   return t
 end
 
--- @func fold: Fold a function into an iterator leftwards
+-- @func fold: Fold a binary function into an iterator
 --   @param f: function
---   @param d: element to place in left-most position
+--   @param d: initial first argument
 --   @param i: iterator
 --   @param ...:
 -- @returns
 --   @param r: result
-function _G.foldl (f, i, ...)
+function _G.fold (f, d, i, ...)
   local r = d
   for e in i (...) do
     r = f (r, e)
   end
   return r
 end
-
--- @func treeIter: tree iterator
---   @param t: tree to iterate over
--- @returns
---   @param f: iterator function
---   @returns
---     @param e: event
---     @param t: table of values
-function _G.treeIter (t)
-  return coroutine.wrap (function ()
-                           if not coroutine.yield ("branch", t) then
-                             for i, v in ipairs (t) do
-                               if type (v) ~= "table" then
-                                 if coroutine.yield ("leaf", {i, v}) then
-                                   break
-                                 end
-                               else
-                                 for e, u in treeIter (v) do
-                                   if coroutine.yield (e, u) then
-                                     break
-                                   end
-                                 end
-                               end
-                             end
-                             coroutine.yield ("join", t)
-                           end
-                         end)
-end
-
--- FIXME: this version is more obvious but has an illegal yield
--- @func treeIter: tree iterator
---   @param t: tree to iterate over
--- @returns
---   @param f: iterator function
---   @returns
---     @param e: event
---     @param t: table of values
--- function _G.treeIter (t)
---   if not coroutine.yield ("branch", t) then
---     for i, v in ipairs (t) do
---       if type (v) ~= "table" then
---         if coroutine.yield ("leaf", {i, v}) then
---           break
---         end
---       else
---         f (v)
---       end
---     end
---     coroutine.yield ("join", t)
---   end
--- end
 
 -- @func assert: Extend to allow formatted arguments
 --   @param v: value
@@ -481,68 +500,48 @@ function _G.die (...)
 end
 
 -- Function forms of operators
+_G.op["[]"] =
+  function (t, s)
+    return t[s]
+  end
+
 _G.op["+"] =
-  function (...)
-    return list.foldr (function (a, b)
-                         return a + b
-                       end,
-                       0, {...})
+  function (a, b)
+    return a + b
   end
 _G.op["-"] =
-  function (...)
-    return list.foldr (function (a, b)
-                         return a - b
-                       end,
-                       0, {...})
+  function (a, b)
+    return a - b
   end
 _G.op["*"] =
-  function (...)
-    return list.foldr (function (a, b)
-                         return a * b
-                       end,
-                       1, {...})
+  function (a, b)
+    return a * b
   end
 _G.op["/"] =
   function (a, b)
     return a / b
   end
 _G.op["and"] =
-  function (...)
-    return list.foldl (function (a, b)
-                         return a and b
-                       end, true, {...})
+  function (a, b)
+    return a and b
   end
 _G.op["or"] =
-  function (...)
-    return list.foldl (function (a, b)
-                         return a or b
-                       end,
-                       false, {...})
+  function (a, b)
+    return a or b
   end
 _G.op["not"] =
-  function (x)
-    return not x
+  function (a)
+    return not a
   end
 _G.op["=="] =
-  function (x, ...)
-    for _, v in ipairs ({...}) do
-      if v ~= x then
-        return false
-      end
-    end
-    return true
+  function (a, b)
+    return a == b
   end
 _G.op["~="] =
-  function (...)
-    local t = {}
-    for _, v in ipairs ({...}) do
-      if t[v] then
-        return false
-      end
-      t[v] = true
-    end
-    return true
+  function (a, b)
+    return a ~= b
   end
+
 -- @module debug
 
 -- Adds to the existing debug module
@@ -623,6 +622,7 @@ end
 if type (_DEBUG) == "table" and _DEBUG.call then
   sethook (trace, "cr")
 end
+
 -- @module table
 
 module ("table", package.seeall)
@@ -644,43 +644,12 @@ function sort (t, c)
   return t
 end
 
--- @func subscript: Expose [] as a function
---   @param t: table
---   @param s: subscript
--- @returns
---   @param v: t[s]
-function subscript (t, s)
-  return t[s]
-end
-
--- @func lookup: Do a late-bound table lookup
---   @param t: table to look up in
---   @param l: list of indices {l1 ... ln}
--- @returns
---   @param u: t[l1]...[ln]
-function lookup (t, l)
-  return list.foldl (subscript, t, l)
-end
-
--- @func pathSubscript: Subscript a table with a string containing
--- dots
---   @param t: table
---   @param s: subscript of the form s1.s2. ... .sn
--- @returns
---   @param v: t.s1.s2. ... .sn
-function subscripts (t, s)
-  return lookup (t, string.split ("%.", s))
-end
-
 -- @func empty: Say whether table is empty
 --   @param t: table
 -- @returns
 --   @param f: true if empty or false otherwise
 function empty (t)
-  for _ in pairs (t) do
-    return false
-  end
-  return true
+  return not next (t)
 end
 
 -- @func size: Find the number of elements in a table
@@ -748,7 +717,7 @@ end
 -- @func clone: Make a shallow copy of a table, including any
 -- metatable
 --   @param t: table
---   @param nometa: if non-nil don't copy metatables
+--   @param nometa: if non-nil don't copy metatable
 -- @returns
 --   @param u: copy of table
 function clone (t, nometa)
@@ -760,40 +729,6 @@ function clone (t, nometa)
     u[i] = v
   end
   return u
-end
-
--- @func deepclone: Make a deep copy of a table, including any
---  metatable
---   @param t: table
---   @param nometa: if non-nil don't copy metatables
--- @returns
---   @param u: copy of table
-function deepclone (t, nometa)
-  local r = {}
-  if not nometa then
-    setmetatable (r, getmetatable (t))
-  end
-  local d = {[t] = r}
-  local function copy (o, x)
-    for i, v in pairs (x) do
-      if type (v) == "table" then
-        if not d[v] then
-          d[v] = {}
-          if not nometa then
-            setmetatable (d[v], getmetatable (v))
-          end
-          local q = copy (d[v], v)
-          o[i] = q
-        else
-          o[i] = d[v]
-        end
-      else
-        o[i] = v
-      end
-    end
-    return o
-  end
-  return copy (r, t)
 end
 
 -- @func merge: Merge two tables
@@ -810,17 +745,18 @@ function merge (t, u)
   return r
 end
 
--- @func newDefault: Make a table with a default value
---   @param x: default value
+-- @func new: Make a table with a default entry value
+--   @param [x]: default entry value [nil]
 --   @param [t]: initial table [{}]
 -- @returns
 --   @param u: table for which u[i] is x if u[i] does not exist
-function newDefault (x, t)
+function new (x, t)
   return setmetatable (t or {},
                        {__index = function (t, i)
                                     return x
                                   end})
 end
+
 -- @module list
 
 module ("list", package.seeall)
@@ -943,7 +879,7 @@ end
 -- @returns
 --   @param r: result
 function foldl (f, e, l)
-  return _G.foldl (f, elems, e, l)
+  return _G.fold (f, e, elems, l)
 end
 
 -- @func foldr: Fold a binary function through a list right
@@ -954,7 +890,8 @@ end
 -- @returns
 --   @param r: result
 function foldr (f, e, l)
-  return _G.foldr (f, relems, e, l)
+  return _G.fold (function (x, y) return f (y, x) end,
+                  e, relems, l)
 end
 
 -- @func cons: Prepend an item to a list
@@ -973,7 +910,7 @@ end
 --   @param r: {l[1], ..., l[#l], x}
 function append (x, l)
   local r = {unpack (l)}
-  table.insert(r, x)
+  table.insert (r, x)
   return r
 end
 
@@ -1209,6 +1146,87 @@ end
 
 -- Function forms of operators
 _G.op[".."] = list.concat
+
+-- @module tree
+
+module ("tree", package.seeall)
+
+require "list"
+
+-- @func new: Make a table into a tree
+--   @param t: table
+-- @returns
+--   @param tr: tree
+local metatable = {}
+function new (t)
+  return setmetatable (t or {}, metatable)
+end
+
+-- @func __index: Tree __index metamethod
+--   @param tr: tree
+--   @param i: non-table, or list of indices {i1 ... in}
+-- @returns
+--   @param v: tr[i]...[in] if i is a table, or tr[i] otherwise
+function metatable.__index (tr, i)
+  if type (i) == "table" then
+    return list.foldl (op["[]"], tr, i)
+  else
+    return rawget (tr, i)
+  end
+end
+
+-- @func __newindex: Tree __newindex metamethod
+-- Sets tr[i1]...[in] = v if i is a table, or tr[i] = v otherwise
+--   @param tr: tree
+--   @param i: non-table, or list of indices {i1 ... in}
+--   @param v: value
+function metatable.__newindex (tr, i, v)
+  if type (i) == "table" then
+    for n = 1, #i - 1 do
+      if type (tr[i[n]]) ~= "table" then
+        tr[i[n]] = tree.new ()
+      end
+      tr = tr[i[n]]
+    end
+    rawset (tr, i[#i], v)
+  else
+    rawset (tr, i, v)
+  end
+end
+
+-- @func clone: Make a deep copy of a tree, including any
+-- metatables
+--   @param t: table
+--   @param nometa: if non-nil don't copy metatables
+-- @returns
+--   @param u: copy of table
+function clone (t, nometa)
+  local r = {}
+  if not nometa then
+    setmetatable (r, getmetatable (t))
+  end
+  local d = {[t] = r}
+  local function copy (o, x)
+    for i, v in pairs (x) do
+      if type (v) == "table" then
+        if not d[v] then
+          d[v] = {}
+          if not nometa then
+            setmetatable (d[v], getmetatable (v))
+          end
+          o[i] = copy (d[v], v)
+        else
+          o[i] = d[v]
+        end
+      else
+        o[i] = v
+      end
+    end
+    return o
+  end
+  return copy (r, t)
+end
+
 -- Prototype-based objects
 
 module ("object", package.seeall)
@@ -1258,6 +1276,7 @@ _G.Object = {
            end,
 }
 setmetatable (Object, Object)
+
 -- String
 
 module ("string", package.seeall)
@@ -1573,6 +1592,7 @@ end
 function trim (r, s)
   return ltrim (rtrim (r, s))
 end
+
 -- Math
 
 -- Adds to the existing math module
@@ -1601,6 +1621,7 @@ function round (n, p)
   local e = 10 ^ (p or 0)
   return _floor (n * e + 0.5) / e
 end
+
 -- I/O
 
 module ("io", package.seeall)
@@ -1631,10 +1652,10 @@ end
 --   @param ...: values to write (as for write)
 function writeLine (h, ...)
   if io.type (h) ~= "file" then
-    table.insert (arg, 1, h)
+    io.write (h, "\n")
     h = io.output ()
   end
-  for _, v in ipairs (arg) do
+  for _, v in ipairs ({...}) do
     h:write (v, "\n")
   end
 end
@@ -1681,6 +1702,7 @@ end
 --     @param name: the name of the file being read
 --     @param i: the number of the argument
 function processFiles (f)
+  -- N.B. "arg" below refers to the global array of command-line args
   if #arg == 0 then
     table.insert (arg, "-")
   end
@@ -1694,6 +1716,7 @@ function processFiles (f)
     f (v, i)
   end
 end
+
 -- getopt
 -- Simplified getopt, based on Svenne Panne's Haskell GetOpt
 
@@ -2005,6 +2028,7 @@ if type (_DEBUG) == "table" and _DEBUG.std then
   --   -name=USER, -n              only dump USER's files
 
 end
+
 -- @module set
 
 module ("set", package.seeall)
@@ -2035,7 +2059,7 @@ end
 --   @param l: list
 -- @returns
 --   @param s: set
-metatable = {}
+local metatable = {}
 function new (l)
   local s = setmetatable ({}, metatable)
   for _, e in ipairs (l) do
