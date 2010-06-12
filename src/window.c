@@ -65,7 +65,7 @@ void
 set_current_window (int wp)
 {
   /* Save buffer's point in a new marker.  */
-  if (get_window_saved_pt (cur_wp ()))
+  if (get_window_saved_pt (cur_wp ()) != LUA_REFNIL)
     free_marker (get_window_saved_pt (cur_wp ()));
 
   set_window_saved_pt (cur_wp (), point_marker ());
