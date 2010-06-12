@@ -1,8 +1,8 @@
 /* Clue: minimal C-Lua integration
 
-   release 4
+   release 5
 
-   Copyright (c) 2007, 2010 Reuben Thomas.
+   Copyright (c) 2007, 2009, 2010 Reuben Thomas.
 
    Permission is hereby granted, free of charge, to any person
    obtaining a copy of this software and associated documentation
@@ -64,10 +64,9 @@
 /* Set a Lua variable `lvar' of type 'lty' to C value `cexp'. */
 #define CLUE_SET(L, lvar, lty, cexp)            \
   do {                                          \
-    lua_checkstack(L, 2);                       \
-    lua_pushstring(L, #lvar);                   \
+    lua_checkstack(L, 1);                       \
     lua_push ## lty(L, cexp);                   \
-    lua_rawset(L, LUA_GLOBALSINDEX);            \
+    lua_setglobal(L, #lvar);                    \
   } while (0)
 
 /* Read a value of type `lty' from Lua global `lvar' into C variable
@@ -76,12 +75,11 @@
 #define CLUE_GET(L, lvar, lty, cvar)            \
   do {                                          \
     lua_checkstack(L, 1);                       \
-    lua_pushstring(L, #lvar);                   \
-    lua_rawget(L, LUA_GLOBALSINDEX);            \
+    lua_getglobal(L, #lvar);                    \
     cvar = lua_to ## lty(L, -1);                \
     lua_pop(L, 1);                              \
   } while (0)
 
 /* Run some Lua code `code'. */
 #define CLUE_DO(L, code)                        \
-  (assert (luaL_loadstring(L, code) == 0), lua_pcall(L, 0, 0, 0))
+  (assert (luaL_loadstring(L, code) == 0), lua_docall(L, 0, 1))
