@@ -132,7 +132,7 @@ end
 
 function term_close ()
   -- Clear last line.
-  term_move (curses.lines - 1, 0)
+  term_move (curses.lines () - 1, 0)
   term_clrtoeol ()
   term_refresh ()
   -- Finish with curses.
@@ -140,6 +140,7 @@ function term_close ()
 end
 
 local function codetokey (c)
+  local ret
   if codetokey_map[c] then
     ret = codetokey_map[c]
   elseif c > 0xff or c < 0 then
