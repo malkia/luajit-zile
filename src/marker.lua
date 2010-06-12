@@ -3,7 +3,8 @@ function marker_new ()
 end
 
 -- FIXME: Use a list of markers, not a chain
-local function unchain_marker (marker)
+-- FIXME: local
+function unchain_marker (marker)
   if not marker.bp then
     return
   end
