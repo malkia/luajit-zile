@@ -29,7 +29,7 @@ end
 free_marker = unchain_marker
 
 function move_marker (marker, bp, pt)
-  if bp ~= get_marker_bp (marker) then
+  if bp ~= marker.bp then
     -- Unchain from previous buffer.
     unchain_marker (marker)
 
