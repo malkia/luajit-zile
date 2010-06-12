@@ -97,16 +97,30 @@ typedef le (*Function) (long uniarg, bool is_uniarg, le list);
 le
 execute_function (const char *name, int uniarg, bool is_uniarg, le list)
 {
-  Function func = NULL;
+  bool isfunc = false;
   int mp;
 
   assert (name);
   CLUE_SET (L, name, string, name);
   CLUE_DO (L, "func = usercmd[name] and usercmd[name].func or nil");
-  CLUE_GET (L, func, lightuserdata, func);
+  CLUE_GET (L, func, boolean, isfunc);
 
-  if (func)
-    return func (uniarg, is_uniarg, list);
+  if (isfunc)
+    {
+      Function func;
+      CLUE_GET (L, func, lightuserdata, func);
+      if (func)
+        return func (uniarg, is_uniarg, list);
+      else
+        {
+          bool ret;
+          lua_rawgeti (L, LUA_REGISTRYINDEX, list);
+          lua_setglobal (L, "branch");
+          CLUE_DO (L, "ret = call_zile_command (name, branch)");
+          CLUE_GET (L, ret, boolean, ret);
+          return ret;
+        }
+    }
   else
     {
       mp = get_macro (name);
@@ -175,7 +189,7 @@ minibuf_read_function_name (const char *fmt, ...)
 }
 
 static int
-call_zile_command (lua_State *L)
+call_zile_c_command (lua_State *L)
 {
   le trybranch;
   const char *keyword;
@@ -202,7 +216,7 @@ init_lisp (void)
   lua_getglobal (L, "functions_history");
   functions_history = luaL_ref (L, LUA_REGISTRYINDEX);
 
-  lua_register (L, "call_zile_command", call_zile_command);
+  lua_register (L, "call_zile_c_command", call_zile_c_command);
 
 #define X(zile_name, c_name)                            \
   lua_pushlightuserdata (L, F_ ## c_name);              \
