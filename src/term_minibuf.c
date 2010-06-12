@@ -278,7 +278,7 @@ term_minibuf_read (const char *prompt, const char *value, size_t pos,
     {
       lua_rawgeti (L, LUA_REGISTRYINDEX, hp);
       lua_setglobal (L, "hp");
-      CLUE_DO (L, "prepare_history (hp)");
+      CLUE_DO (L, "history_prepare (hp)");
     }
 
   as = do_minibuf_read (prompt, value, pos, cp, hp);
