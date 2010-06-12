@@ -110,7 +110,7 @@ execute_function (const char *name, int uniarg, bool is_uniarg, le list)
   else
     {
       mp = get_macro (name);
-      if (mp)
+      if (mp != LUA_REFNIL)
         {
           call_macro (mp);
           return leT;
