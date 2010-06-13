@@ -54,6 +54,7 @@ window_new (void)
   wp = luaL_ref (L, LUA_REGISTRYINDEX);
   set_window_next (wp, LUA_REFNIL);
   set_window_topdelta (wp, 0);
+  set_window_start_column (wp, 0);
 
   return wp;
 }
