@@ -144,7 +144,7 @@ delete_window (int del_wp)
       set_current_window (wp);
     }
 
-  if (get_window_saved_pt (del_wp))
+  if (get_window_saved_pt (del_wp) != LUA_REFNIL)
     free_marker (get_window_saved_pt (del_wp));
 
   luaL_unref (L, LUA_REGISTRYINDEX, del_wp);
