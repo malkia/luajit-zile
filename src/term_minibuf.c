@@ -274,7 +274,7 @@ term_minibuf_read (const char *prompt, const char *value, size_t pos,
   char *s = NULL;
   astr as;
 
-  if (hp != LUA_NOREF)
+  if (hp != LUA_REFNIL)
     {
       lua_rawgeti (L, LUA_REGISTRYINDEX, hp);
       lua_setglobal (L, "hp");
