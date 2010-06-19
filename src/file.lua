@@ -21,7 +21,7 @@
 
 
 -- Formats of end-of-line
-coding_eol_lf = "\n";
+coding_eol_lf = "\n"
 coding_eol_crlf = "\r\n"
 coding_eol_cr = "\r"
 

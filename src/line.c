@@ -47,10 +47,6 @@
 #undef TABLE_FIELD
 
 /*
- * Circular doubly-linked lists
- */
-
-/*
  * Adjust markers (including point) when line at point is split, or
  * next line is joined on, or where a line is edited.
  *   newlp is the line to which characters were moved, oldlp the line
@@ -87,78 +83,6 @@ adjust_markers (int newlp, int oldlp, size_t pointo, int dir, ptrdiff_t delta)
   free_marker (m_pt);
 }
 
-/* Insert the character at the current position and move the text at its right
- * whatever the insert/overwrite mode is.
- * This function doesn't change the current position of the pointer.
- */
-static int
-intercalate_char (int c)
-{
-  astr as;
-
-  if (warn_if_readonly_buffer ())
-    return false;
-
-  as = astr_new_cstr (get_line_text (get_point_p (get_buffer_pt (cur_bp ()))));
-  undo_save (UNDO_REPLACE_BLOCK, get_buffer_pt (cur_bp ()), 0, 1);
-  astr_insert_char (as, get_point_o (get_buffer_pt (cur_bp ())), c);
-  set_line_text (get_point_p (get_buffer_pt (cur_bp ())), xstrdup (astr_cstr (as)));
-  astr_delete (as);
-  set_buffer_modified (cur_bp (), true);
-
-  return true;
-}
-
-/*
- * Insert the character `c' at the current point position
- * into the current buffer.
- */
-int
-insert_char (int c)
-{
-  size_t t = tab_width (cur_bp ());
-
-  if (warn_if_readonly_buffer ())
-    return false;
-
-  if (get_buffer_overwrite (cur_bp ()))
-    {
-      int pt = get_buffer_pt (cur_bp ());
-      /* Current character isn't the end of line
-         && isn't a \t
-         || tab width isn't correct
-         || current char is a \t && we are in the tab limit.  */
-      if ((get_point_o (pt) < strlen (get_line_text (get_point_p (pt))))
-          &&
-          ((get_line_text (get_point_p (pt))[get_point_o (pt)] != '\t')
-           ||
-           ((get_line_text (get_point_p (pt))[get_point_o (pt)] == '\t') && ((get_goalc () % t) == t))))
-        {
-          /* Replace the character.  */
-          char ch = (char) c;
-          astr as = astr_new_cstr (get_line_text (get_point_p (pt)));
-          undo_save (UNDO_REPLACE_BLOCK, pt, 1, 1);
-          astr_nreplace_cstr (as, get_point_o (pt), 1, &ch, 1);
-          set_line_text (get_point_p (pt), xstrdup (astr_cstr (as)));
-          astr_delete (as);
-          set_point_o (pt, get_point_o (pt) + 1);
-          set_buffer_modified (cur_bp (), true);
-
-          return true;
-        }
-      /*
-       * Fall through the "insertion" mode of a character at the end
-       * of the line, since it is the same as "overwrite" mode.
-       */
-    }
-
-  intercalate_char (c);
-  forward_char ();
-  adjust_markers (get_point_p (get_buffer_pt (cur_bp ())), get_point_p (get_buffer_pt (cur_bp ())), get_point_o (get_buffer_pt (cur_bp ())), 0, 1);
-
-  return true;
-}
-
 /*
  * Insert a character at the current position in insert mode
  * whatever the current insert mode is.
@@ -170,38 +94,12 @@ insert_char_in_insert_mode (int c)
   bool old_overwrite = get_buffer_overwrite (cur_bp ());
 
   set_buffer_overwrite (cur_bp (), false);
-  ret = insert_char (c);
+  CLUE_SET (L, c, integer, c);
+  CLUE_DO (L, "ret = insert_char (string.char (c))");
+  CLUE_GET (L, ret, integer, ret);
   set_buffer_overwrite (cur_bp (), old_overwrite);
 
   return ret;
-}
-
-static void
-insert_expanded_tab (int (*inschr) (int chr))
-{
-  int c = get_goalc ();
-  int t = tab_width (cur_bp ());
-
-  undo_save (UNDO_START_SEQUENCE, get_buffer_pt (cur_bp ()), 0, 0);
-
-  for (c = t - c % t; c > 0; --c)
-    (*inschr) (' ');
-
-  undo_save (UNDO_END_SEQUENCE, get_buffer_pt (cur_bp ()), 0, 0);
-}
-
-static bool
-insert_tab (void)
-{
-  if (warn_if_readonly_buffer ())
-    return false;
-
-  if (get_variable_bool ("indent-tabs-mode"))
-    insert_char_in_insert_mode ('\t');
-  else
-    insert_expanded_tab (insert_char_in_insert_mode);
-
-  return true;
 }
 
 DEFUN ("tab-to-tab-stop", tab_to_tab_stop)
@@ -210,7 +108,9 @@ Insert a tabulation at the current point position into the current
 buffer.
 +*/
 {
-  ok = execute_with_uniarg (true, uniarg, insert_tab, NULL);
+  CLUE_DO (L, "ok = execute_with_uniarg (true, uniarg, insert_tab)");
+  lua_getglobal (L, "ok");
+  ok = luaL_ref (L, LUA_REGISTRYINDEX);
 }
 END_DEFUN
 
@@ -513,42 +413,6 @@ delete_char (void)
   return true;
 }
 
-static bool
-backward_delete_char (void)
-{
-  deactivate_mark ();
-
-  if (!backward_char ())
-    {
-      minibuf_error ("Beginning of buffer");
-      return false;
-    }
-
-  delete_char ();
-  return true;
-}
-
-static bool
-backward_delete_char_overwrite (void)
-{
-  if (bolp () || eolp ())
-    return backward_delete_char ();
-
-  deactivate_mark ();
-
-  if (warn_if_readonly_buffer ())
-    return false;
-
-  backward_char ();
-  if (following_char () == '\t')
-    insert_expanded_tab (insert_char);
-  else
-    insert_char (' ');
-  backward_char ();
-
-  return true;
-}
-
 DEFUN_ARGS ("delete-char", delete_char,
             INT_OR_UNIARG (n))
 /*+
@@ -556,7 +420,13 @@ Delete the following @i{n} characters (previous if @i{n} is negative).
 +*/
 {
   INT_OR_UNIARG_INIT (n);
-  ok = execute_with_uniarg (true, n, delete_char, backward_delete_char);
+  CLUE_SET (L, n, integer, n);
+  {
+    bool ret;
+    CLUE_DO (L, "ret = execute_with_uniarg (true, n, delete_char, backward_delete_char)");
+    CLUE_GET (L, ret, boolean, ret);
+    ok = bool_to_lisp (ret);
+  }
 }
 END_DEFUN
 
@@ -566,10 +436,14 @@ DEFUN_ARGS ("backward-delete-char", backward_delete_char,
 Delete the previous @i{n} characters (following if @i{n} is negative).
 +*/
 {
-  bool (*forward) (void) = get_buffer_overwrite (cur_bp ()) ?
-    backward_delete_char_overwrite : backward_delete_char;
   INT_OR_UNIARG_INIT (n);
-  ok = execute_with_uniarg (true, n, forward, delete_char);
+  CLUE_SET (L, n, integer, n);
+  {
+    bool ret;
+    CLUE_DO (L, "ret = execute_with_uniarg (true, n, cur_bp.overwrite and backward_delete_char_overwrite or backward_delete_char, delete_char)");
+    CLUE_GET (L, ret, boolean, ret);
+    ok = bool_to_lisp (ret);
+  }
 }
 END_DEFUN
 
@@ -584,7 +458,7 @@ Delete all spaces and tabs around point.
     delete_char ();
 
   while (!bolp () && isspace (preceding_char ()))
-    backward_delete_char ();
+    CLUE_DO (L, "backward_delete_char ()");
 
   undo_save (UNDO_END_SEQUENCE, get_buffer_pt (cur_bp ()), 0, 0);
 }
@@ -682,17 +556,32 @@ does nothing.
           do
             {
               if (cur_goalc % t == 0 && cur_goalc + t <= target_goalc)
-                ok = bool_to_lisp (insert_tab ());
+                {
+                  bool ret;
+                  CLUE_DO (L, "ret = insert_tab ()");
+                  CLUE_GET (L, ret, boolean, ret);
+                  ok = bool_to_lisp (ret);
+                }
               else
                 ok = bool_to_lisp (insert_char_in_insert_mode (' '));
             }
           while (ok == leT && (cur_goalc = get_goalc ()) < target_goalc);
         }
       else
-        ok = bool_to_lisp (insert_tab ());
+        {
+          bool ret;
+          CLUE_DO (L, "ret = insert_tab ()");
+          CLUE_GET (L, ret, boolean, ret);
+          ok = bool_to_lisp (ret);
+        }
     }
   else
-    ok = bool_to_lisp (insert_tab ());
+    {
+      bool ret;
+      CLUE_DO (L, "ret = insert_tab ()");
+      CLUE_GET (L, ret, boolean, ret);
+      ok = bool_to_lisp (ret);
+    }
   undo_save (UNDO_END_SEQUENCE, get_buffer_pt (cur_bp ()), 0, 0);
 }
 END_DEFUN
@@ -728,7 +617,12 @@ the indentation.  Else stay at same point in text.
 +*/
 {
   if (get_variable_bool ("tab-always-indent"))
-    return bool_to_lisp (insert_tab ());
+    {
+      bool ret;
+      CLUE_DO (L, "ret = insert_tab ()");
+      CLUE_GET (L, ret, boolean, ret);
+      return bool_to_lisp (ret);
+    }
   else if (get_goalc () < previous_line_indent ())
     return FUNCALL (indent_relative);
 }

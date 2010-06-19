@@ -40,44 +40,9 @@
 #include "completion.h"
 #undef FIELD
 
-static void
-write_completion (va_list ap)
-{
-  int cp = va_arg (ap, int);
-  size_t width = va_arg (ap, size_t);
-  const char *s;
-  lua_rawgeti (L, LUA_REGISTRYINDEX, cp);
-  lua_setglobal (L, "cp");
-  CLUE_SET (L, width, integer, width);
-  CLUE_DO (L, "s = completion_write (cp, width)");
-  CLUE_GET (L, s, string, s);
-  bprintf ("%s", s);
-}
-
-/*
- * Popup the completion window.
- */
-void
-popup_completion (int cp)
-{
-  lua_rawgeti (L, LUA_REGISTRYINDEX, cp);
-  lua_setglobal (L, "cp");
-  CLUE_DO (L, "cp.poppedup = true");
-  if (get_window_next (head_wp ()) == LUA_REFNIL)
-    CLUE_DO (L, "cp.close = true");
-
-  write_temp_buffer ("*Completions*", true, write_completion, cp, get_window_ewidth (cur_wp ()));
-
-  if (!get_completion_close (cp))
-    CLUE_DO (L, "cp.old_bp = cur_bp");
-
-  CLUE_DO (L, "term_redisplay ()");
-}
-
 char *
-minibuf_read_variable_name (char *fmt, ...)
+minibuf_read_variable_name (char *fmt)
 {
-  va_list ap;
   char *ms;
   int cp;
 
@@ -87,12 +52,9 @@ minibuf_read_variable_name (char *fmt, ...)
   lua_getglobal (L, "cp");
   cp = luaL_ref (L, LUA_REGISTRYINDEX);
 
-  va_start (ap, fmt);
-  ms = minibuf_vread_completion (fmt, "", cp, LUA_NOREF,
+  ms = minibuf_vread_completion (fmt, "", cp, LUA_REFNIL,
                                  "No variable name given",
-                                 minibuf_test_in_completions,
-                                 "Undefined variable name `%s'", ap);
-  va_end (ap);
+                                 "Undefined variable name `%s'");
 
   return ms;
 }

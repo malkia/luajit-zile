@@ -114,10 +114,8 @@ Argument is a command name.  If the prefix arg is non-nil, insert the
 message in the buffer.
 ]],
   function (l)
-    io.stderr:write ("where-is ")
     local name = minibuf_read_function_name ("Where is command: ")
     local g = {}
-    io.stderr:write (name ,"\n")
 
     ok = leNIL
 
@@ -132,7 +130,7 @@ message in the buffer.
         else
           local s = string.format ("%s is on %s", name, g.bindings)
           if bit.band (lastflag, FLAG_SET_UNIARG) ~= 0 then
-            bprintf ("%s", s)
+            insert_string (s)
           else
             minibuf_write (s)
           end
@@ -144,13 +142,13 @@ message in the buffer.
 }
 
 local function print_binding (key, p)
-  bprintf ("%-15s %s\n", key, get_binding_func (p))
+  insert_string (string.format ("%-15s %s\n", key, get_binding_func (p)))
 end
 
-local function write_bindings_list ()
-  bprintf ("Key translations:\n");
-  bprintf ("%-15s %s\n", "key", "binding")
-  bprintf ("%-15s %s\n", "---", "-------")
+local function write_bindings_list (key, binding)
+  insert_string ("Key translations:\n")
+  insert_string (string.format ("%-15s %s\n", "key", "binding"))
+  insert_string (string.format ("%-15s %s\n", "---", "-------"))
 
   walk_bindings (root_bindings, print_binding)
 end

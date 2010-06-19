@@ -117,9 +117,6 @@ enum
  * Zile commands to C bindings.
  *--------------------------------------------------------------------------*/
 
-#define LUA_NIL(e) \
-  ((e) == LUA_NOREF || (e) == LUA_REFNIL)       \
-
 /* Turn a bool into a Lisp boolean */
 #define bool_to_lisp(b) ((b) ? leT : leNIL)
 
@@ -146,7 +143,7 @@ enum
   const char *name = NULL; \
   bool free_ ## name = true;
 #define STR_INIT(name)                          \
-  if (!LUA_NIL (arglist) && !LUA_NIL (get_lists_next (arglist))) \
+  if (arglist != LUA_REFNIL && get_lists_next (arglist) != LUA_REFNIL)  \
     { \
       name = get_lists_data (get_lists_next (arglist));   \
       arglist = get_lists_next (arglist);           \
@@ -160,7 +157,7 @@ enum
 #define INT_ARG(name) \
   long name = 1;
 #define INT_INIT(name) \
-  if (!LUA_NIL (arglist) && !LUA_NIL (get_lists_next (arglist))) \
+  if (arglist != LUA_REFNIL && get_lists_next (arglist) != LUA_REFNIL) \
     { \
       const char *s = get_lists_data (get_lists_next (arglist));  \
       arglist = get_lists_next (arglist);                   \
@@ -178,7 +175,7 @@ enum
   else                                                                  \
     {                                                                   \
       if (!(lastflag () & FLAG_SET_UNIARG) && !is_uniarg &&             \
-          arglist != LUA_NOREF)                                         \
+          arglist != LUA_REFNIL)                                         \
         noarg = true;                                                   \
       name = uniarg;                                                    \
     }
@@ -187,7 +184,7 @@ enum
 #define BOOL_ARG(name) \
   bool name = true;
 #define BOOL_INIT(name) \
-  if (!LUA_NIL (arglist) && !LUA_NIL (get_lists_next (arglist))) \
+  if (arglist != LUA_REFNIL && get_lists_next (arglist) != LUA_REFNIL) \
     { \
       const char *s = get_lists_data (get_lists_next (arglist)); \
       arglist = get_lists_next (arglist);                  \
@@ -197,11 +194,11 @@ enum
 
 /* Call an interactive function. */
 #define FUNCALL(c_func)                         \
-  F_ ## c_func (1, false, LUA_NOREF)
+  F_ ## c_func (1, false, LUA_REFNIL)
 
 /* Call an interactive function with a universal argument. */
 #define FUNCALL_ARG(c_func, uniarg)             \
-  F_ ## c_func (uniarg, true, LUA_NOREF)
+  F_ ## c_func (uniarg, true, LUA_REFNIL)
 
 /*--------------------------------------------------------------------------
  * Keyboard handling.

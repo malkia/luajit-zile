@@ -39,21 +39,18 @@ zile_FUNCTION_SOURCES =					\
 	lisp.c						\
 	lua.c						\
 	macro.c						\
-	redisplay.c					\
 	registers.c					\
 	search.c					\
 	undo.c						\
 	variables.c					\
 	window.c
 
-# FIXME: Move lcurses.c to lib/
 zile_BASE_SOURCES =					\
 	$(zile_FUNCTION_SOURCES)			\
 	astr.c						\
 	astr.h						\
 	xalloc_extra.c					\
 	xalloc_extra.h					\
-	lcurses.c					\
 	extern.h					\
 	main.h						\
 	list_fields.h					\
@@ -65,7 +62,6 @@ zile_BASE_SOURCES =					\
 	completion.c					\
 	editfns.c					\
 	getkey.c					\
-	keycode.c					\
 	line.h						\
 	main.c						\
 	marker.h					\
@@ -78,9 +74,11 @@ zile_BASE_SOURCES =					\
 clue_SOURCES =						\
 	clue.h
 
+# FIXME: Move lcurses.c to lib/
 zile_SOURCES =						\
 	$(zile_BASE_SOURCES)				\
 	$(clue_SOURCES)					\
+	lcurses.c					\
 	loadlua.h					\
 	tbl_funcs.h					\
 	tbl_opts.h.in
@@ -93,14 +91,19 @@ zile_LUA =						\
 	bind.lua					\
 	buffer.lua					\
 	completion.lua					\
+	editfns.lua					\
+	funcs.lua					\
+	getkey.lua					\
 	history.lua					\
 	file.lua					\
 	keycode.lua					\
 	line.lua					\
 	lisp.lua					\
+	macro.lua					\
 	marker.lua					\
 	minibuf.lua					\
 	point.lua					\
+	redisplay.lua					\
 	undo.lua					\
 	variables.lua					\
 	window.lua					\
@@ -193,11 +196,6 @@ TESTS = $(check_PROGRAMS)
 check-local:
 	echo $(LISP_TESTS) | $(TESTS_VARS) EMACS="$(EMACS)" VALGRIND="$(VALGRIND)" xargs $(srcdir)/run-lisp-tests
 	echo $(LISP_TESTS_ZILE_ONLY) | $(TESTS_VARS) VALGRIND="$(VALGRIND)" xargs $(srcdir)/run-lisp-tests
-
-check_PROGRAMS = astr
-
-astr_CPPFLAGS = -DTEST -DSRCPATH="\"$(top_srcdir)/src\"" $(AM_CPPFLAGS)
-astr_LDADD = xalloc_extra.o $(LDADD)
 
 TESTSCRIPTS =						\
 	run-lisp-tests					\
@@ -397,8 +395,7 @@ LISP_TESTS_OUTPUTS =					\
 	lisp-tests/upcase_region.output			\
 	lisp-tests/upcase_word.output			\
 	lisp-tests/yank.output				\
-	lisp-tests/setq_nonexistent_variable.output	\
-	lisp-tests/test.input
+	lisp-tests/setq_nonexistent_variable.output
 
 EXTRA_DIST =						\
 	$(zile_LUA)					\
@@ -408,6 +405,7 @@ EXTRA_DIST =						\
 	$(LISP_TESTS)					\
 	$(LISP_TESTS_ZILE_ONLY)				\
 	$(LISP_TESTS_OUTPUTS)				\
+	lisp-tests/test.input				\
 	$(TESTSCRIPTS)					\
 	quit.el						\
 	dotzile-extra.el				\

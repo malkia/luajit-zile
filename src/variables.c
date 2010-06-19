@@ -152,7 +152,7 @@ Set a variable value to the user-specified value.
     return leNIL;
   STR_INIT (val)
   else
-    val = minibuf_read ("Set %s to value: ", "", var);
+    val = minibuf_read (astr_cstr (astr_afmt (astr_new (), "Set %s to value: ", var)), "");
   if (val == NULL)
     ok = FUNCALL (keyboard_quit);
 

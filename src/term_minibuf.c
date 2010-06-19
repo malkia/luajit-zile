@@ -29,245 +29,8 @@
 #include "main.h"
 #include "extern.h"
 
-static astr
-do_minibuf_read (const char *prompt, const char *value, size_t pos,
-                 int cp, int hp)
-{
-  static int overwrite_mode = 0;
-  int c, thistab, lasttab = -1;
-  size_t prompt_len;
-  char *s;
-  astr as = astr_new_cstr (value), saved = NULL;
-
-  prompt_len = strlen (prompt);
-  if (pos == SIZE_MAX)
-    pos = astr_len (as);
-
-  for (;;)
-    {
-      switch (lasttab)
-        {
-        case COMPLETION_MATCHEDNONUNIQUE:
-          s = " [Complete, but not unique]";
-          break;
-        case COMPLETION_NOTMATCHED:
-          s = " [No match]";
-          break;
-        case COMPLETION_MATCHED:
-          s = " [Sole completion]";
-          break;
-        default:
-          s = "";
-        }
-      CLUE_SET (L, prompt, string, prompt);
-      CLUE_SET (L, as, string, astr_cstr (as));
-      CLUE_SET (L, s, string, s);
-      CLUE_SET (L, pos, integer, pos);
-      CLUE_DO (L, "draw_minibuf_read (prompt, as, s, pos)");
-
-      thistab = -1;
-
-      switch (c = getkey ())
-        {
-        case KBD_NOKEY:
-          break;
-        case KBD_CTRL | 'z':
-          FUNCALL (suspend_emacs);
-          break;
-        case KBD_RET:
-          CLUE_DO (L, "term_move (term_height () - 1, 0)");
-          CLUE_DO (L, "term_clrtoeol ()");
-          if (saved)
-            astr_delete (saved);
-          return as;
-        case KBD_CANCEL:
-          CLUE_DO (L, "term_move (term_height () - 1, 0)");
-          CLUE_DO (L, "term_clrtoeol ()");
-          if (saved)
-            astr_delete (saved);
-          astr_delete (as);
-          return NULL;
-        case KBD_CTRL | 'a':
-        case KBD_HOME:
-          pos = 0;
-          break;
-        case KBD_CTRL | 'e':
-        case KBD_END:
-          pos = astr_len (as);
-          break;
-        case KBD_CTRL | 'b':
-        case KBD_LEFT:
-          if (pos > 0)
-            --pos;
-          else
-            ding ();
-          break;
-        case KBD_CTRL | 'f':
-        case KBD_RIGHT:
-          if (pos < astr_len (as))
-            ++pos;
-          else
-            ding ();
-          break;
-        case KBD_CTRL | 'k':
-          /* FIXME: do kill-register save. */
-          if (pos < astr_len (as))
-            astr_truncate (as, pos);
-          else
-            ding ();
-          break;
-        case KBD_BS:
-          if (pos > 0)
-            astr_remove (as, --pos, 1);
-          else
-            ding ();
-          break;
-        case KBD_CTRL | 'd':
-        case KBD_DEL:
-          if (pos < astr_len (as))
-            astr_remove (as, pos, 1);
-          else
-            ding ();
-          break;
-        case KBD_INS:
-          overwrite_mode = overwrite_mode ? 0 : 1;
-          break;
-        case KBD_META | 'v':
-        case KBD_PGUP:
-          if (LUA_NIL (cp))
-            {
-              ding ();
-              break;
-            }
-
-          if (get_completion_poppedup (cp))
-            {
-              completion_scroll_down ();
-              thistab = lasttab;
-            }
-          break;
-        case KBD_CTRL | 'v':
-        case KBD_PGDN:
-          if (LUA_NIL (cp))
-            {
-              ding ();
-              break;
-            }
-
-          if (get_completion_poppedup (cp))
-            {
-              completion_scroll_up ();
-              thistab = lasttab;
-            }
-          break;
-        case KBD_UP:
-        case KBD_META | 'p':
-          if (hp)
-            {
-              const char *elem;
-
-              lua_rawgeti (L, LUA_REGISTRYINDEX, hp);
-              lua_setglobal (L, "hp");
-              CLUE_DO (L, "elem = previous_history_element (hp)");
-              CLUE_GET (L, elem, string, elem);
-
-              if (elem)
-                {
-                  if (!saved)
-                    saved = astr_cpy (astr_new (), as);
-
-                  astr_cpy_cstr (as, elem);
-                }
-            }
-          break;
-        case KBD_DOWN:
-        case KBD_META | 'n':
-          if (hp)
-            {
-              const char *elem;
-
-              lua_rawgeti (L, LUA_REGISTRYINDEX, hp);
-              lua_setglobal (L, "hp");
-              CLUE_DO (L, "elem = next_history_element (hp)");
-              CLUE_GET (L, elem, string, elem);
-
-              if (elem)
-                astr_cpy_cstr (as, elem);
-              else if (saved)
-                {
-                  astr_cpy (as, saved);
-                  astr_delete (saved);
-                  saved = NULL;
-                }
-            }
-          break;
-        case KBD_TAB:
-        got_tab:
-          if (LUA_NIL (cp))
-            {
-              ding ();
-              break;
-            }
-
-          if (lasttab != -1 && lasttab != COMPLETION_NOTMATCHED
-              && get_completion_poppedup (cp))
-            {
-              completion_scroll_up ();
-              thistab = lasttab;
-            }
-          else
-            {
-              lua_rawgeti (L, LUA_REGISTRYINDEX, cp);
-              lua_setglobal (L, "cp");
-              CLUE_SET (L, search, string, astr_cstr (as));
-              CLUE_DO (L, "ret = completion_try (cp, search)");
-              CLUE_GET (L, ret, integer, thistab);
-
-              switch (thistab)
-                {
-                case COMPLETION_NONUNIQUE:
-                case COMPLETION_MATCHEDNONUNIQUE:
-                  popup_completion (cp);
-                case COMPLETION_MATCHED:
-                  {
-                    astr bs = astr_new ();
-                    if (get_completion_filename (cp))
-                      astr_cat_cstr (bs, get_completion_path (cp));
-                    astr_ncat_cstr (bs, get_completion_match (cp), get_completion_matchsize (cp));
-                    if (strncmp (astr_cstr (as), astr_cstr (bs),
-                                 astr_len (bs)) != 0)
-                      thistab = -1;
-                    astr_delete (as);
-                    as = bs;
-                    pos = astr_len (as);
-                    break;
-                  }
-                case COMPLETION_NOTMATCHED:
-                  ding ();
-                }
-            }
-          break;
-        case ' ':
-          if (!LUA_NIL (cp))
-            goto got_tab;
-          /* FALLTHROUGH */
-        default:
-          if (c > 255 || !isprint (c))
-            {
-              ding ();
-              break;
-            }
-          astr_insert_char (as, pos++, c);
-          if (overwrite_mode && pos != astr_len (as))
-            astr_remove (as, pos, 1);
-        }
-
-      lasttab = thistab;
-    }
-}
-
 char *
-term_minibuf_read (const char *prompt, const char *value, size_t pos,
+term_minibuf_read (const char *prompt, const char *value, long pos,
                    int cp, int hp)
 {
   int wp, old_wp = cur_wp ();
@@ -281,22 +44,45 @@ term_minibuf_read (const char *prompt, const char *value, size_t pos,
       CLUE_DO (L, "history_prepare (hp)");
     }
 
-  as = do_minibuf_read (prompt, value, pos, cp, hp);
+  {
+    const char *s;
+    CLUE_SET (L, prompt, string, prompt);
+    CLUE_SET (L, value, string, value);
+    CLUE_SET (L, pos, integer, pos);
+    lua_rawgeti (L, LUA_REGISTRYINDEX, cp);
+    lua_setglobal (L, "cp");
+    lua_rawgeti (L, LUA_REGISTRYINDEX, hp);
+    lua_setglobal (L, "hp");
+    CLUE_DO (L, "s = do_minibuf_read (prompt, value, pos, cp, hp)");
+    CLUE_GET (L, s, string, s);
+    as = s ? astr_new_cstr (s) : NULL;
+  }
   if (as)
     {
       s = xstrdup (astr_cstr (as));
       astr_delete (as);
     }
 
-  if (!LUA_NIL (cp) && get_completion_poppedup (cp)
-      && (wp = find_window ("*Completions*")) != LUA_REFNIL)
+  CLUE_SET (L, name, string, "*Completions*");
+  CLUE_DO (L, "wp = find_window (name)");
+  lua_getglobal (L, "wp");
+  wp = luaL_ref (L, LUA_REGISTRYINDEX);
+  if (cp != LUA_REFNIL && get_completion_poppedup (cp) && wp != LUA_REFNIL)
     {
-      set_current_window (wp);
+      lua_rawgeti (L, LUA_REGISTRYINDEX, wp);
+      lua_setglobal (L, "wp");
+      CLUE_DO (L, "set_current_window (wp)");
       if (get_completion_close (cp))
         FUNCALL (delete_window);
       else if (get_completion_old_bp (cp))
-        switch_to_buffer (get_completion_old_bp (cp));
-      set_current_window (old_wp);
+        {
+          lua_rawgeti (L, LUA_REGISTRYINDEX, get_completion_old_bp (cp));
+          lua_setglobal (L, "bp");
+          CLUE_DO (L, "switch_to_buffer (bp)");
+        }
+      lua_rawgeti (L, LUA_REGISTRYINDEX, old_wp);
+      lua_setglobal (L, "old_wp");
+      CLUE_DO (L, "set_current_window (old_wp)");
     }
 
   return s;

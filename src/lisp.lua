@@ -225,3 +225,46 @@ The values val are expressions; they are evaluated.
 function function_exists (f)
   return usercmd[f] ~= nil
 end
+
+-- Read a function name from the minibuffer.
+-- FIXME: local
+functions_history = nil
+function minibuf_read_function_name (s)
+  local cp = completion_new ()
+
+  for name, func in pairs (usercmd) do
+    if func.interactive then
+      table.insert (cp.completions, name)
+    end
+  end
+  add_macros_to_list (cp)
+
+  return minibuf_vread_completion (s, "", cp, functions_history,
+                                   "No function name given",
+                                   minibuf_test_in_completions,
+                                   "Undefined function name `%s'")
+end
+
+function execute_with_uniarg (undo, uniarg, forward, backward)
+  local func = forward
+
+  if backward and uniarg < 0 then
+    func = backward
+    uniarg = -uniarg
+  end
+  if undo then
+    undo_save (UNDO_START_SEQUENCE, cur_bp.pt, 0, 0)
+  end
+  local ret = true
+  for uni = 1, uniarg do
+    ret = func ()
+    if not ret then
+      break
+    end
+  end
+  if undo then
+    undo_save (UNDO_END_SEQUENCE, cur_bp.pt, 0, 0)
+  end
+
+  return bool_to_lisp (ret)
+end

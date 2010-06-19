@@ -187,8 +187,8 @@ static void
 goto_linep (int lp)
 {
   int pt;
-  set_buffer_pt (cur_bp (), point_min ());
-  resync_redisplay (cur_wp ());
+  CLUE_DO (L, "cur_bp.pt = point_min ()");
+  CLUE_DO (L, "resync_redisplay (cur_wp)");
   for (pt = get_buffer_pt (cur_bp ()); !lua_refeq (L, get_point_p (pt), lp); pt = get_buffer_pt (cur_bp ()))
     next_line ();
 }
@@ -433,7 +433,7 @@ isearch (int dir, int regexp)
               set_thisflag (thisflag () | FLAG_NEED_RESYNC);
             }
           else
-            ding ();
+            CLUE_DO (L, "ding ()");
         }
       else if (c & KBD_CTRL && (c & 0xff) == 'q')
         {
@@ -513,7 +513,7 @@ isearch (int dir, int regexp)
         last = true;
 
       if (thisflag () & FLAG_NEED_RESYNC)
-        resync_redisplay (cur_wp ());
+        CLUE_DO (L, "resync_redisplay (cur_wp)");
     }
 
   /* done */
@@ -602,7 +602,7 @@ what to do with it.
   find_len = strlen (find);
   find_no_upper = no_upper (find, find_len, false);
 
-  repl = minibuf_read ("Query replace `%s' with: ", "", find);
+  repl = minibuf_read (astr_cstr (astr_afmt (astr_new (), "Query replace `%s' with: ", find)), "");
   if (repl == NULL)
     {
       free (find);
@@ -617,7 +617,7 @@ what to do with it.
       if (!noask)
         {
           if (thisflag () & FLAG_NEED_RESYNC)
-            resync_redisplay (cur_wp ());
+            CLUE_DO (L, "resync_redisplay (cur_wp)");
           for (;;)
             {
               minibuf_write
@@ -660,7 +660,7 @@ what to do with it.
   free (repl);
 
   if (thisflag () & FLAG_NEED_RESYNC)
-    resync_redisplay (cur_wp ());
+    CLUE_DO (L, "resync_redisplay (cur_wp)");
 
   if (ok)
     minibuf_write ("Replaced %d occurrences", count);

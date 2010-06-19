@@ -33,7 +33,7 @@ GETKEY_DELAYED = 0001
 GETKEY_UNFILTERED = 0002
 
 -- Special value returned for invalid key codes, or when no key is pressed
-KBD_NOKEY = UINT_MAX
+KBD_NOKEY = -1
 
 -- Key modifiers.
 KBD_CTRL = 512

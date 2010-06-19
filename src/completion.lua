@@ -21,12 +21,12 @@
 
 -- Completions table:
 -- {
---   completions - list of completion strings
---   matches - list of matches
---   match - the current matched string
---   filename - true if the completion is a filename completion
---   poppedup - true if the completion is currently displayed
---   close - true if the completion window should be closed
+--   completions: list of completion strings
+--   matches: list of matches
+--   match: the current matched string
+--   filename: true if the completion is a filename completion
+--   poppedup: true if the completion is currently displayed
+--   close: true if the completion window should be closed
 -- }
 
 -- Make a new completions table
@@ -174,4 +174,24 @@ function completion_try (cp, search)
   end
 
   return ret, search
+end
+
+local function write_completion (cp, width)
+  insert_string (completion_write (cp, width))
+end
+
+-- Popup the completion window.
+function popup_completion (cp)
+  cp.poppedup = true
+  if head_wp.next == nil then
+    cp.close = true
+  end
+
+  write_temp_buffer ("*Completions*", true, write_completion, cp, cur_wp.ewidth)
+
+  if not cp.close then
+    cp.old_bp = cur_bp
+  end
+
+  term_redisplay ()
 end

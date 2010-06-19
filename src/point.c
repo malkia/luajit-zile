@@ -48,7 +48,7 @@
 int
 point_new (void)
 {
-  CLUE_DO (L, "pt = {o = 0, n = 0, p = {}}");
+  CLUE_DO (L, "pt = point_new ()");
   lua_getglobal (L, "pt");
   return luaL_ref (L, LUA_REGISTRYINDEX);
 }
@@ -87,26 +87,6 @@ cmp_point (int pt1, int pt2)
     return +1;
   else
     return ((get_point_o (pt1) < get_point_o (pt2)) ? -1 : (get_point_o (pt1) > get_point_o (pt2)) ? +1 : 0);
-}
-
-int
-point_min (void)
-{
-  int pt = point_new ();
-  set_point_p (pt, get_line_next (get_buffer_lines (cur_bp ())));
-  set_point_n (pt, 0);
-  set_point_o (pt, 0);
-  return pt;
-}
-
-int
-point_max (void)
-{
-  int pt = point_new ();
-  set_point_p (pt, get_line_prev (get_buffer_lines (cur_bp ())));
-  set_point_n (pt, get_buffer_last_line (cur_bp ()));
-  set_point_o (pt, strlen (get_line_text (get_line_prev (get_buffer_lines (cur_bp ())))));
-  return pt;
 }
 
 int

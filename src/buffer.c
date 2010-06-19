@@ -64,71 +64,12 @@
 #undef FIELD
 #undef TABLE_FIELD
 
-/*
- * Allocate a new buffer, set the default local variable values, and
- * insert it into the buffer list.
- * The allocation of the first empty line is done here to simplify
- * the code.
- */
 int
 buffer_new (void)
 {
-  int bp;
-
-  lua_newtable (L);
-  bp = luaL_ref (L, LUA_REGISTRYINDEX);
-
-  /* Allocate point. */
-  set_buffer_pt (bp, point_new ());
-
-  /* Allocate a line. */
-  CLUE_DO (L, "l = line_new ()");
-  lua_getglobal (L, "l");
-  set_point_p (get_buffer_pt (bp), luaL_ref (L, LUA_REGISTRYINDEX));
-  set_line_text (get_point_p (get_buffer_pt (bp)), "");
-
-  /* Allocate the limit marker. */
-  CLUE_DO (L, "l = line_new ()");
-  lua_getglobal (L, "l");
-  set_buffer_lines (bp, luaL_ref (L, LUA_REGISTRYINDEX));
-
-  set_line_prev (get_buffer_lines (bp), get_point_p (get_buffer_pt (bp)));
-  set_line_next (get_buffer_lines (bp), get_point_p (get_buffer_pt (bp)));
-  set_line_prev (get_point_p (get_buffer_pt (bp)), get_buffer_lines (bp));
-  set_line_next (get_point_p (get_buffer_pt (bp)), get_buffer_lines (bp));
-
-  /* Set default EOL string. */
-  set_buffer_eol (bp, coding_eol_lf);
-
-  /* Insert into buffer list. */
-  set_buffer_next (bp, head_bp ());
-  set_head_bp (bp);
-
-  init_buffer (bp);
-
-  return bp;
-}
-
-/*
- * Free the buffer's allocated memory.
- */
-void
-free_buffer (int bp)
-{
-  while (get_buffer_markers (bp) != LUA_REFNIL)
-    free_marker (get_buffer_markers (bp));
-
-  luaL_unref (L, LUA_REGISTRYINDEX, bp);
-}
-
-/*
- * Initialise a buffer
- */
-void
-init_buffer (int bp)
-{
-  if (get_variable_bool ("auto-fill-mode"))
-    set_buffer_autofill (bp, true);
+  CLUE_DO (L, "bp = buffer_new ()");
+  lua_getglobal (L, "bp");
+  return luaL_ref (L, LUA_REGISTRYINDEX);
 }
 
 /*
@@ -213,50 +154,6 @@ find_buffer (const char *name)
     }
 
   return LUA_REFNIL;
-}
-
-/* Move the selected buffer to head.  */
-
-static void
-move_buffer_to_head (int bp)
-{
-  int it, prev = LUA_REFNIL;
-
-  for (it = head_bp (); it; prev = it, it = get_buffer_next (it))
-    {
-      if (lua_refeq (L, bp, it))
-        {
-          if (prev != LUA_REFNIL)
-            {
-              set_buffer_next (prev, get_buffer_next (bp));
-              set_buffer_next (bp, head_bp ());
-              set_head_bp (bp);
-            }
-          break;
-        }
-    }
-}
-
-/*
- * Switch to the specified buffer.
- */
-void
-switch_to_buffer (int bp)
-{
-  assert (lua_refeq (L, get_window_bp (cur_wp ()), cur_bp ()));
-
-  /* The buffer is the current buffer; return safely.  */
-  if (cur_bp () == bp)
-    return;
-
-  /* Set current buffer.  */
-  set_cur_bp (bp);
-  set_window_bp (cur_wp (), cur_bp ());
-
-  /* Move the buffer to head.  */
-  move_buffer_to_head (bp);
-
-  set_thisflag (thisflag () | FLAG_NEED_RESYNC);
 }
 
 /*
@@ -356,40 +253,6 @@ delete_region (int rp)
   return true;
 }
 
-/*
- * Set the specified buffer temporary flag and move the buffer
- * to the end of the buffer list.
- */
-void
-set_temporary_buffer (int bp)
-{
-  int bp0;
-
-  set_buffer_temporary (bp, true);
-
-  if (bp == head_bp ())
-    {
-      if (get_buffer_next (head_bp ()) == LUA_REFNIL)
-        return;
-      set_head_bp (get_buffer_next (head_bp ()));
-    }
-  else if (get_buffer_next (bp) == LUA_REFNIL)
-    return;
-
-  for (bp0 = head_bp (); bp0 != LUA_REFNIL; bp0 = get_buffer_next (bp0))
-    if (lua_refeq (L, get_buffer_next (bp0), bp))
-      {
-        set_buffer_next (bp0, get_buffer_next (get_buffer_next (bp0)));
-        break;
-      }
-
-  for (bp0 = head_bp (); get_buffer_next (bp0) != LUA_REFNIL; bp0 = get_buffer_next (bp0))
-    ;
-
-  set_buffer_next (bp0, bp);
-  set_buffer_next (bp, LUA_REFNIL);
-}
-
 size_t
 calculate_buffer_size (int bp)
 {
@@ -465,60 +328,6 @@ create_scratch_buffer (void)
   return bp;
 }
 
-/*
- * Remove the specified buffer from the buffer list and deallocate
- * its space.  Recreate the scratch buffer when required.
- */
-void
-kill_buffer (int kill_bp)
-{
-  int next_bp, wp, bp;
-
-  if (get_buffer_next (kill_bp) != LUA_REFNIL)
-    next_bp = get_buffer_next (kill_bp);
-  else
-    next_bp = (lua_refeq (L, head_bp (), kill_bp)) ? LUA_REFNIL : head_bp ();
-
-  /* Search for windows displaying the buffer to kill. */
-  for (wp = head_wp (); wp != LUA_REFNIL; wp = get_window_next (wp))
-    if (lua_refeq (L, get_window_bp (wp), kill_bp))
-      {
-        set_window_bp (wp, next_bp);
-        set_window_topdelta (wp, 0);
-        set_window_saved_pt (wp, LUA_REFNIL); /* The old marker will be freed. */
-      }
-
-  /* Remove the buffer from the buffer list. */
-  if (lua_refeq (L, cur_bp (), kill_bp))
-    set_cur_bp (next_bp);
-  if (lua_refeq (L, head_bp (), kill_bp))
-    set_head_bp (get_buffer_next (head_bp ()));
-  for (bp = head_bp (); bp != LUA_REFNIL && get_buffer_next (bp) != LUA_REFNIL; bp = get_buffer_next (bp))
-    if (lua_refeq (L, get_buffer_next (bp), kill_bp))
-      {
-        set_buffer_next (bp, get_buffer_next (get_buffer_next (bp)));
-        break;
-      }
-
-  free_buffer (kill_bp);
-
-  /* If no buffers left, recreate scratch buffer and point windows at
-     it. */
-  if (next_bp == LUA_REFNIL)
-    {
-      next_bp = create_scratch_buffer ();
-      set_cur_bp (next_bp);
-      set_head_bp (next_bp);
-      for (wp = head_wp (); wp != LUA_REFNIL; wp = get_window_next (wp))
-        set_window_bp (wp, head_bp ());
-    }
-
-  /* Resync windows that need it. */
-  for (wp = head_wp (); wp != LUA_REFNIL; wp = get_window_next (wp))
-    if (lua_refeq (L, get_window_bp (wp), next_bp))
-      resync_redisplay (wp);
-}
-
 DEFUN_ARGS ("kill-buffer", kill_buffer,
             STR_ARG (buffer))
 /*+
@@ -532,8 +341,8 @@ With a nil argument, kill the current buffer.
   else
     {
       int cp = make_buffer_completion ();
-      buffer = minibuf_read_completion ("Kill buffer (default %s): ",
-                                        "", cp, LUA_NOREF, get_buffer_name (cur_bp ()));
+      buffer = minibuf_read_completion (astr_cstr (astr_afmt (astr_new (), "Kill buffer (default %s): ",
+                                                              get_buffer_name (cur_bp ()))), "", cp, LUA_REFNIL);
       if (buffer == NULL)
         ok = FUNCALL (keyboard_quit);
     }
@@ -556,7 +365,11 @@ With a nil argument, kill the current buffer.
       if (!check_modified_buffer (bp))
         ok = leNIL;
       else
-        kill_buffer (bp);
+        {
+          lua_rawgeti (L, LUA_REGISTRYINDEX, bp);
+          lua_setglobal (L, "bp");
+          CLUE_DO (L, "kill_buffer (bp)");
+        }
     }
 
   STR_FREE (buffer);
@@ -575,7 +388,7 @@ check_modified_buffer (int bp)
     for (;;)
       {
         int ans = minibuf_read_yesno
-          ("Buffer %s modified; kill anyway? (yes or no) ", get_buffer_name (bp));
+          (astr_cstr (astr_afmt (astr_new (), "Buffer %s modified; kill anyway? (yes or no) ", get_buffer_name (bp))));
         if (ans == -1)
           {
             FUNCALL (keyboard_quit);

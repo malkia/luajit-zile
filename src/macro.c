@@ -26,7 +26,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "gl_array_list.h"
 
 #include "main.h"
 #include "extern.h"
@@ -44,39 +43,41 @@
 #undef TABLE_FIELD
 
 
-static int cur_mp, cmd_mp = LUA_REFNIL, head_mp = LUA_REFNIL;
+static int cur_mp, cmd_mp = LUA_REFNIL;
 
 static int
 macro_new (void)
 {
-  int mp;
-
-  lua_newtable (L);
-  mp = luaL_ref (L, LUA_REGISTRYINDEX);
-  set_macro_keys (mp, gl_list_create_empty (GL_ARRAY_LIST,
-                                            NULL, NULL, NULL, true));
-  return mp;
+  CLUE_DO (L, "mp = {keys = {}}");
+  lua_getglobal (L, "mp");
+  return luaL_ref (L, LUA_REGISTRYINDEX);
 }
 
 static void
 add_macro_key (int mp, size_t key)
 {
-  gl_list_add_last (get_macro_keys (mp), (void *) key);
+  lua_rawgeti (L, LUA_REGISTRYINDEX, get_macro_keys (mp));
+  lua_setglobal (L, "keys");
+  CLUE_SET (L, key, integer, key);
+  CLUE_DO (L, "table.insert (keys, key)");
 }
 
 static void
 remove_macro_key (int mp)
 {
-  gl_list_remove_at (get_macro_keys (mp), gl_list_size (get_macro_keys (mp)) - 1);
+  lua_rawgeti (L, LUA_REGISTRYINDEX, get_macro_keys (mp));
+  lua_setglobal (L, "keys");
+  CLUE_DO (L, "table.remove (keys)");
 }
 
 static void
 append_key_list (int to, int from)
 {
-  size_t i;
-
-  for (i = 0; i < gl_list_size (get_macro_keys (from)); i++)
-    add_macro_key (to, (size_t) gl_list_get_at (get_macro_keys (from), i));
+  lua_rawgeti (L, LUA_REGISTRYINDEX, get_macro_keys (to));
+  lua_setglobal (L, "to");
+  lua_rawgeti (L, LUA_REGISTRYINDEX, get_macro_keys (from));
+  lua_setglobal (L, "from");
+  CLUE_DO (L, "to = list.concat (to, from)");
 }
 
 void
@@ -103,13 +104,6 @@ remove_key_from_cmd (void)
   remove_macro_key (cmd_mp);
 }
 
-void
-cancel_kbd_macro (void)
-{
-  cmd_mp = cur_mp = LUA_REFNIL;
-  set_thisflag (thisflag () & ~FLAG_DEFINING_MACRO);
-}
-
 DEFUN ("start-kbd-macro", start_kbd_macro)
 /*+
 Record subsequent keyboard input, defining a keyboard macro.
@@ -125,7 +119,7 @@ Use @kbd{M-x name-last-kbd-macro} to give it a permanent name.
     }
 
   if (cur_mp)
-    cancel_kbd_macro ();
+    CLUE_DO (L, "cancel_kbd_macro ()");
 
   minibuf_write ("Defining keyboard macro...");
 
@@ -175,16 +169,18 @@ Such a \"function\" cannot be called from Lisp, but it is a valid editor command
     }
 
   mp = get_macro (ms);
-  if (mp != LUA_REFNIL)
-    /* If a macro with this name already exists, update its key list */
-    free (get_macro_keys (mp));
-  else
+  /* If a macro with this name already exists, update its key list */
+  if (mp == LUA_REFNIL)
     {
+      int head_mp;
       /* Add a new macro to the list */
       mp = macro_new ();
+      lua_getglobal (L, "head_mp");
+      head_mp = luaL_ref (L, LUA_REGISTRYINDEX);
       set_macro_next (mp, head_mp);
       set_macro_name (mp, xstrdup (ms));
-      head_mp = mp;
+      lua_rawgeti (L, LUA_REGISTRYINDEX, mp);
+      lua_setglobal (L, "head_mp");
     }
 
   /* Copy the keystrokes from cur_mp. */
@@ -194,34 +190,14 @@ Such a \"function\" cannot be called from Lisp, but it is a valid editor command
 }
 END_DEFUN
 
-static void
-process_keys (gl_list_t keys)
-{
-  size_t i, len = gl_list_size (keys), cur;
-
-  CLUE_DO (L, "cur = term_buf_len ()");
-  CLUE_GET (L, cur, integer, cur);
-
-  for (i = 0; i < len; i++)
-    pushkey ((size_t) gl_list_get_at (keys, len - i - 1));
-
-  while (true)
-    {
-      size_t newcur;
-      CLUE_DO (L, "newcur = term_buf_len ()");
-      CLUE_GET (L, newcur, integer, newcur);
-      if (newcur <= cur)
-        break;
-      process_command ();
-    }
-}
-
 void
 call_macro (int mp)
 {
-  assert (mp);
-  assert (get_macro_keys (mp));
-  process_keys (get_macro_keys (mp));
+  assert (mp != LUA_REFNIL);
+  assert (get_macro_keys (mp) != LUA_REFNIL);
+  lua_rawgeti (L, LUA_REGISTRYINDEX, get_macro_keys (mp));
+  lua_setglobal (L, "keys");
+  CLUE_DO (L, "process_keys (keys)");
 }
 
 DEFUN ("call-last-kbd-macro", call_last_kbd_macro)
@@ -254,17 +230,17 @@ DEFUN_NONINTERACTIVE_ARGS ("execute-kbd-macro", execute_kbd_macro,
 Execute macro as string of editor command characters.
 +*/
 {
-  gl_list_t keys;
-
   STR_INIT (keystr);
-  keys = keystrtovec (keystr);
-  if (keys)
-    {
-      process_keys (keys);
-      gl_list_free (keys);
-    }
-  else
-    ok = leNIL;
+  CLUE_SET (L, keystr, string, keystr);
+  CLUE_DO (L, "keys = keystrtovec (keystr); keys_ok = keys ~= nil");
+  {
+    bool keys_ok;
+    CLUE_GET (L, keys_ok, boolean, keys_ok);
+    if (keys_ok)
+      CLUE_DO (L, "process_keys (keys)");
+    else
+      ok = leNIL;
+  }
   STR_FREE (keystr);
 }
 END_DEFUN
@@ -276,26 +252,12 @@ int
 get_macro (const char *name)
 {
   int mp;
+  int head_mp;
+  lua_getglobal (L, "head_mp");
+  head_mp = luaL_ref (L, LUA_REGISTRYINDEX);
   assert (name);
   for (mp = head_mp; mp != LUA_REFNIL; mp = get_macro_next (mp))
     if (!strcmp (get_macro_name (mp), name))
       return mp;
   return LUA_REFNIL;
-}
-
-/*
- * Add macro names to a list.
- */
-void
-add_macros_to_list (int l)
-{
-  int mp;
-
-  lua_rawgeti (L, LUA_REGISTRYINDEX, l);
-  lua_setglobal (L, "cp");
-  for (mp = head_mp; mp != LUA_REFNIL; mp = get_macro_next (mp))
-    {
-      CLUE_SET (L, s, string, get_macro_name (mp));
-      CLUE_DO (L, "table.insert (cp.completions, s)");
-    }
 }

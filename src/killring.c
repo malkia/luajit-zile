@@ -248,7 +248,7 @@ kill_text (int uniarg, const char * mark_func)
 
   push_mark ();
   undo_save (UNDO_START_SEQUENCE, get_buffer_pt (cur_bp ()), 0, 0);
-  execute_function (mark_func, uniarg, true, LUA_NOREF);
+  execute_function (mark_func, uniarg, true, LUA_REFNIL);
   FUNCALL (kill_region);
   undo_save (UNDO_END_SEQUENCE, get_buffer_pt (cur_bp ()), 0, 0);
   pop_mark ();

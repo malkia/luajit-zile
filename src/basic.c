@@ -193,7 +193,7 @@ Position 1 is the beginning of the buffer.
           }
         n = strtoul (ms, NULL, 10);
         if (n == LONG_MAX)
-          ding ();
+          CLUE_DO (L, "ding ()");
         free (ms);
       }
     while (n == LONG_MAX);
@@ -241,7 +241,7 @@ END_DEFUN
 void
 gotobob (void)
 {
-  set_buffer_pt (cur_bp (), point_min ());
+  CLUE_DO (L, "cur_bp.pt = point_min ()");
   set_thisflag (thisflag () | FLAG_NEED_RESYNC);
 }
 
@@ -261,7 +261,7 @@ END_DEFUN
 void
 gotoeob (void)
 {
-  set_buffer_pt (cur_bp (), point_max ());
+  CLUE_DO (L, "cur_bp.pt = point_max ()");
   set_thisflag (thisflag () | FLAG_NEED_RESYNC);
 }
 

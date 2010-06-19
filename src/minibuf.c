@@ -30,7 +30,7 @@
 #include "main.h"
 #include "extern.h"
 
-static int files_history = LUA_NOREF;
+static int files_history = LUA_REFNIL;
 
 /*--------------------------------------------------------------------------
  * Minibuffer wrapper functions.
@@ -86,45 +86,29 @@ minibuf_error (const char *fmt, ...)
   minibuf_vwrite (fmt, ap);
   va_end (ap);
 
-  ding ();
+  CLUE_DO (L, "ding ()");
 }
 
 /*
  * Read a string from the minibuffer.
  */
 char *
-minibuf_read (const char *fmt, const char *value, ...)
+minibuf_read (const char *fmt, const char *value)
 {
-  va_list ap;
-  char *buf, *p;
-
-  va_start (ap, value);
-  xvasprintf (&buf, fmt, ap);
-  va_end (ap);
-
-  p = term_minibuf_read (buf, value ? value : "", SIZE_MAX, LUA_NOREF, LUA_NOREF);
-  free (buf);
-
-  return p;
+  return term_minibuf_read (fmt, value ? value : "", -1, LUA_REFNIL, LUA_REFNIL);
 }
 
 /*
  * Read a non-negative number from the minibuffer.
  */
 unsigned long
-minibuf_read_number (const char *fmt, ...)
+minibuf_read_number (const char *fmt)
 {
-  va_list ap;
-  char *buf;
   unsigned long n;
-
-  va_start (ap, fmt);
-  xvasprintf (&buf, fmt, ap);
-  va_end (ap);
 
   do
     {
-      char *ms = minibuf_read (buf, "");
+      char *ms = minibuf_read (fmt, "");
       if (ms == NULL)
         {
           n = SIZE_MAX;
@@ -149,20 +133,15 @@ minibuf_read_number (const char *fmt, ...)
  */
 char *
 minibuf_read_filename (const char *fmt, const char *value,
-                       const char *file, ...)
+                       const char *file)
 {
-  va_list ap;
-  char *buf, *p = NULL;
+  char *p = NULL;
   astr as;
   size_t pos;
 
   as = astr_new_cstr (value);
   if (expand_path (as))
     {
-      va_start (ap, file);
-      xvasprintf (&buf, fmt, ap);
-      va_end (ap);
-
       as = compact_path (as);
 
       CLUE_DO (L, "cp = completion_new ()");
@@ -172,8 +151,7 @@ minibuf_read_filename (const char *fmt, const char *value,
       pos = astr_len (as);
       if (file)
         pos -= strlen (file);
-      p = term_minibuf_read (buf, astr_cstr (as), pos, luaL_ref (L, LUA_REGISTRYINDEX), files_history);
-      free (buf);
+      p = term_minibuf_read (fmt, astr_cstr (as), pos, luaL_ref (L, LUA_REGISTRYINDEX), files_history);
 
       if (p != NULL)
         {
@@ -197,32 +175,15 @@ minibuf_read_filename (const char *fmt, const char *value,
   return p;
 }
 
-bool
-minibuf_test_in_completions (const char *ms, int cp)
-{
-  bool found;
-  lua_rawgeti (L, LUA_REGISTRYINDEX, cp);
-  lua_setglobal (L, "cp");
-  CLUE_SET (L, s, string, ms);
-  CLUE_DO (L, "found = false; for i, v in pairs (cp.completions) do if v == s then found = true end end");
-  CLUE_GET (L, found, boolean, found);
-  return found;
-}
-
 int
-minibuf_read_yn (const char *fmt, ...)
+minibuf_read_yn (const char *fmt)
 {
-  va_list ap;
-  char *buf, *errmsg = "";
-
-  va_start (ap, fmt);
-  xvasprintf (&buf, fmt, ap);
-  va_end (ap);
+  char *errmsg = "";
 
   for (;;) {
     size_t key;
 
-    minibuf_write ("%s%s", errmsg, buf);
+    minibuf_write ("%s%s", errmsg, fmt);
     key = getkey ();
     switch (key)
       {
@@ -239,9 +200,8 @@ minibuf_read_yn (const char *fmt, ...)
 }
 
 int
-minibuf_read_yesno (const char *fmt, ...)
+minibuf_read_yesno (const char *fmt)
 {
-  va_list ap;
   char *ms;
   const char *errmsg = "Please answer yes or no.";
   int ret = -1;
@@ -250,10 +210,7 @@ minibuf_read_yesno (const char *fmt, ...)
   CLUE_DO (L, "cp.completions = {'no', 'yes'}");
   lua_getglobal (L, "cp");
 
-  va_start (ap, fmt);
-  ms = minibuf_vread_completion (fmt, "", luaL_ref (L, LUA_REGISTRYINDEX), LUA_NOREF, errmsg,
-                                 minibuf_test_in_completions, errmsg, ap);
-  va_end (ap);
+  ms = minibuf_vread_completion (fmt, "", luaL_ref (L, LUA_REGISTRYINDEX), LUA_REFNIL, errmsg, errmsg);
 
   if (ms != NULL)
     ret = !strcmp (ms, "yes");
@@ -263,19 +220,9 @@ minibuf_read_yesno (const char *fmt, ...)
 
 /* FIXME: Make all callers use history */
 char *
-minibuf_read_completion (const char *fmt, char *value, int cp, int hp, ...)
+minibuf_read_completion (const char *fmt, char *value, int cp, int hp)
 {
-  va_list ap;
-  char *buf, *ms;
-
-  va_start (ap, hp);
-  xvasprintf (&buf, fmt, ap);
-  va_end (ap);
-
-  ms = term_minibuf_read (buf, value, SIZE_MAX, cp, hp);
-
- free (buf);
- return ms;
+  return term_minibuf_read (fmt, value, -1, cp, hp);
 }
 
 /*
@@ -284,16 +231,13 @@ minibuf_read_completion (const char *fmt, char *value, int cp, int hp, ...)
 char *
 minibuf_vread_completion (const char *fmt, char *value, int cp,
                           int hp, const char *empty_err,
-                          bool (*test) (const char *s, int cp),
-                          const char *invalid_err, va_list ap)
+                          const char *invalid_err)
 {
-  char *buf, *ms;
-
-  xvasprintf (&buf, fmt, ap);
+  char *ms;
 
   for (;;)
     {
-      ms = term_minibuf_read (buf, value, SIZE_MAX, cp, hp);
+      ms = term_minibuf_read (fmt, value, -1, cp, hp);
 
       if (ms == NULL) /* Cancelled. */
         {
@@ -310,6 +254,7 @@ minibuf_vread_completion (const char *fmt, char *value, int cp,
       else
         {
           int comp;
+          bool b;
           /* Complete partial words if possible. */
           lua_rawgeti (L, LUA_REGISTRYINDEX, cp);
           lua_setglobal (L, "cp");
@@ -322,11 +267,20 @@ minibuf_vread_completion (const char *fmt, char *value, int cp,
               ms = xstrdup (get_completion_match (cp));
             }
           else if (comp == COMPLETION_NONUNIQUE)
-            popup_completion (cp);
-
-          if (test (ms, cp))
             {
-              if (hp)
+              lua_rawgeti (L, LUA_REGISTRYINDEX, cp);
+              lua_setglobal (L, "cp");
+              CLUE_DO (L, "popup_completion (cp)");
+            }
+
+          CLUE_SET (L, ms, string, ms);
+          lua_rawgeti (L, LUA_REGISTRYINDEX, cp);
+          lua_setglobal (L, "cp");
+          CLUE_DO (L, "b = minibuf_test_in_completions (ms, cp)");
+          CLUE_GET (L, b, boolean, b);
+          if (b)
+            {
+              if (hp != LUA_REFNIL)
                 {
                   lua_rawgeti (L, LUA_REGISTRYINDEX, hp);
                   lua_setglobal (L, "hp");
@@ -343,8 +297,6 @@ minibuf_vread_completion (const char *fmt, char *value, int cp,
             }
         }
     }
-
-  free (buf);
 
   return ms;
 }

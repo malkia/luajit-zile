@@ -27,7 +27,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "gl_array_list.h"
 
 #include "main.h"
 #include "extern.h"
@@ -177,54 +176,55 @@ DEFUN_ARGS ("describe-key", describe_key,
 Display documentation of the command invoked by a key sequence.
 +*/
 {
-  const char *name = NULL, *doc;
-  astr binding = NULL;
+  const char *name = NULL, *doc, *binding;
 
   STR_INIT (keystr);
   if (keystr != NULL)
     {
-      gl_list_t keys = keystrtovec (keystr);
+      int keys;
 
-      if (keys != NULL)
+      CLUE_SET (L, keystr, string, keystr);
+      CLUE_DO (L, "keys = keystrtovec (keystr)");
+      lua_getglobal (L, "keys");
+      keys = luaL_ref (L, LUA_REGISTRYINDEX);
+
+      if (keys != LUA_REFNIL)
         {
-          name = get_function_by_keys (keys);
-          binding = keyvectostr (keys);
-          gl_list_free (keys);
+          CLUE_DO (L, "name = get_function_by_keys (keys)");
+          CLUE_GET (L, name, string, name);
+          CLUE_DO (L, "s = keyvectostr (keys)");
+          CLUE_GET (L, s, string, binding);
+          luaL_unref (L, LUA_REGISTRYINDEX, keys);
         }
       else
         ok = leNIL;
     }
   else
     {
-      gl_list_t keys;
-
       minibuf_write ("Describe key:");
-      keys = get_key_sequence ();
-      name = get_function_by_keys (keys);
-      binding = keyvectostr (keys);
-      gl_list_free (keys);
+      CLUE_DO (L, "keys, name = get_key_sequence ()");
+      CLUE_GET (L, name, string, name);
+      CLUE_DO (L, "s = keyvectostr (keys)");
+      CLUE_GET (L, s, string, binding);
 
       if (name == NULL)
         {
-          minibuf_error ("%s is undefined", astr_cstr (binding));
+          minibuf_error ("%s is undefined", binding);
           ok = leNIL;
         }
     }
 
   if (ok == leT)
     {
-      minibuf_write ("%s runs the command `%s'", astr_cstr (binding), name);
+      minibuf_write ("%s runs the command `%s'", binding, name);
 
       doc = get_function_doc (name);
       if (doc == NULL)
         ok = leNIL;
       else
         write_temp_buffer ("*Help*", true,
-                           write_key_description, name, doc, astr_cstr (binding));
+                           write_key_description, name, doc, binding);
     }
-
-  if (binding)
-    astr_delete (binding);
 
   STR_FREE (keystr);
 }

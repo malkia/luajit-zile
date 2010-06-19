@@ -47,10 +47,10 @@ push_mark (void)
     { /* Save an invalid mark.  */
       int m;
       CLUE_DO (L, "m = marker_new ()");
+      CLUE_DO (L, "move_marker (m, cur_bp, point_min ())");
       lua_getglobal (L, "m");
       m = luaL_ref (L, LUA_REGISTRYINDEX);
-      move_marker (m, cur_bp (), point_min ());
-      set_point_p (get_marker_pt (m), LUA_NOREF);
+      set_point_p (get_marker_pt (m), LUA_REFNIL);
       gl_list_add_last (mark_ring, (void *) m);
     }
 }
@@ -160,15 +160,4 @@ eolp (void)
 {
   int pt = get_buffer_pt (cur_bp ());
   return get_point_o (pt) == strlen (get_line_text (get_point_p (pt)));
-}
-
-/* Signal an error, and abort any ongoing macro definition. */
-void
-ding (void)
-{
-  if (thisflag () & FLAG_DEFINING_MACRO)
-    cancel_kbd_macro ();
-
-  if (get_variable_bool ("ring-bell") && cur_wp () != LUA_REFNIL)
-    CLUE_DO (L, "term_beep ()");
 }

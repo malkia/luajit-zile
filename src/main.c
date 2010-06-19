@@ -88,12 +88,6 @@ void set_cur_bp (int bp)
   lua_setglobal (L, "cur_bp");
 }
 
-void set_head_bp (int bp)
-{
-  lua_rawgeti (L, LUA_REGISTRYINDEX, bp);
-  lua_setglobal (L, "head_bp");
-}
-
 int thisflag (void)
 {
   int ret;
@@ -175,8 +169,10 @@ setup_main_screen (void)
   /* *scratch* and two files. */
   if (c == 3)
     {
-      FUNCALL (split_window);
-      switch_to_buffer (last_bp);
+      CLUE_DO (L, "call_zile_command ('split-window')");
+      lua_rawgeti (L, LUA_REGISTRYINDEX, last_bp);
+      lua_setglobal (L, "last_bp");
+      CLUE_DO (L, "switch_to_buffer (last_bp)");
       FUNCALL (other_window);
     }
   /* More than two files. */
@@ -211,7 +207,6 @@ signal_init (void)
   signal (SIGBUS, segv_sig_handler);
   signal (SIGHUP, other_sig_handler);
   signal (SIGINT, other_sig_handler);
-  signal (SIGQUIT, other_sig_handler);
   signal (SIGTERM, other_sig_handler);
 }
 
@@ -374,7 +369,7 @@ main (int argc, char **argv)
 
   setlocale (LC_ALL, "");
 
-  init_default_bindings ();
+  CLUE_DO (L, "init_default_bindings ()");
   init_minibuf ();
 
   CLUE_DO (L, "term_init ()");
@@ -421,7 +416,7 @@ main (int argc, char **argv)
         case ARG_FUNCTION:
           ok = function_exists (arg);
           if (ok)
-            ok = execute_function (arg, 1, true, LUA_NOREF) != leNIL;
+            ok = execute_function (arg, 1, true, LUA_REFNIL) != leNIL;
           else
             minibuf_error ("Function `%s' not defined", arg);
           break;
@@ -450,7 +445,9 @@ main (int argc, char **argv)
   set_lastflag (lastflag () | FLAG_NEED_RESYNC);
 
   /* Reinitialise the scratch buffer to catch settings */
-  init_buffer (scratch_bp);
+  lua_rawgeti (L, LUA_REGISTRYINDEX, scratch_bp);
+  lua_setglobal (L, "scratch_bp");
+  CLUE_DO (L, "init_buffer (scratch_bp)");
 
   /* Refresh minibuffer in case there was an error that couldn't be
      written during startup */
@@ -460,7 +457,7 @@ main (int argc, char **argv)
   while (!(thisflag () & FLAG_QUIT))
     {
       if (lastflag () & FLAG_NEED_RESYNC)
-        resync_redisplay (cur_wp ());
+        CLUE_DO (L, "resync_redisplay (cur_wp)");
       CLUE_DO (L, "term_redisplay ()");
       CLUE_DO (L, "term_refresh ()");
       process_command ();

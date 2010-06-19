@@ -155,7 +155,7 @@ Read function name, then read its arguments and call it.
   if (name == NULL)
     return false;
 
-  ok = execute_function (name, uniarg, true, LUA_NOREF);
+  ok = execute_function (name, uniarg, true, LUA_REFNIL);
   free ((char *) name);
 }
 END_DEFUN
@@ -163,12 +163,10 @@ END_DEFUN
 /*
  * Read a function name from the minibuffer.
  */
-static int functions_history = LUA_NOREF;
+static int functions_history = LUA_REFNIL;
 const char *
-minibuf_read_function_name (const char *fmt, ...)
+minibuf_read_function_name (const char *fmt)
 {
-  va_list ap;
-  char *ms;
   int cp;
 
   CLUE_DO (L, "cp = completion_new ()");
@@ -176,27 +174,22 @@ minibuf_read_function_name (const char *fmt, ...)
   cp = luaL_ref (L, LUA_REGISTRYINDEX);
 
   CLUE_DO (L, "for name, func in pairs (usercmd) do if func.interactive then table.insert (cp.completions, name) end end");
-  add_macros_to_list (cp);
+  CLUE_DO (L, "add_macros_to_list (cp)");
 
-  va_start (ap, fmt);
-  ms = minibuf_vread_completion (fmt, "", cp, functions_history,
-                                 "No function name given",
-                                 minibuf_test_in_completions,
-                                 "Undefined function name `%s'", ap);
-  va_end (ap);
-
-  return ms;
+  return minibuf_vread_completion (fmt, "", cp, functions_history,
+                                   "No function name given",
+                                   "Undefined function name `%s'");
 }
 
 static int
 call_zile_c_command (lua_State *L)
 {
-  le trybranch;
+  le trybranch = LUA_REFNIL;
   const char *keyword;
-  assert (lua_isstring (L, -2));
-  assert (lua_istable (L, -1));
-  keyword = lua_tostring (L, -2);
-  trybranch = luaL_ref (L, LUA_REGISTRYINDEX);
+  assert (lua_isstring (L, 1));
+  keyword = lua_tostring (L, 1);
+  if (lua_gettop (L) == 2)
+    trybranch = luaL_ref (L, LUA_REGISTRYINDEX);
   assert (function_exists (keyword));
   lua_pushvalue (L, execute_function (keyword, 1, false, trybranch));
   luaL_unref (L, LUA_REGISTRYINDEX, trybranch);

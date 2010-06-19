@@ -268,7 +268,9 @@ find_file (const char *filename)
       if (get_buffer_filename (bp) != NULL &&
           !strcmp (get_buffer_filename (bp), filename))
         {
-          switch_to_buffer (bp);
+          lua_rawgeti (L, LUA_REGISTRYINDEX, bp);
+          lua_setglobal (L, "bp");
+          CLUE_DO (L, "switch_to_buffer (bp)");
           return true;
         }
     }
@@ -282,7 +284,9 @@ find_file (const char *filename)
   bp = buffer_new ();
   set_buffer_names (bp, filename);
 
-  switch_to_buffer (bp);
+  lua_rawgeti (L, LUA_REGISTRYINDEX, bp);
+  lua_setglobal (L, "bp");
+  CLUE_DO (L, "switch_to_buffer (bp)");
   read_file (filename);
 
   set_thisflag (thisflag () | FLAG_NEED_RESYNC);
@@ -352,7 +356,7 @@ If the current buffer now contains an empty file that you just visited
     ok = FUNCALL (keyboard_quit);
   else if (ms[0] != '\0' && check_modified_buffer (cur_bp ()))
     {
-      kill_buffer (cur_bp ());
+      CLUE_DO (L, "kill_buffer (cur_bp)");
       ok = bool_to_lisp (find_file (ms));
     }
 
@@ -374,8 +378,7 @@ Select buffer @i{buffer} in the current window.
   else
     {
       int cp = make_buffer_completion ();
-      buffer = minibuf_read_completion ("Switch to buffer (default %s): ",
-                                        "", cp, LUA_NOREF, get_buffer_name (bp));
+      buffer = minibuf_read_completion (astr_cstr (astr_afmt (astr_new (), "Switch to buffer (default %s): ", get_buffer_name (bp))), "", cp, LUA_REFNIL);
 
       if (buffer == NULL)
         ok = FUNCALL (keyboard_quit);
@@ -399,7 +402,9 @@ Select buffer @i{buffer} in the current window.
             }
         }
 
-      switch_to_buffer (bp);
+      lua_rawgeti (L, LUA_REGISTRYINDEX, bp);
+      lua_setglobal (L, "bp");
+      CLUE_DO (L, "switch_to_buffer (bp)");
     }
 
   STR_FREE (buffer);
@@ -453,8 +458,7 @@ Puts mark after the inserted text.
   else
     {
       int cp = make_buffer_completion ();
-      buffer = minibuf_read_completion ("Insert buffer (default %s): ",
-                                        "", cp, LUA_NOREF, get_buffer_name (def_bp));
+      buffer = minibuf_read_completion (astr_cstr (astr_afmt (astr_new (), "Insert buffer (default %s): ", get_buffer_name (def_bp))), "", cp, LUA_REFNIL);
       if (buffer == NULL)
         ok = FUNCALL (keyboard_quit);
     }
@@ -786,7 +790,7 @@ write_buffer (int bp, bool needname, bool confirm,
 
   if (confirm && exist_file (name))
     {
-      ans = minibuf_read_yn ("File `%s' exists; overwrite? (y or n) ", name);
+      ans = minibuf_read_yn (astr_cstr (astr_afmt (astr_new (), "File `%s' exists; overwrite? (y or n) ", name)));
       if (ans == -1)
         FUNCALL (keyboard_quit);
       if (ans == false)
@@ -852,7 +856,7 @@ Interactively, confirmation is required unless you supply a prefix argument.
 +*/
 {
   ok = write_buffer (cur_bp (), true,
-                     !LUA_NIL (arglist) && !(lastflag () & FLAG_SET_UNIARG),
+                     arglist != LUA_REFNIL && !(lastflag () & FLAG_SET_UNIARG),
                      NULL, "Write file: ");
 }
 END_DEFUN

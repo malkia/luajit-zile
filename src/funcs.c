@@ -119,26 +119,35 @@ write_temp_buffer (const char *name, bool show, void (*func) (va_list ap), ...)
   va_list ap;
 
   /* Popup a window with the buffer "name". */
-  wp = find_window (name);
+  CLUE_SET (L, name, string, name);
+  CLUE_DO (L, "wp = find_window (name)");
+  lua_getglobal (L, "wp");
+  wp = luaL_ref (L, LUA_REGISTRYINDEX);
   if (show && wp != LUA_REFNIL)
-    set_current_window (wp);
+    {
+      lua_rawgeti (L, LUA_REGISTRYINDEX, wp);
+      lua_setglobal (L, "wp");
+      CLUE_DO (L, "set_current_window (wp)");
+    }
   else
     {
       int bp = find_buffer (name);
       if (show)
-        set_current_window (popup_window ());
+        CLUE_DO (L, "set_current_window (popup_window ())");
       if (bp == LUA_REFNIL)
         {
           bp = buffer_new ();
           set_buffer_name (bp, name);
         }
-      switch_to_buffer (bp);
+      lua_rawgeti (L, LUA_REGISTRYINDEX, bp);
+      lua_setglobal (L, "bp");
+      CLUE_DO (L, "switch_to_buffer (bp)");
     }
 
   /* Remove the contents of that buffer. */
   new_bp = buffer_new ();
   set_buffer_name (new_bp, get_buffer_name (cur_bp ()));
-  kill_buffer (cur_bp ());
+  CLUE_DO (L, "kill_buffer (cur_bp)");
   set_cur_bp (new_bp);
   set_window_bp (cur_wp (), cur_bp ());
 
@@ -146,7 +155,7 @@ write_temp_buffer (const char *name, bool show, void (*func) (va_list ap), ...)
   set_buffer_needname (cur_bp (), true);
   set_buffer_noundo (cur_bp (), true);
   set_buffer_nosave (cur_bp (), true);
-  set_temporary_buffer (cur_bp ());
+  CLUE_DO (L, "set_temporary_buffer (cur_bp)");
 
   /* Use the "callback" routine. */
   va_start (ap, func);
@@ -158,11 +167,17 @@ write_temp_buffer (const char *name, bool show, void (*func) (va_list ap), ...)
   set_buffer_modified (cur_bp (), false);
 
   /* Restore old current window. */
-  set_current_window (old_wp);
+  lua_rawgeti (L, LUA_REGISTRYINDEX, old_wp);
+  lua_setglobal (L, "old_wp");
+  CLUE_DO (L, "set_current_window (old_wp)");
 
   /* If we're not showing the new buffer, switch back to the old one. */
   if (!show)
-    switch_to_buffer (old_bp);
+    {
+      lua_rawgeti (L, LUA_REGISTRYINDEX, old_bp);
+      lua_setglobal (L, "old_bp");
+      CLUE_DO (L, "switch_to_buffer (old_bp)");
+    }
 }
 
 static void
@@ -254,18 +269,18 @@ Just C-u as argument means to use the current column.
     get_point_o (get_buffer_pt (cur_bp ())) : (unsigned long) uniarg;
   char *buf;
 
-  if (!(lastflag () & FLAG_SET_UNIARG) && LUA_NIL (arglist))
+  if (!(lastflag () & FLAG_SET_UNIARG) && arglist == LUA_REFNIL)
     {
-      fill_col = minibuf_read_number ("Set fill-column to (default %d): ", get_point_o (get_buffer_pt (cur_bp ())));
+      fill_col = minibuf_read_number (astr_cstr (astr_afmt (astr_new (), "Set fill-column to (default %d): ", get_point_o (get_buffer_pt (cur_bp ())))));
       if (fill_col == LONG_MAX)
         return leNIL;
       else if (fill_col == LONG_MAX - 1)
         fill_col = get_point_o (get_buffer_pt (cur_bp ()));
     }
 
-  if (!LUA_NIL (arglist))
+  if (arglist != LUA_REFNIL)
     {
-      if (!LUA_NIL (get_lists_next (arglist)))
+      if (get_lists_next (arglist) != LUA_REFNIL)
         buf = (char *) get_lists_data (get_lists_next (arglist));
       else
         {
@@ -284,7 +299,7 @@ Just C-u as argument means to use the current column.
   if (ok == leT)
     set_variable ("fill-column", buf);
 
-  if (LUA_NIL (arglist))
+  if (arglist == LUA_REFNIL)
     free (buf);
 }
 END_DEFUN
@@ -322,7 +337,7 @@ Put the mark where point is now, and point where the mark is now.
 {
   int tmp;
 
-  if (get_buffer_mark (cur_bp ()) == LUA_NOREF)
+  if (get_buffer_mark (cur_bp ()) == LUA_REFNIL)
     {
       minibuf_error ("No mark set in this buffer");
       return leNIL;
@@ -411,11 +426,13 @@ Repeating @kbd{C-u} without digits or minus sign multiplies the argument
 by 4 each time.
 +*/
 {
-  int i = 0, arg = 1, sgn = 1;
+  int i = 0, arg = 1, sgn = 1, key;
   astr as = astr_new ();
 
   /* Need to process key used to invoke universal-argument. */
-  pushkey (lastkey ());
+  CLUE_DO (L, "key = lastkey ()");
+  CLUE_GET (L, key, integer, key);
+  pushkey (key);
 
   set_thisflag (thisflag () | FLAG_UNIARG_EMPTY);
 
@@ -424,7 +441,9 @@ by 4 each time.
       size_t key;
 
       astr_cat_char (as, '-'); /* Add the `-' character. */
-      key = do_binding_completion (as);
+      CLUE_SET (L, s, string, astr_cstr (as));
+      CLUE_DO (L, "key = do_binding_completion (s)");
+      CLUE_GET (L, key, integer, key);
       astr_truncate (as, astr_len (as) - 1); /* Remove the `-' character. */
 
       /* Cancelled. */
@@ -1095,7 +1114,7 @@ mark (int uniarg, const char * func)
 {
   le ret;
   FUNCALL (set_mark);
-  ret = execute_function (func, uniarg, true, LUA_NOREF);
+  ret = execute_function (func, uniarg, true, LUA_REFNIL);
   if (ret)
     FUNCALL (exchange_point_and_mark);
   return ret;
@@ -1158,7 +1177,7 @@ move_paragraph (int uniarg, bool (*forward) (void), bool (*backward) (void),
   if (is_empty_line ())
     FUNCALL (beginning_of_line);
   else
-    execute_function (line_extremum, 1, false, LUA_NOREF);
+    execute_function (line_extremum, 1, false, LUA_REFNIL);
 
   return leT;
 }

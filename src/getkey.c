@@ -29,15 +29,6 @@
 #include "main.h"
 #include "extern.h"
 
-static size_t _last_key;
-
-/* Return last key pressed */
-size_t
-lastkey (void)
-{
-  return _last_key;
-}
-
 /*
  * Get a keystroke, waiting for up to timeout 10ths of a second if
  * mode contains GETKEY_DELAYED, and translating it into a
@@ -46,15 +37,17 @@ lastkey (void)
 size_t
 xgetkey (int mode, size_t timeout)
 {
+  size_t key;
+
   CLUE_SET (L, mode, integer, mode);
   CLUE_SET (L, timeout, integer, timeout);
   CLUE_DO (L, "key = term_xgetkey (mode, timeout)");
-  CLUE_GET (L, key, integer, _last_key);
+  CLUE_GET (L, key, integer, key);
 
-  if (thisflag () & FLAG_DEFINING_MACRO)
-    add_key_to_cmd (_last_key);
+  if (key != KBD_NOKEY && thisflag () & FLAG_DEFINING_MACRO)
+    add_key_to_cmd (key);
 
-  return _last_key;
+  return key;
 }
 
 /*
