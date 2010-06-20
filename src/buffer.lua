@@ -151,7 +151,7 @@ function kill_buffer (kill_bp)
   end
 
   -- Search for windows displaying the buffer to kill.
-  local wp = head_bp
+  local wp = head_wp
   while wp do
     if wp.bp == kill_bp then
       wp.bp = next_bp
