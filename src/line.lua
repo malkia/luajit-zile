@@ -36,7 +36,7 @@ end
 local function adjust_markers (newlp, oldlp, pointo, dir, delta)
   local m_pt = point_marker ()
 
-  assert (dir >= -1 and dir <= 1)
+  assert (dir == -1 or dir == 0 or dir == 1)
 
   local m = cur_bp.markers
   while m do
@@ -65,7 +65,7 @@ local function intercalate_char (c)
 
   local as = cur_bp.pt.p.text
   undo_save (UNDO_REPLACE_BLOCK, cur_bp.pt, 0, 1)
-  as = string.sub (as, 1, cur_bp.pt.o) .. c .. string.sub (as, 1, cur_bp.pt.o + 1)
+  as = string.sub (as, 1, cur_bp.pt.o) .. c .. string.sub (as, cur_bp.pt.o + 1)
   cur_bp.pt.p.text = as
   cur_bp.modified = true
 
@@ -83,8 +83,8 @@ function insert_char (c)
 
   if cur_bp.overwrite then
     local pt = cur_bp.pt
-    -- Current character isn't the end of line && isn't a \t
-    -- || current char is a \t && we are in the tab limit.
+    -- (Current character isn't the end of line or a \t) or
+    -- (current character is a \t and we are in the tab limit).
     if pt.o < #pt.p.text and string.sub (pt.p.text, pt.o + 1, pt.o + 1) ~= '\t' or
       string.sub (pt.p.text, pt.o + 1, pt.o + 1) == '\t' and get_goalc () % t == t then
       -- Replace the character.
@@ -122,7 +122,7 @@ function insert_string (s)
   local i
   undo_save (UNDO_REPLACE_BLOCK, cur_bp.pt, 0, #s)
   undo_nosave = true
-  for i = 0, #s do
+  for i = 1, #s do
     if string.sub (s, i, i) == '\n' then
       insert_newline ()
     else
@@ -144,7 +144,7 @@ local function intercalate_newline ()
   -- Move the text after the point into a new line.
   line_insert (cur_bp.pt.p, string.sub (cur_bp.pt.p.text, cur_bp.pt.o + 1))
   cur_bp.last_line = cur_bp.last_line + 1
-  cur_bp.pt.p.text = string.sub (cur_bp.pt.p.text, 1, cur_bp.pt.o + 1)
+  cur_bp.pt.p.text = string.sub (cur_bp.pt.p.text, 1, cur_bp.pt.o)
   adjust_markers (cur_bp.pt.p.next, cur_bp.pt.p, cur_bp.pt.o, 1, 0)
 
   cur_bp.modified = true

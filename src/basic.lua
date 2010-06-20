@@ -1,22 +1,22 @@
 local function move_char (dir)
-  if dir > 0 and not eolp () or not bolp () then
+  if (dir > 0 and not eolp ()) or (dir < 0 and not bolp ()) then
     cur_bp.pt.o = cur_bp.pt.o + dir
     return true
-  elseif dir > 0 and not eobp () or not bobp () then
-      thisflag = bit.bor (thisflag, FLAG_NEED_RESYNC)
-      if dir > 0 then
-        cur_bp.pt.p = cur_bp.pt.p.next
-      else
-        cur_bp.pt.p = cur_bp.pt.p.prev
-      end
-      cur_bp.pt.n = cur_bp.pt.n + dir
-      if dir > 0 then
-        call_zile_command ("beginning_of_line")
-      else
-        call_zile_command ("end_of_line")
-      end
-      return true
+  elseif (dir > 0 and not eobp ()) or (dir < 0 and not bobp ()) then
+    thisflag = bit.bor (thisflag, FLAG_NEED_RESYNC)
+    if dir > 0 then
+      cur_bp.pt.p = cur_bp.pt.p.next
+    else
+      cur_bp.pt.p = cur_bp.pt.p.prev
     end
+    cur_bp.pt.n = cur_bp.pt.n + dir
+    if dir > 0 then
+      call_zile_command ("beginning-of-line")
+    else
+      call_zile_command ("end-of-line")
+    end
+    return true
+  end
 
   return false
 end

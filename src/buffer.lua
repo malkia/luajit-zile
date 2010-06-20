@@ -143,7 +143,11 @@ function kill_buffer (kill_bp)
   if kill_bp.next ~= nil then
     next_bp = kill_bp.next
   else
-    next_bp = kill_bp == head_bp and nil or head_bp
+    if kill_bp == head_bp then
+      next_bp = nil
+    else
+      next_bp = head_bp
+    end
   end
 
   -- Search for windows displaying the buffer to kill.
