@@ -418,7 +418,7 @@ insert_lines (size_t n, size_t end, size_t last, int from_lp)
     {
       insert_nstring (get_line_text (from_lp), strlen (get_line_text (from_lp)));
       if (n < last)
-        insert_newline ();
+        CLUE_DO (L, "insert_newline ()");
     }
   return n;
 }
@@ -436,7 +436,7 @@ insert_buffer (int bp)
   insert_lines (0, old_cur_n, old_lines, get_line_next (get_buffer_lines (bp)));
   insert_astr (old_cur_line);
   if (old_cur_n < old_lines)
-    insert_newline ();
+    CLUE_DO (L, "insert_newline ()");
   insert_lines (old_cur_n + 1, old_lines, old_lines, old_next);
   astr_delete (old_cur_line);
   set_undo_nosave (false);

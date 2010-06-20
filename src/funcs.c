@@ -108,7 +108,7 @@ print_buf (int old_bp, int bp)
       insert_astr (shortname);
       astr_delete (shortname);
     }
-  insert_newline ();
+  CLUE_DO (L, "insert_newline ()");
 }
 
 void
