@@ -1314,16 +1314,10 @@ module ("string", package.seeall)
 --   @param n: index
 -- @returns
 --   @param s_: string.sub (s, n, n)
-local oldmeta = getmetatable ("").__index
 getmetatable ("").__index =
   function (s, n)
     if type (n) == "number" then
       return sub (s, n, n)
-    -- Fall back to old metamethods
-    elseif type (oldmeta) == "function" then
-      return oldmeta (s, n)
-    else
-      return oldmeta[n]
     end
   end
 
@@ -1958,6 +1952,7 @@ end
 -- @func processArgs: simple getOpt wrapper
 -- adds -version/-v and -help/-h/-? automatically; stops program
 -- if there was an error or -help was used
+_G.options = nil
 function processArgs ()
   local totArgs = #arg
   options = Options (list.concat (options or {},
