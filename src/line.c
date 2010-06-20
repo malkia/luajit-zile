@@ -147,12 +147,6 @@ intercalate_newline (void)
   return true;
 }
 
-bool
-insert_newline (void)
-{
-  return intercalate_newline () && forward_char ();
-}
-
 /*
  * Check the case of a string.
  * Returns 2 if it is all upper case, 1 if just the first letter is,
@@ -271,7 +265,7 @@ fill_break_line (void)
           int pt = get_buffer_pt (cur_bp ());
           set_point_o (pt, break_col);
           FUNCALL (delete_horizontal_space);
-          insert_newline ();
+          CLUE_DO (L, "insert_newline ()");
           set_buffer_pt (cur_bp (), point_copy (get_marker_pt (m)));
           break_made = true;
         }
@@ -290,10 +284,13 @@ fill_break_line (void)
 static bool
 newline (void)
 {
+  bool ret;
   if (get_buffer_autofill (cur_bp ()) &&
       get_goalc () > (size_t) get_variable_number ("fill-column"))
     fill_break_line ();
-  return insert_newline ();
+  CLUE_DO (L, "ret = insert_newline ()");
+  CLUE_GET (L, ret, boolean, ret);
+  return ret;
 }
 
 DEFUN ("newline", newline)
@@ -324,7 +321,7 @@ insert_nstring (const char *s, size_t len)
   for (i = 0; i < len; i++)
     {
       if (s[i] == '\n')
-        insert_newline ();
+        CLUE_DO (L, "insert_newline ()");
       else
         insert_char_in_insert_mode (s[i]);
     }
@@ -634,6 +631,8 @@ Insert a newline, then indent.
 Indentation is done using the `indent-for-tab-command' function.
 +*/
 {
+  bool ret;
+
   ok = leNIL;
 
   if (warn_if_readonly_buffer ())
@@ -642,7 +641,9 @@ Indentation is done using the `indent-for-tab-command' function.
   deactivate_mark ();
 
   undo_save (UNDO_START_SEQUENCE, get_buffer_pt (cur_bp ()), 0, 0);
-  if (insert_newline ())
+  CLUE_DO (L, "ret = insert_newline ()");
+  CLUE_GET (L, ret, boolean, ret);
+  if (ret)
     {
       int m = point_marker (), indent;
       size_t pos;
