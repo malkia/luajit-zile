@@ -270,6 +270,7 @@ DEFUN ("open-line", open_line)
 Insert a newline and leave point before it.
 +*/
 {
+  CLUE_SET (L, uniarg, integer, uniarg);
   CLUE_DO (L, "ok = execute_with_uniarg (true, uniarg, intercalate_newline)");
   lua_getglobal (L, "ok");
   ok = luaL_ref (L, LUA_REGISTRYINDEX);

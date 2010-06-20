@@ -134,7 +134,8 @@ end
 
 -- Insert a newline at the current position without moving the cursor.
 -- Update markers after point in the split line.
-local function intercalate_newline ()
+-- FIXME: local
+function intercalate_newline ()
   if warn_if_readonly_buffer () then
     return false
   end
