@@ -47,7 +47,7 @@ local function walk_bindings (tree, process, st)
       else
         table.insert (keys, chordtostr (key))
         walk_bindings_tree (node, keys, process, st)
-        tree.remove (keys)
+        table.remove (keys)
       end
     end
   end
@@ -141,8 +141,8 @@ message in the buffer.
   end
 }
 
-local function print_binding (key, p)
-  insert_string (string.format ("%-15s %s\n", key, get_binding_func (p)))
+local function print_binding (key, func)
+  insert_string (string.format ("%-15s %s\n", key, func))
 end
 
 local function write_bindings_list (key, binding)
