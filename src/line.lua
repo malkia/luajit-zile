@@ -224,7 +224,8 @@ function delete_char ()
   return true
 end
 
-local function backward_delete_char ()
+-- FIXME: local
+function backward_delete_char ()
   deactivate_mark ()
 
   if not backward_char () then
