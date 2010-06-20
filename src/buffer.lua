@@ -46,6 +46,14 @@ function init_buffer (bp)
   end
 end
 
+function activate_mark ()
+  cur_bp.mark_active = true
+end
+
+function deactivate_mark ()
+  cur_bp.mark_active = false
+end
+
 -- Return a safe tab width for the given buffer.
 function tab_width (bp)
   return math.max (get_variable_number_bp (bp, "tab-width"), 1)
