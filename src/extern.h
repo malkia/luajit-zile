@@ -147,7 +147,6 @@ void line_replace_text (int lp, size_t offset, size_t oldlen,
                         char *newtext, int replace_case);
 int insert_char_in_insert_mode (int c);
 bool fill_break_line (void);
-bool insert_newline (void);
 void insert_nstring (const char *s, size_t len);
 void insert_astr (astr as);
 void bprintf (const char *fmt, ...);
