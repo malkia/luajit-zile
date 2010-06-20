@@ -185,8 +185,6 @@ CLUE_DECLS(L);
 extern char *prog_name;
 int cur_wp (void);
 int head_wp (void);
-void set_cur_wp (int wp);
-void set_head_wp (int wp);
 int cur_bp (void);
 int head_bp (void);
 void set_cur_bp (int bp);

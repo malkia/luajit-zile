@@ -53,7 +53,7 @@ delete_window (int del_wp)
   if (del_wp == head_wp ())
     {
       wp = get_window_next (head_wp ());
-      set_head_wp (wp);
+      CLUE_DO (L, "head_wp = head_wp.next");
     }
   else
     for (wp = head_wp (); wp != LUA_REFNIL; wp = get_window_next (wp))
@@ -209,11 +209,11 @@ create_scratch_window (void)
   CLUE_GET (L, w, integer, w);
   CLUE_GET (L, h, integer, h);
   CLUE_DO (L, "wp = window_new ()");
+  CLUE_DO (L, "cur_wp = wp");
+  CLUE_DO (L, "head_wp = wp");
   lua_getglobal (L, "wp");
   wp = luaL_ref (L, LUA_REGISTRYINDEX);
 
-  set_cur_wp (wp);
-  set_head_wp (wp);
   set_window_fwidth (wp, w);
   set_window_ewidth (wp, w);
   /* Save space for minibuffer. */

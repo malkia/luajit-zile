@@ -58,18 +58,6 @@ int head_wp (void)
   return luaL_ref (L, LUA_REGISTRYINDEX);
 }
 
-void set_cur_wp (int wp)
-{
-  lua_rawgeti (L, LUA_REGISTRYINDEX, wp);
-  lua_setglobal (L, "cur_wp");
-}
-
-void set_head_wp (int wp)
-{
-  lua_rawgeti (L, LUA_REGISTRYINDEX, wp);
-  lua_setglobal (L, "head_wp");
-}
-
 int cur_bp (void)
 {
   lua_getglobal (L, "cur_bp");
