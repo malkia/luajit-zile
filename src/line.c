@@ -91,14 +91,9 @@ int
 insert_char_in_insert_mode (int c)
 {
   int ret;
-  bool old_overwrite = get_buffer_overwrite (cur_bp ());
-
-  set_buffer_overwrite (cur_bp (), false);
   CLUE_SET (L, c, integer, c);
-  CLUE_DO (L, "ret = insert_char (string.char (c))");
+  CLUE_DO (L, "ret = insert_char_in_insert_mode (string.char (c))");
   CLUE_GET (L, ret, integer, ret);
-  set_buffer_overwrite (cur_bp (), old_overwrite);
-
   return ret;
 }
 
@@ -113,39 +108,6 @@ buffer.
   ok = luaL_ref (L, LUA_REGISTRYINDEX);
 }
 END_DEFUN
-
-/*
- * Insert a newline at the current position without moving the cursor.
- * Update markers after point in the split line.
- */
-static bool
-intercalate_newline (void)
-{
-  astr as;
-
-  if (warn_if_readonly_buffer ())
-    return false;
-
-  undo_save (UNDO_REPLACE_BLOCK, get_buffer_pt (cur_bp ()), 0, 1);
-
-  /* Move the text after the point into a new line. */
-  CLUE_SET (L, s, string, get_line_text (get_point_p (get_buffer_pt (cur_bp ()))));
-  CLUE_SET (L, o, integer, get_point_o (get_buffer_pt (cur_bp ())));
-  lua_rawgeti (L, LUA_REGISTRYINDEX, get_point_p (get_buffer_pt (cur_bp ())));
-  lua_setglobal (L, "l");
-  CLUE_DO (L, "line_insert (l, string.sub (s, o + 1))");
-  set_buffer_last_line (cur_bp (), get_buffer_last_line (cur_bp ()) + 1);
-  as = astr_new_cstr (get_line_text (get_point_p (get_buffer_pt (cur_bp ()))));
-  astr_truncate (as, get_point_o (get_buffer_pt (cur_bp ())));
-  set_line_text (get_point_p (get_buffer_pt (cur_bp ())), xstrdup (astr_cstr (as)));
-  astr_delete (as);
-  adjust_markers (get_line_next (get_point_p (get_buffer_pt (cur_bp ()))), get_point_p (get_buffer_pt (cur_bp ())), get_point_o (get_buffer_pt (cur_bp ())), 1, 0);
-
-  set_buffer_modified (cur_bp (), true);
-  set_thisflag (thisflag () | FLAG_NEED_RESYNC);
-
-  return true;
-}
 
 /*
  * Check the case of a string.
@@ -308,7 +270,9 @@ DEFUN ("open-line", open_line)
 Insert a newline and leave point before it.
 +*/
 {
-  ok = execute_with_uniarg (true, uniarg, intercalate_newline, NULL);
+  CLUE_DO (L, "ok = execute_with_uniarg (true, uniarg, intercalate_newline)");
+  lua_getglobal (L, "ok");
+  ok = luaL_ref (L, LUA_REGISTRYINDEX);
 }
 END_DEFUN
 
