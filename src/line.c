@@ -103,6 +103,7 @@ Insert a tabulation at the current point position into the current
 buffer.
 +*/
 {
+  CLUE_SET (L, uniarg, integer, uniarg);
   CLUE_DO (L, "ok = execute_with_uniarg (true, uniarg, insert_tab)");
   lua_getglobal (L, "ok");
   ok = luaL_ref (L, LUA_REGISTRYINDEX);
