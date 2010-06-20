@@ -83,7 +83,7 @@ function get_function_by_keys (keys)
   -- Detect Meta-digit
   if #keys == 1 then
     local key = keys[1]
-    if bit.band (key, KBD_META) and (isdigit (bit.band (key, 0xff)) or bit.band (key, 0xff) == string.byte ('-')) then
+    if bit.band (key, KBD_META) ~= 0 and (isdigit (bit.band (key, 0xff)) or bit.band (key, 0xff) == string.byte ('-')) then
       return "universal-argument"
     end
   end
