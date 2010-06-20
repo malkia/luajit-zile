@@ -27,6 +27,12 @@ function minibuf_write (s)
   minibuf_refresh ()
 end
 
+-- Write the specified error string in the minibuffer and signal an error.
+function minibuf_error (s)
+  minibuf_write (s)
+  ding ()
+end
+
 function minibuf_test_in_completions (ms, cp)
   for i, v in pairs (cp.completions) do
     if v == s then
