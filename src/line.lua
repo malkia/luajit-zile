@@ -214,7 +214,7 @@ function delete_char ()
     thisflag = bit.bor (thisflag, FLAG_NEED_RESYNC)
   else
     local as = cur_bp.pt.p.text
-    as = string.sub (as, 1, cur_bp.pt.o) .. string.sub (as, cur_bp.pt.o + 1)
+    as = string.sub (as, 1, cur_bp.pt.o) .. string.sub (as, cur_bp.pt.o + 2)
     cur_bp.pt.p.text = as
     adjust_markers (cur_bp.pt.p, cur_bp.pt.p, cur_bp.pt.o, 0, -1)
   end
