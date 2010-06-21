@@ -21,19 +21,12 @@
 
 #include "config.h"
 
-#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
 #include "main.h"
 #include "extern.h"
 
-/*
- * Get a keystroke, waiting for up to timeout 10ths of a second if
- * mode contains GETKEY_DELAYED, and translating it into a
- * keycode unless mode contains GETKEY_UNFILTERED.
- */
 size_t
 xgetkey (int mode, size_t timeout)
 {
@@ -41,52 +34,14 @@ xgetkey (int mode, size_t timeout)
 
   CLUE_SET (L, mode, integer, mode);
   CLUE_SET (L, timeout, integer, timeout);
-  CLUE_DO (L, "key = term_xgetkey (mode, timeout)");
+  CLUE_DO (L, "key = xgetkey (mode, timeout)");
   CLUE_GET (L, key, integer, key);
-
-  if (key != KBD_NOKEY && thisflag () & FLAG_DEFINING_MACRO)
-    add_key_to_cmd (key);
 
   return key;
 }
 
-/*
- * Wait for a keystroke indefinitely, and return the
- * corresponding keycode.
- */
 size_t
 getkey (void)
 {
   return xgetkey (0, 0);
-}
-
-/*
- * Wait for timeout 10ths if a second or until a key is pressed.
- * The key is then available with [x]getkey.
- */
-void
-waitkey (size_t timeout)
-{
-  ungetkey (xgetkey (GETKEY_DELAYED, timeout));
-}
-
-/*
- * Push a key into the input buffer.
- */
-void
-pushkey (size_t key)
-{
-  CLUE_SET (L, key, integer, key);
-  CLUE_DO (L, "term_ungetkey (key)");
-}
-
-/*
- * Unget a key as if it had not been fetched.
- */
-void ungetkey (size_t key)
-{
-  pushkey (key);
-
-  if (thisflag () & FLAG_DEFINING_MACRO)
-    remove_key_from_cmd ();
 }

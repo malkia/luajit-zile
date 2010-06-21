@@ -495,7 +495,10 @@ isearch (int dir, int regexp)
               else
                 minibuf_clear ();
               if (c != KBD_RET)
-                ungetkey (c);
+                {
+                  CLUE_SET (L, c, integer, c);
+                  CLUE_DO (L, "ungetkey (c)");
+                }
             }
           break;
         }
@@ -628,7 +631,7 @@ what to do with it.
                   || c == 'n' || c == 'q' || c == '.' || c == '!')
                 break;
               minibuf_error ("Please answer y, n, !, . or q.");
-              waitkey (WAITKEY_DEFAULT);
+              CLUE_DO (L, "waitkey (WAITKEY_DEFAULT)");
             }
           minibuf_clear ();
 

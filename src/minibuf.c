@@ -293,7 +293,7 @@ minibuf_vread_completion (const char *fmt, char *value, int cp,
           else
             {
               minibuf_error (invalid_err, ms);
-              waitkey (WAITKEY_DEFAULT);
+              CLUE_DO (L, "waitkey (WAITKEY_DEFAULT)");
             }
         }
     }

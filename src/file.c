@@ -747,7 +747,7 @@ write_to_disk (int bp, const char *filename)
       else
         {
           minibuf_error ("Cannot make backup file: %s", strerror (errno));
-          waitkey (WAITKEY_DEFAULT);
+          CLUE_DO (L, "waitkey (WAITKEY_DEFAULT)");
         }
       astr_delete (bfilename);
     }
@@ -912,7 +912,7 @@ save_some_buffers (void)
                     goto exitloop;
                   default:
                     minibuf_error ("Please answer y, n, !, . or q.");
-                    waitkey (WAITKEY_DEFAULT);
+                    CLUE_DO (L, "waitkey (WAITKEY_DEFAULT)");
                     break;
                   }
               }

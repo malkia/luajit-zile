@@ -123,11 +123,8 @@ void set_mark_interactive (void);
 void write_temp_buffer (const char *name, bool show, void (*func) (va_list ap), ...);
 
 /* getkey.c --------------------------------------------------------------- */
-void pushkey (size_t key);
-void ungetkey (size_t key);
 size_t xgetkey (int mode, size_t timeout);
 size_t getkey (void);
-void waitkey (size_t delay);
 
 /* killring.c ------------------------------------------------------------- */
 void free_kill_ring (void);

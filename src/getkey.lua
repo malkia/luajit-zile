@@ -23,3 +23,23 @@ end
 function getkey ()
   return xgetkey (0, 0)
 end
+
+-- Push a key into the input buffer.
+function pushkey (key)
+  term_ungetkey (key)
+end
+
+-- Unget a key as if it had not been fetched.
+function ungetkey (key)
+  pushkey (key)
+
+  if bit.band (thisflag, FLAG_DEFINING_MACRO) ~= 0 then
+    remove_key_from_cmd ()
+  end
+end
+
+-- Wait for timeout 10ths if a second or until a key is pressed.
+-- The key is then available with [x]getkey.
+function waitkey (timeout)
+  ungetkey (xgetkey (GETKEY_DELAYED, timeout))
+end

@@ -133,7 +133,7 @@ about_screen (void)
       CLUE_SET (L, splash, string, about_splash_str);
       CLUE_DO (L, "show_splash_screen (splash)");
       CLUE_DO (L, "term_refresh ()");
-      waitkey (20 * 10);
+      CLUE_DO (L, "waitkey (20 * 10)");
     }
 }
 
