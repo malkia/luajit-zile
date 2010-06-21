@@ -172,7 +172,6 @@ int lua_refeq (lua_State *L, int r1, int r2);
 void lua_init (lua_State *L);
 
 /* macro.c ---------------------------------------------------------------- */
-void add_cmd_to_macro (void);
 void add_key_to_cmd (size_t key);
 void remove_key_from_cmd (void);
 void call_macro (int mp);

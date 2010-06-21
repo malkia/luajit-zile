@@ -81,14 +81,6 @@ append_key_list (int to, int from)
 }
 
 void
-add_cmd_to_macro (void)
-{
-  assert (cmd_mp);
-  append_key_list (cur_mp, cmd_mp);
-  cmd_mp = LUA_REFNIL;
-}
-
-void
 add_key_to_cmd (size_t key)
 {
   if (cmd_mp == LUA_REFNIL)

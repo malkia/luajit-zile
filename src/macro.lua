@@ -28,3 +28,13 @@ function add_macros_to_list (cp)
     mp = mp.next
   end
 end
+
+local function append_key_list (to, from)
+  to.keys = list.concat (to.keys, from.keys)
+end
+
+function add_cmd_to_macro ()
+  assert (cmd_mp)
+  append_key_list (cur_mp, cmd_mp)
+  cmd_mp = nil
+end
