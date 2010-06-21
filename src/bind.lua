@@ -147,11 +147,9 @@ Print message listing key sequences that invoke the command DEFINITION.
 Argument is a command name.  If the prefix arg is non-nil, insert the
 message in the buffer.
 ]],
-  function (l)
+  function ()
     local name = minibuf_read_function_name ("Where is command: ")
     local g = {}
-
-    ok = leNIL
 
     if name then
       g.f = name
@@ -169,9 +167,11 @@ message in the buffer.
             minibuf_write (s)
           end
         end
-        ok = leT
+        return leT
       end
     end
+
+    return leNIL
   end
 }
 
@@ -193,5 +193,6 @@ Show a list of all defined keys, and their definitions.
 ]],
   function ()
     write_temp_buffer ("*Help*", true, write_bindings_list)
+    return leT
   end
 }

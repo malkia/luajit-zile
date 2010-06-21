@@ -57,17 +57,17 @@ Repeating @kbd{C-u} without digits or minus sign multiplies the argument
 by 4 each time.
 ]],
   function (l)
-    local i = 0
-    local arg = 1
-    local sgn = 1
-    local key
-    local as = ""
+    local ok = leT
 
     -- Need to process key used to invoke universal-argument.
-    pushkey (lastkey)
+    pushkey (lastkey ())
 
     thisflag = bit.bor (thisflag, FLAG_UNIARG_EMPTY)
 
+    local i = 0
+    local arg = 1
+    local sgn = 1
+    local as = ""
     while true do
       as = as .. '-' -- Add the `-' character.
       local key = do_binding_completion (as)
@@ -75,11 +75,12 @@ by 4 each time.
 
       -- Cancelled.
       if key == KBD_CANCEL then
-        ok = call_zile_command ("keyboard_quit")
+        ok = call_zile_command ("keyboard-quit")
         break
       -- Digit pressed.
-      elseif isdigit (bit.band (key, 0xff)) then
+      elseif isdigit (string.char (bit.band (key, 0xff))) then
         local digit = bit.band (key, 0xff) - string.byte ('0')
+        io.stderr:write ("digit ",bit.band (key, 0xff), " ", tostring(digit) .. "\n")
         thisflag = bit.band (thisflag, bit.bnot (FLAG_UNIARG_EMPTY))
 
         if bit.band (key, KBD_META) ~= 0 then
@@ -121,5 +122,7 @@ by 4 each time.
       thisflag = bit.bor (thisflag, FLAG_SET_UNIARG)
       minibuf_clear ()
     end
+
+    return ok
   end
 }

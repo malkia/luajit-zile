@@ -222,39 +222,36 @@ int lua_refeq (lua_State *L, int r1, int r2) {
 }
 
 /* FIXME: Package this properly */
-static int
-zlua_isdigit (lua_State *L)
-{
-    char c = *lua_tostring (L, -1);
-    lua_pop (L, 1);
-    lua_pushboolean (L, isdigit ((int) c));
-    return 1;
-}
+#define bind_ctype(f)                                     \
+  static int                                              \
+  zlua_ ## f (lua_State *L)                               \
+  {                                                       \
+    const char *s = lua_tostring (L, -1);                 \
+    char c;                                               \
+    if (s)                                                \
+      c = *s;                                             \
+    lua_pop (L, 1);                                       \
+    if (s)                                                \
+      {                                                   \
+        lua_pushboolean (L, f ((int) c));                 \
+        return 1;                                         \
+      }                                                   \
+    return 0;                                             \
+  }
 
-static int
-zlua_isgraph (lua_State *L)
-{
-    char c = *lua_tostring (L, -1);
-    lua_pop (L, 1);
-    lua_pushboolean (L, isgraph ((int) c));
-    return 1;
-}
+bind_ctype (isdigit)
+bind_ctype (isgraph)
+bind_ctype (isprint)
 
-static int
-zlua_isprint (lua_State *L)
-{
-    char c = *lua_tostring (L, -1);
-    lua_pop (L, 1);
-    lua_pushboolean (L, isprint ((int) c));
-    return 1;
-}
+#define register_ctype(f) \
+  lua_register (L, #f, zlua_ ## f)
 
 void
 lua_init (lua_State *L)
 {
-  lua_register (L, "isdigit", zlua_isdigit);
-  lua_register (L, "isgraph", zlua_isgraph);
-  lua_register (L, "isprint", zlua_isprint);
+  register_ctype (isdigit);
+  register_ctype (isgraph);
+  register_ctype (isprint);
 }
 
 int lua_docall (lua_State *L, int narg, int clear) {

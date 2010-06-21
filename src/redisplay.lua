@@ -34,9 +34,10 @@ Defun {"recenter",
 Center point in window and redisplay screen.
 The desired position of point is always relative to the current window.
 ]],
-  function (l)
+  function ()
     recenter (cur_wp)
     term_full_redisplay ()
+    return leT
   end
 }
 

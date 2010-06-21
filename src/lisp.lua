@@ -136,12 +136,10 @@ function evaluateBranch (branch)
 end
 
 function execute_function (name, uniarg, is_uniarg, list)
-  local func = usercmd[name] and usercmd[name].func
-
   if is_uniarg then
     list = { next = { data = tostring (uniarg) }}
   end
-  if func then
+  if usercmd[name] and usercmd[name].func then
     return call_zile_command (name, list)
   else
     local mp = get_macro (name)
@@ -208,12 +206,10 @@ Defun {"load",
 Execute a file of Lisp code named FILE.
 ]],
   function (l)
-    local ok
     if l and #l >= 2 then
-      ok = bool_to_lisp (lisp_loadfile (l.next.data))
-    else
-      ok = leNIL
+      return bool_to_lisp (lisp_loadfile (l.next.data))
     end
+    return leNIL
   end
 }
 

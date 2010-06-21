@@ -90,7 +90,7 @@ function completion_scroll_down ()
   local wp = find_window ("*Completions*")
   assert (wp)
   set_current_window (wp)
-  if cur_bp.pt.n == 0 or not call_zile_command ("scroll_down") then
+  if cur_bp.pt.n == 0 or not call_zile_command ("scroll-down") then
     gotoeob ()
     resync_redisplay (cur_wp)
   end
@@ -128,7 +128,7 @@ Defun {"split-window",
 Split current window into two windows, one above the other.
 Both windows display the same buffer now current.
 ]],
-  function (l)
+  function ()
     -- Windows smaller than 4 lines cannot be split.
     if cur_wp.fheight < 4 then
       minibuf_error (string.format ("Window height %d too small for splitting", cur_wp.fheight))
@@ -150,5 +150,7 @@ Both windows display the same buffer now current.
     newwp.next = cur_wp.next
     newwp.next = cur_wp.next
     cur_wp.next = newwp
+
+    return leT
   end
 }
