@@ -34,7 +34,7 @@ set_variable (const char *var, const char *val)
   bool local = false;
 
   CLUE_SET (L, var, string, var);
-  CLUE_DO (L, "islocal = main_vars[var].islocal");
+  CLUE_DO (L, "islocal = (main_vars[var] or {}).islocal");
   CLUE_GET (L, islocal, boolean, local);
   if (local)
     {
