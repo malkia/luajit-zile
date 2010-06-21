@@ -73,9 +73,12 @@ END_DEFUN
 const char *
 last_command (void)
 {
-  const char *s;
+  const char *s = lua_tostring (L, -1);
   lua_getglobal (L, "_last_command");
-  s = xstrdup (lua_tostring (L, -1));
+  if (s)
+    s = xstrdup (s);
+  else
+    s = "";
   lua_pop (L, 1);
   return s;
 }
