@@ -498,7 +498,8 @@ by 4 each time.
 
   if (ok == leT)
     {
-      last_uniarg = arg * sgn;
+      lua_pushinteger (L,  arg * sgn);
+      lua_setglobal (L, "last_uniarg");
       set_thisflag (thisflag () | FLAG_SET_UNIARG);
       minibuf_clear ();
       astr_delete (as);

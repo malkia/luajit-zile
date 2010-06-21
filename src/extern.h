@@ -39,7 +39,6 @@ void set_this_command (const char * cmd);
 size_t do_binding_completion (astr as);
 int get_key_sequence (void);
 const char * get_function_by_keys (int keys);
-void process_command (void);
 void init_default_bindings (void);
 
 /* buffer.c --------------------------------------------------------------- */
@@ -191,8 +190,6 @@ void set_cur_bp (int bp);
 int thisflag (void);
 int lastflag (void);
 void set_thisflag (int f);
-void set_lastflag (int f);
-extern int last_uniarg;
 
 /* marker.c --------------------------------------------------------------- */
 #define FIELD(cty, lty, field)                  \

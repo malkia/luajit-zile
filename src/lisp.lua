@@ -135,6 +135,24 @@ function evaluateBranch (branch)
   return call_zile_command (branch.data, branch)
 end
 
+function execute_function (name, uniarg, is_uniarg, list)
+  local func = usercmd[name] and usercmd[name].func
+
+  if is_uniarg then
+    list = { next = { data = tostring (uniarg) }}
+  end
+  if func then
+    return call_zile_command (name, list)
+  else
+    local mp = get_macro (name)
+    if mp then
+      call_macro (mp)
+      return leT
+    end
+    return leNIL
+  end
+end
+
 function call_zile_command (func, branch)
   local ret
   if usercmd[func] and type (usercmd[func].func) == "function" then

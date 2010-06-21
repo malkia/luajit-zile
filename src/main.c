@@ -100,14 +100,11 @@ void set_thisflag (int f)
   lua_setglobal (L, "thisflag ()");
 }
 
-void set_lastflag (int f)
+static void set_lastflag (int f)
 {
   lua_pushinteger (L, f);
   lua_setglobal (L, "lastflag ()");
 }
-
-/* The universal argument repeat count. */
-int last_uniarg = 1;
 
 static const char about_splash_str[] = "\
 " ZILE_VERSION_STRING "\n\
@@ -448,7 +445,7 @@ main (int argc, char **argv)
         CLUE_DO (L, "resync_redisplay (cur_wp)");
       CLUE_DO (L, "term_redisplay ()");
       CLUE_DO (L, "term_refresh ()");
-      process_command ();
+      CLUE_DO (L, "process_command ()");
     }
 
   /* Tidy and close the terminal. */

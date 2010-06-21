@@ -120,3 +120,6 @@ head_bp = nil
 -- The global editor flags.
 thisflag = 0
 lastflag = 0
+
+-- The universal argument repeat count.
+last_uniarg = 1

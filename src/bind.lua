@@ -1,3 +1,37 @@
+_last_command = nil
+_this_command = nil
+
+function process_command ()
+  local keys, name = get_key_sequence ()
+
+  thisflag = bit.band (lastflag, FLAG_DEFINING_MACRO)
+  minibuf_clear ()
+
+  if function_exists (name) then
+    _this_command = name
+    execute_function (name, last_uniarg, bit.band (lastflag, FLAG_SET_UNIARG) ~= 0)
+    _last_command = _this_command
+  else
+    minibuf_error ("%s is undefined", keyvectostr (keys))
+  end
+
+  -- Only add keystrokes if we were already in macro defining mode
+  -- before the function call, to cope with start-kbd-macro.
+  if bit.band (lastflag, FLAG_DEFINING_MACRO) ~= 0 and bit.band (thisflag, FLAG_DEFINING_MACRO) ~= 0 then
+    add_cmd_to_macro ()
+  end
+
+  if bit.band (thisflag, FLAG_SET_UNIARG) == 0 then
+    last_uniarg = 1
+  end
+
+  if _last_command ~= "undo" then
+    cur_bp.next_undop = cur_bp.last_undop
+  end
+
+  lastflag = thisflag
+end
+
 root_bindings = tree.new ()
 
 function init_default_bindings ()

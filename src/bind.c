@@ -70,57 +70,21 @@ Whichever character you type to run this command is inserted.
 }
 END_DEFUN
 
-static const char * _last_command = "";
-static const char * _this_command = "";
-
 const char *
 last_command (void)
 {
-  return _last_command;
+  const char *s;
+  lua_getglobal (L, "_last_command");
+  s = xstrdup (lua_tostring (L, -1));
+  lua_pop (L, 1);
+  return s;
 }
 
 void
 set_this_command (const char * cmd)
 {
-  _this_command = cmd;
-}
-
-void
-process_command (void)
-{
-  const char * name;
-  CLUE_DO (L, "keys, name = get_key_sequence ()");
-  CLUE_GET (L, name, string, name);
-
-  set_thisflag (lastflag () & FLAG_DEFINING_MACRO);
-  minibuf_clear ();
-
-  if (function_exists (name))
-    {
-      set_this_command (name);
-      execute_function (name, last_uniarg, (lastflag () & FLAG_SET_UNIARG) != 0, LUA_REFNIL);
-      _last_command = _this_command;
-    }
-  else
-    {
-      const char *s;
-      CLUE_DO (L, "s = keyvectostr (keys)");
-      CLUE_GET (L, s, string, s);
-      minibuf_error ("%s is undefined", s);
-    }
-
-  /* Only add keystrokes if we were already in macro defining mode
-     before the function call, to cope with start-kbd-macro. */
-  if (lastflag () & FLAG_DEFINING_MACRO && thisflag () & FLAG_DEFINING_MACRO)
-    add_cmd_to_macro ();
-
-  if (!(thisflag () & FLAG_SET_UNIARG))
-    last_uniarg = 1;
-
-  if (strcmp (last_command (), "undo") != 0)
-    set_buffer_next_undop (cur_bp (), get_buffer_last_undop (cur_bp ()));
-
-  set_lastflag (thisflag ());
+  lua_pushstring (L, cmd);
+  lua_setglobal (L, "_this_command");
 }
 
 DEFUN_ARGS ("global-set-key", global_set_key,
