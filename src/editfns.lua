@@ -34,6 +34,6 @@ function set_mark ()
   if cur_bp.mark == nil then
     cur_bp.mark = point_marker ()
   else
-    move_marker (cur_bp.mark, cur_bp, point_copy (cur_bp.pt))
+    move_marker (cur_bp.mark, cur_bp, table.clone (cur_bp.pt))
   end
 end
