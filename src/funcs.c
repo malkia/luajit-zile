@@ -307,7 +307,7 @@ END_DEFUN
 void
 set_mark_interactive (void)
 {
-  set_mark ();
+  CLUE_DO (L, "set_mark ()");
   minibuf_write ("Mark set");
 }
 
@@ -867,7 +867,7 @@ transpose_subr (bool (*forward_func) (void), bool (*backward_func) (void))
   push_mark ();
 
   /* Mark the beginning of first string. */
-  set_mark ();
+  CLUE_DO (L, "set_mark ()");
   m1 = point_marker ();
 
   /* Check to make sure we can go forwards twice. */
@@ -912,7 +912,7 @@ transpose_subr (bool (*forward_func) (void), bool (*backward_func) (void))
   else
     {
       /* Mark the end of second string. */
-      set_mark ();
+      CLUE_DO (L, "set_mark ()");
 
       /* Backward. */
       backward_func ();
@@ -1546,7 +1546,7 @@ On nonblank line, delete any immediately following blank lines.
         {
           push_mark ();
           FUNCALL (beginning_of_line);
-          set_mark ();
+          CLUE_DO (L, "set_mark ()");
           activate_mark ();
           while (FUNCALL (forward_line) == leT && is_blank_line ())
             ;
@@ -1567,7 +1567,7 @@ On nonblank line, delete any immediately following blank lines.
       int forward = true;
       push_mark ();
       FUNCALL (beginning_of_line);
-      set_mark ();
+      CLUE_DO (L, "set_mark ()");
       activate_mark ();
       do
         {
@@ -1597,7 +1597,7 @@ On nonblank line, delete any immediately following blank lines.
     {
       push_mark ();
       FUNCALL (beginning_of_line);
-      set_mark ();
+      CLUE_DO (L, "set_mark ()");
       activate_mark ();
       FUNCALL (forward_line);
       FUNCALL (delete_region);	/* Just one action, without a

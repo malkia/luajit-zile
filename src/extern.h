@@ -95,7 +95,6 @@ int make_buffer_completion (void);
 /* editfns.c -------------------------------------------------------------- */
 void push_mark (void);
 void pop_mark (void);
-void set_mark (void);
 bool is_empty_line (void);
 bool is_blank_line (void);
 int following_char (void);

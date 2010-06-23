@@ -483,7 +483,7 @@ isearch (int dir, int regexp)
               if (astr_len (pattern) > 0)
                 {
                   /* Save mark. */
-                  set_mark ();
+                  CLUE_DO (L, "set_mark ()");
                   set_marker_pt (get_buffer_mark (cur_bp ()), start);
 
                   /* Save search string. */
