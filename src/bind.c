@@ -73,8 +73,9 @@ END_DEFUN
 const char *
 last_command (void)
 {
-  const char *s = lua_tostring (L, -1);
+  const char *s;
   lua_getglobal (L, "_last_command");
+  s = lua_tostring (L, -1);
   if (s)
     s = xstrdup (s);
   else
