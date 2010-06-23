@@ -19,6 +19,7 @@
 -- Free Software Foundation, Fifth Floor, 51 Franklin Street, Boston,
 -- MA 02111-1301, USA.
 
+_DEBUG = true
 
 -- Main editor structures.
 
