@@ -525,7 +525,7 @@ isearch (int dir, int regexp)
   astr_delete (buf);
   astr_delete (pattern);
 
-  if (old_mark)
+  if (old_mark != LUA_REFNIL)
     free_marker (old_mark);
 
   return leT;
