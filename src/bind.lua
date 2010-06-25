@@ -12,7 +12,7 @@ function process_command ()
     execute_function (name, last_uniarg, bit.band (lastflag, FLAG_SET_UNIARG) ~= 0)
     _last_command = _this_command
   else
-    minibuf_error ("%s is undefined", keyvectostr (keys))
+    minibuf_error (keyvectostr (keys) .. " is undefined")
   end
 
   -- Only add keystrokes if we were already in macro defining mode
