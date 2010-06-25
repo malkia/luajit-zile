@@ -79,7 +79,7 @@ void set_cur_bp (int bp)
 int thisflag (void)
 {
   int ret;
-  lua_getglobal (L, "thisflag ()");
+  lua_getglobal (L, "thisflag");
   ret = lua_tointeger (L, -1);
   lua_pop (L, 1);
   return ret;
@@ -88,7 +88,7 @@ int thisflag (void)
 int lastflag (void)
 {
   int ret;
-  lua_getglobal (L, "lastflag ()");
+  lua_getglobal (L, "lastflag");
   ret = lua_tointeger (L, -1);
   lua_pop (L, 1);
   return ret;
@@ -97,13 +97,13 @@ int lastflag (void)
 void set_thisflag (int f)
 {
   lua_pushinteger (L, f);
-  lua_setglobal (L, "thisflag ()");
+  lua_setglobal (L, "thisflag");
 }
 
 static void set_lastflag (int f)
 {
   lua_pushinteger (L, f);
-  lua_setglobal (L, "lastflag ()");
+  lua_setglobal (L, "lastflag");
 }
 
 static const char about_splash_str[] = "\
