@@ -42,7 +42,7 @@ self_insert_command (void)
   CLUE_DO (L, "key = lastkey ()");
   CLUE_GET (L, key, integer, key);
   key &= ~KBD_CTRL;
-  deactivate_mark ();
+  CLUE_DO (L, "deactivate_mark ()");
   if (key <= 0xff)
     {
       if (isspace (key) && get_buffer_autofill (cur_bp ()) &&

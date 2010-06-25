@@ -66,7 +66,7 @@ copy_or_kill_region (bool kill, int rp)
     }
 
   set_this_command ("kill-region");
-  deactivate_mark ();
+  CLUE_DO (L, "deactivate_mark ()");
 
   return true;
 }
@@ -194,7 +194,7 @@ with no argument.
       undo_save (UNDO_END_SEQUENCE, get_buffer_pt (cur_bp ()), 0, 0);
     }
 
-  deactivate_mark ();
+  CLUE_DO (L, "deactivate_mark ()");
 }
 END_DEFUN
 
@@ -317,6 +317,6 @@ killed @i{or} yanked.  Put point at end, and set mark at beginning.
   insert_astr (kill_ring_text);
   set_undo_nosave (false);
 
-  deactivate_mark ();
+  CLUE_DO (L, "deactivate_mark ()");
 }
 END_DEFUN

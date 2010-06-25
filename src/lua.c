@@ -242,6 +242,7 @@ int lua_refeq (lua_State *L, int r1, int r2) {
 bind_ctype (isdigit)
 bind_ctype (isgraph)
 bind_ctype (isprint)
+bind_ctype (isspace)
 
 #define register_ctype(f) \
   lua_register (L, #f, zlua_ ## f)
@@ -252,6 +253,7 @@ lua_init (lua_State *L)
   register_ctype (isdigit);
   register_ctype (isgraph);
   register_ctype (isprint);
+  register_ctype (isspace);
 }
 
 int lua_docall (lua_State *L, int narg, int clear) {

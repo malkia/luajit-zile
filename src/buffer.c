@@ -274,18 +274,6 @@ calculate_buffer_size (int bp)
   return size;
 }
 
-void
-activate_mark (void)
-{
-  set_buffer_mark_active (cur_bp (), true);
-}
-
-void
-deactivate_mark (void)
-{
-  set_buffer_mark_active (cur_bp (), false);
-}
-
 /*
  * Return a safe tab width for the given buffer.
  */

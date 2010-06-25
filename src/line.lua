@@ -260,3 +260,170 @@ local function backward_delete_char_overwrite ()
 
   return true
 end
+
+-- Indentation command
+-- Go to cur_goalc () in the previous non-blank line.
+local function previous_nonblank_goalc ()
+  local cur_goalc = get_goalc ()
+
+  -- Find previous non-blank line.
+  while execute_function ("forward-line", -1, true) == leT and is_blank_line () do
+  end
+
+  -- Go to `cur_goalc' in that non-blank line.
+  while not eolp () and get_goalc () < cur_goalc do
+    forward_char ()
+  end
+end
+
+local function previous_line_indent ()
+  local cur_indent
+  local m = point_marker ()
+
+  call_zile_command ("previous-line")
+  call_zile_command ("beginning-of-line")
+
+  -- Find first non-blank char.
+  while not eolp () and isspace (following_char ()) do
+    forward_char ()
+  end
+
+  cur_indent = get_goalc ()
+
+  -- Restore point.
+  cur_bp.pt = table.clone (m.pt)
+  unchain_marker (m)
+
+  return cur_indent
+end
+
+Defun {"indent-for-tab-command",
+[[
+Indent line or insert a tab.
+Depending on `tab-always-indent', either insert a tab or indent.
+If initial point was within line's indentation, position after
+the indentation.  Else stay at same point in text.
+]],
+  function ()
+    if get_variable_bool ("tab-always-indent") then
+      return bool_to_lisp (insert_tab ())
+    elseif (get_goalc () < previous_line_indent ()) then
+      return call_zile_command ("indent-relative")
+    end
+  end
+}
+
+Defun {"indent-relative",
+[[
+Space out to under next indent point in previous nonblank line.
+An indent point is a non-whitespace character following whitespace.
+The following line shows the indentation points in this line.
+    ^         ^    ^     ^   ^           ^      ^  ^    ^
+If the previous nonblank line has no indent points beyond the
+column point starts at, `tab-to-tab-stop' is done instead, unless
+this command is invoked with a numeric argument, in which case it
+does nothing.
+]],
+  function ()
+    local target_goalc = 0
+    local cur_goalc = get_goalc ()
+    local t = tab_width (cur_bp)
+    local ok = leNIL
+
+    if warn_if_readonly_buffer () then
+      return leNIL
+    end
+
+    deactivate_mark ()
+
+    -- If we're on first line, set target to 0.
+    if cur_bp.pt.p.prev == cur_bp.lines then
+      target_goalc = 0
+    else
+      -- Find goalc in previous non-blank line.
+      local m = point_marker ()
+
+      previous_nonblank_goalc ()
+
+      -- Now find the next blank char.
+      if preceding_char () ~= '\t' or get_goalc () <= cur_goalc then
+        while not eolp () and not isspace (following_char ()) do
+          forward_char ()
+        end
+      end
+
+      -- Find next non-blank char.
+      while not eolp () and isspace (following_char ()) do
+        forward_char ()
+      end
+
+      -- Target column.
+      if not eolp () then
+        target_goalc = get_goalc ()
+      end
+      cur_bp.pt = table.clone (m.pt)
+      unchain_marker (m)
+    end
+
+    -- Insert indentation.
+    undo_save (UNDO_START_SEQUENCE, cur_bp.pt, 0, 0)
+    if target_goalc > 0 then
+      -- If not at EOL on target line, insert spaces & tabs up to
+      -- target_goalc; if already at EOL on target line, insert a tab.
+      cur_goalc = get_goalc ()
+      if cur_goalc < target_goalc then
+        repeat
+          if cur_goalc % t == 0 and cur_goalc + t <= target_goalc then
+            ok = bool_to_lisp (insert_tab ())
+          else
+            ok = bool_to_lisp (insert_char_in_insert_mode (' '))
+          end
+          cur_goalc = get_goalc ()
+        until ok ~= leT or cur_goalc >= target_goalc
+      else
+        ok = bool_to_lisp (insert_tab ())
+      end
+    else
+      ok = bool_to_lisp (insert_tab ())
+    end
+    undo_save (UNDO_END_SEQUENCE, cur_bp.pt, 0, 0)
+  end
+}
+
+Defun {"newline-and-indent",
+[[
+Insert a newline, then indent.
+Indentation is done using the `indent-for-tab-command' function.
+]],
+  function ()
+    local ret
+
+    local ok = leNIL
+
+    if warn_if_readonly_buffer () then
+      return leNIL
+    end
+
+    deactivate_mark ()
+
+    undo_save (UNDO_START_SEQUENCE, cur_bp.pt, 0, 0)
+    if insert_newline () then
+      local m = point_marker ()
+      local pos
+
+      -- Check where last non-blank goalc is.
+      previous_nonblank_goalc ()
+      pos = get_goalc ()
+      local indent = pos > 0 or (not eolp () and isspace (following_char ()))
+      cur_bp.pt = table.clone (m.pt)
+      unchain_marker (m)
+      -- Only indent if we're in column > 0 or we're in column 0 and
+      -- there is a space character there in the last non-blank line.
+      if indent then
+        call_zile_command ("indent-for-tab-command")
+      end
+      ok = leT
+    end
+    undo_save (UNDO_END_SEQUENCE, cur_bp.pt, 0, 0)
+  end
+}

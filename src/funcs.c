@@ -48,7 +48,7 @@ DEFUN ("keyboard-quit", keyboard_quit)
 Cancel current command.
 +*/
 {
-  deactivate_mark ();
+  CLUE_DO (L, "deactivate_mark ()");
   minibuf_error ("Quit");
   ok = leNIL;
 }
@@ -70,7 +70,7 @@ With arg, turn Transient Mark mode on if arg is positive, off otherwise.
   else
     set_variable ("transient-mark-mode", uniarg > 0 ? "t" : "nil");
 
-  activate_mark ();
+  CLUE_DO (L, "activate_mark ()");
 }
 END_DEFUN
 
@@ -317,7 +317,7 @@ Set this buffer's mark to point.
 +*/
 {
   set_mark_interactive ();
-  activate_mark ();
+  CLUE_DO (L, "activate_mark ()");
 }
 END_DEFUN
 
@@ -349,7 +349,7 @@ Put the mark where point is now, and point where the mark is now.
 
   /* In transient-mark-mode we must reactivate the mark.  */
   if (get_variable_bool ("transient-mark-mode"))
-    activate_mark ();
+    CLUE_DO (L, "activate_mark ()");
 
   set_thisflag (thisflag () | FLAG_NEED_RESYNC);
 }
@@ -568,7 +568,7 @@ edit_tab_region (int action)
       set_buffer_pt (cur_bp (), point_copy (get_marker_pt (m)));
       undo_save (UNDO_END_SEQUENCE, get_marker_pt (m), 0, 0);
       free_marker (m);
-      deactivate_mark ();
+      CLUE_DO (L, "deactivate_mark ()");
     }
 
   luaL_unref (L, LUA_REGISTRYINDEX, rp);
@@ -832,7 +832,7 @@ astr_append_region (astr s)
   int rp = region_new ();
   astr as;
 
-  activate_mark ();
+  CLUE_DO (L, "activate_mark ()");
   calculate_the_region (rp);
 
   as = copy_text_block (get_region_start (rp), get_region_size (rp));
@@ -941,7 +941,7 @@ transpose_subr (bool (*forward_func) (void), bool (*backward_func) (void))
 
   /* Restore mark. */
   pop_mark ();
-  deactivate_mark ();
+  CLUE_DO (L, "deactivate_mark ()");
 
   /* Move forward if necessary. */
   if (forward_func != next_line)
@@ -1524,7 +1524,7 @@ Delete the text between point and mark.
   else if (!delete_region (rp))
     ok = leNIL;
   else
-    deactivate_mark ();
+    CLUE_DO (L, "deactivate_mark ()");
 
   luaL_unref (L, LUA_REGISTRYINDEX, rp);
 }
@@ -1547,7 +1547,7 @@ On nonblank line, delete any immediately following blank lines.
           push_mark ();
           FUNCALL (beginning_of_line);
           CLUE_DO (L, "set_mark ()");
-          activate_mark ();
+          CLUE_DO (L, "activate_mark ()");
           while (FUNCALL (forward_line) == leT && is_blank_line ())
             ;
           if (!seq_started)
@@ -1568,7 +1568,7 @@ On nonblank line, delete any immediately following blank lines.
       push_mark ();
       FUNCALL (beginning_of_line);
       CLUE_DO (L, "set_mark ()");
-      activate_mark ();
+      CLUE_DO (L, "activate_mark ()");
       do
         {
           if (!FUNCALL_ARG (forward_line, -1))
@@ -1598,7 +1598,7 @@ On nonblank line, delete any immediately following blank lines.
       push_mark ();
       FUNCALL (beginning_of_line);
       CLUE_DO (L, "set_mark ()");
-      activate_mark ();
+      CLUE_DO (L, "activate_mark ()");
       FUNCALL (forward_line);
       FUNCALL (delete_region);	/* Just one action, without a
                                    sequence. */
@@ -1611,6 +1611,6 @@ On nonblank line, delete any immediately following blank lines.
     undo_save (UNDO_END_SEQUENCE, get_buffer_pt (cur_bp ()), 0, 0);
 
   free_marker (m);
-  deactivate_mark ();
+  CLUE_DO (L, "deactivate_mark ()");
 }
 END_DEFUN

@@ -73,8 +73,6 @@ int warn_if_readonly_buffer (void);
 int calculate_the_region (int rp);
 bool delete_region (const int rp);
 size_t calculate_buffer_size (int bp);
-void activate_mark (void);
-void deactivate_mark (void);
 size_t tab_width (int bp);
 astr copy_text_block (int pt, size_t size);
 int create_scratch_buffer (void);

@@ -244,3 +244,11 @@ function warn_if_readonly_buffer ()
 
   return false
 end
+
+function activate_mark ()
+  cur_bp.mark_active = true
+end
+
+function deactivate_mark ()
+  cur_bp.mark_active = false
+end
