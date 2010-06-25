@@ -82,6 +82,9 @@ FLAG_DEFINING_MACRO = 0x10 -- We are defining a macro.
 FONT_NORMAL = 0
 FONT_REVERSE = 1
 
+-- Default waitkey pause in ds
+WAITKEY_DEFAULT = 20
+
 
 -- Zile command to Lua bindings
 
