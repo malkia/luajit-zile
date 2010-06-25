@@ -9,6 +9,29 @@ function ding ()
   end
 end
 
+
+-- Returns the character following point in the current buffer.
+function following_char ()
+  if eobp () then
+    return 0
+  elseif eolp () then
+    return '\n'
+  else
+    return cur_bp.pt.p.text[cur_bp.pt.o + 1]
+  end
+end
+
+-- Return the character preceding point in the current buffer.
+function preceding_char ()
+  if bobp () then
+    return 0
+  elseif bolp () then
+    return '\n'
+  else
+    return cur_bp.pt.p.text[cur_bp.pt.o]
+  end
+end
+
 -- Return true if point is at the beginning of the buffer.
 function bobp ()
   return cur_bp.pt.p.prev == cur_bp.lines and bolp ()
