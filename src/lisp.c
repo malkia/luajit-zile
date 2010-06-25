@@ -186,12 +186,17 @@ call_zile_c_command (lua_State *L)
 {
   le trybranch = LUA_REFNIL;
   const char *keyword;
+  int uniarg;
+  bool is_uniarg;
+
+  assert (lua_gettop (L) == 4);
   assert (lua_isstring (L, 1));
   keyword = lua_tostring (L, 1);
-  if (lua_gettop (L) == 2)
-    trybranch = luaL_ref (L, LUA_REGISTRYINDEX);
+  uniarg = lua_tointeger (L, 2);
+  is_uniarg = lua_toboolean (L, 3);
+  trybranch = luaL_ref (L, LUA_REGISTRYINDEX);
   assert (function_exists (keyword));
-  lua_pushvalue (L, execute_function (keyword, 1, false, trybranch));
+  lua_pushvalue (L, execute_function (keyword, uniarg, is_uniarg, trybranch));
   luaL_unref (L, LUA_REGISTRYINDEX, trybranch);
   return 1;
 }
