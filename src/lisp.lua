@@ -132,7 +132,7 @@ function evaluateBranch (branch)
   if branch == nil or branch.data == nil then
     return nil
   end
-  return call_zile_command (branch.data, branch)
+  return execute_function (branch.data, 1, false, branch)
 end
 
 function execute_function (name, uniarg, is_uniarg, list)
@@ -140,7 +140,11 @@ function execute_function (name, uniarg, is_uniarg, list)
     list = { next = { data = tostring (uniarg) }}
   end
   if usercmd[name] and usercmd[name].func then
-    return call_zile_command (name, list)
+    if type (usercmd[name].func) == "function" then
+      return usercmd[name].func (list)
+    else
+      return call_zile_c_command (name, uniarg, is_uniarg, not is_uniarg and list or nil)
+    end
   else
     local mp = get_macro (name)
     if mp then
@@ -151,14 +155,8 @@ function execute_function (name, uniarg, is_uniarg, list)
   end
 end
 
-function call_zile_command (func, branch)
-  local ret
-  if usercmd[func] and type (usercmd[func].func) == "function" then
-    ret = usercmd[func].func (branch)
-  else
-    ret = call_zile_c_command (func, branch)
-  end
-  return ret
+function call_zile_command (func)
+  return execute_function (func, 1, false, nil)
 end
 
 function leEval (list)
