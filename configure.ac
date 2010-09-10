@@ -73,12 +73,14 @@ if test -z "$LUA"; then
 fi
 AX_LUA_VERSION(501, 502)
 AX_LUA_HEADERS
+AX_LUA_HEADERS_VERSION(501, 502)
 AX_LUA_LIBS
-AX_LUA_LIB_VERSION(501, 502)
+if test -z "$LUA_LIB"; then
+  AC_MSG_FAILURE([liblua not found])
+fi
 AC_SUBST(LUA)
 AC_SUBST(LUA_INCLUDE)
 AC_SUBST(LUA_LIB)
-PKG_CHECK_MODULES([LUA_LIBS], [lua5.1-posix >= 5.1 lua5.1-bitop >= 1.0.1])
 AX_LUA_READLINE
 
 dnl Extra definitions for config.h
