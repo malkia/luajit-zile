@@ -9,6 +9,7 @@
 #   AX_LUA_HEADERS
 #   AX_LUA_LIBS
 #   AX_LUA_LIB_VERSION (MIN-VERSION, [TOO-BIG-VERSION])
+#   AX_LUA_READLINE
 #
 # DESCRIPTION
 #
@@ -29,6 +30,9 @@
 #   AX_LUA_LIB_VERSION checks that the Lua libraries' version is at least
 #   MIN-VERSION, and less than TOO-BIG-VERSION, if given.
 #
+#   AX_LUA_READLINE configures Lua to be built with readline support, if
+#   available. This macro requires AX_LIB_READLINE.
+#
 #   Versions are specified as three-digit integers whose first digit is the
 #   major version and last two are the minor version (the same format as
 #   LUA_VERSION_NUM in lua.h); e.g. 501 for Lua 5.1. The revision (e.g. the
@@ -42,7 +46,7 @@
 #
 # LICENSE
 #
-#   Copyright (c) 2009 Reuben Thomas <rrt@sc3d.org>
+#   Copyright (c) 2010 Reuben Thomas <rrt@sc3d.org>
 #   Copyright (c) 2009 Matthieu Moy <Matthieu.Moy@imag.fr>
 #   Copyright (c) 2009 Tom Payne <twpayne@gmail.com>
 #
@@ -72,7 +76,7 @@
 #   modified version of the Autoconf Macro, you may extend this special
 #   exception to the GPL to apply to your modified version as well.
 
-#serial 5
+#serial 8
 
 dnl Helper function to declare extra options
 AC_DEFUN([_AX_LUA_OPTS],
@@ -184,3 +188,9 @@ int main()
   AC_MSG_FAILURE([Lua libraries version not in desired range])])
   LIBS="$LUA_OLD_LIBS"
   CPPFLAGS="$LUA_OLD_CPPFLAGS"])dnl
+
+AC_DEFUN([AX_LUA_READLINE],
+  [AX_LIB_READLINE
+  if test -n "$ac_cv_header_readline_readline_h" -a -n "$ac_cv_header_readline_history_h"; then
+    LUA_LIBS_CFLAGS="-DLUA_USE_READLINE $LUA_LIBS_CFLAGS"
+  fi])dnl
