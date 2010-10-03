@@ -223,7 +223,6 @@ end
 
 local zarg = {}
 local qflag = false
-local help_width = 24
 
 function process_args ()
   while true do
@@ -270,11 +269,11 @@ function process_args ()
         if v[1] == "doc" then
           io.write (v[2] .. "\n")
         elseif v[1] == "opt" then
-          local shortopt = string.format (", -%s", v[3] or "")
-          local buf = string.format ("--%s%s %s", v[2], v[3] and shortopt or "", v[5])
-          io.write (string.sub (buf .. string.rep (" ", help_width), 1, help_width) .. v[6] .. "\n")
+          local shortopt = string.format (", -%s", v[3])
+          local buf = string.format ("--%s%s %s", v[2], v[3] ~= '\0' and shortopt or "", v[5])
+          io.write (string.format ("%-24s%s\n", buf, v[6]))
         elseif v[1] == "act" then
-          io.write (string.sub (v[2] .. string.rep (" ", help_width), 1, help_width) .. v[3] .. "\n")
+          io.write (string.format ("%-24s%s\n", v[2], v[3]))
         end
       end
 
