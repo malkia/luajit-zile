@@ -15,7 +15,7 @@ code for the init file.
 
 [author]
 Zile was written by Reuben Thomas, based on the C version by Sandro
-Sigala, Reuben Thomas and David A. Capello.
+Sigala, Reuben Thomas, David A. Capello and Scott Lawrence.
 
 [see also]
 .BR emacs (1)
