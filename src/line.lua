@@ -132,6 +132,64 @@ function insert_string (s)
   undo_nosave = false
 end
 
+-- If point is greater than fill-column, then split the line at the
+-- right-most space character at or before fill-column, if there is
+-- one, or at the left-most at or after fill-column, if not. If the
+-- line contains no spaces, no break is made.
+--
+-- Return flag indicating whether break was made.
+function fill_break_line ()
+  local i, old_col
+  local break_col = 0
+  local fillcol = get_variable_number ("fill-column")
+  local break_made = false
+
+  -- Only break if we're beyond fill-column.
+  if get_goalc () > fillcol then
+    -- Save point.
+    local m = point_marker ()
+
+    -- Move cursor back to fill column
+    old_col = cur_bp.pt.o
+    while get_goalc () > fillcol + 1 do
+      cur_bp.pt.o = cur_bp.pt.o - 1
+    end
+
+    -- Find break point moving left from fill-column.
+    for i = cur_bp.pt.o, 1, -1 do
+      if isspace (cur_bp.pt.p.text[i]) then
+        break_col = i
+        break
+      end
+    end
+
+    -- If no break point moving left from fill-column, find first
+    -- possible moving right.
+    if break_col == 0 then
+      for i = cur_bp.pt.o + 1, #cur_bp.pt.p.text do
+        if isspace (cur_bp.pt.p.text[i]) then
+          break_col = i
+          break
+        end
+      end
+    end
+
+    if break_col >= 1 then -- Break line.
+      cur_bp.pt.o = break_col
+      execute_function ("delete-horizontal-space")
+      insert_newline ()
+      cur_bp.pt = table.clone (m.pt)
+      break_made = true
+    else -- Undo fiddling with point.
+      cur_bp.pt.o = old_col
+    end
+
+    unchain_marker (m)
+  end
+
+  return break_made
+end
+
 -- Insert a newline at the current position without moving the cursor.
 -- Update markers after point in the split line.
 -- FIXME: local
@@ -280,8 +338,8 @@ local function previous_line_indent ()
   local cur_indent
   local m = point_marker ()
 
-  call_zile_command ("previous-line")
-  call_zile_command ("beginning-of-line")
+  execute_function ("previous-line")
+  execute_function ("beginning-of-line")
 
   -- Find first non-blank char.
   while not eolp () and isspace (following_char ()) do
@@ -297,23 +355,26 @@ local function previous_line_indent ()
   return cur_indent
 end
 
-Defun {"indent-for-tab-command",
+Defun ("indent-for-tab-command",
+       {},
 [[
 Indent line or insert a tab.
 Depending on `tab-always-indent', either insert a tab or indent.
 If initial point was within line's indentation, position after
 the indentation.  Else stay at same point in text.
 ]],
+  true,
   function ()
     if get_variable_bool ("tab-always-indent") then
       return bool_to_lisp (insert_tab ())
     elseif (get_goalc () < previous_line_indent ()) then
-      return call_zile_command ("indent-relative")
+      return execute_function ("indent-relative")
     end
   end
-}
+)
 
-Defun {"indent-relative",
+Defun ("indent-relative",
+       {},
 [[
 Space out to under next indent point in previous nonblank line.
 An indent point is a non-whitespace character following whitespace.
@@ -324,6 +385,7 @@ column point starts at, `tab-to-tab-stop' is done instead, unless
 this command is invoked with a numeric argument, in which case it
 does nothing.
 ]],
+  true,
   function ()
     local target_goalc = 0
     local cur_goalc = get_goalc ()
@@ -388,13 +450,15 @@ does nothing.
     end
     undo_save (UNDO_END_SEQUENCE, cur_bp.pt, 0, 0)
   end
-}
+)
 
-Defun {"newline-and-indent",
+Defun ("newline-and-indent",
+       {},
 [[
 Insert a newline, then indent.
 Indentation is done using the `indent-for-tab-command' function.
 ]],
+  true,
   function ()
     local ret
 
@@ -420,10 +484,147 @@ Indentation is done using the `indent-for-tab-command' function.
       -- Only indent if we're in column > 0 or we're in column 0 and
       -- there is a space character there in the last non-blank line.
       if indent then
-        call_zile_command ("indent-for-tab-command")
+        execute_function ("indent-for-tab-command")
       end
       ok = leT
     end
     undo_save (UNDO_END_SEQUENCE, cur_bp.pt, 0, 0)
   end
-}
+)
+
+-- Check the case of a string.
+-- Returns "uppercase" if it is all upper case, "capitalized" if just
+-- the first letter is, and nil otherwise.
+local function check_case (s)
+  if string.match (s, "^%u+$") then
+    return "uppercase"
+  elseif string.match (s, "^%u%U*") then
+    return "capitalized"
+  end
+end
+
+-- Replace text in the line "lp" with "newtext". If "replace_case" is
+-- true then the new characters will be the same case as the old.
+function line_replace_text (lp, offset, oldlen, newtext, replace_case)
+  if replace_case and get_variable_bool ("case-replace") then
+    local case_type = check_case (string.sub (lp.text, offset, offset + oldlen))
+    if case_type then
+      astr_recase (newtext, case_type)
+    end
+  end
+
+  cur_bp.modified = true
+  lp.text = string.sub (lp.text, 1, offset) .. newtext .. string.sub (lp.text, offset + 1 + oldlen)
+  adjust_markers (lp, lp, offset, 0, #newtext - oldlen)
+end
+
+
+Defun ("delete-char",
+       {"number"},
+[[
+Delete the following @i{n} characters (previous if @i{n} is negative).
+]],
+  true,
+  function (n)
+    return execute_with_uniarg (true, n, delete_char, backward_delete_char)
+  end
+)
+
+Defun ("backward-delete-char",
+       {"number"},
+[[
+Delete the previous @i{n} characters (following if @i{n} is negative).
+]],
+  true,
+  function (n)
+    return execute_with_uniarg (true, n, cur_bp.overwrite and backward_delete_char_overwrite or backward_delete_char, delete_char)
+  end
+)
+
+Defun ("delete-horizontal-space",
+       {},
+[[
+Delete all spaces and tabs around point.
+]],
+  true,
+  function ()
+    undo_save (UNDO_START_SEQUENCE, cur_bp.pt, 0, 0)
+
+    while not eolp () and isspace (following_char ()) do
+      delete_char ()
+    end
+
+    while not bolp () and isspace (preceding_char ()) do
+      backward_delete_char ()
+    end
+
+    undo_save (UNDO_END_SEQUENCE, cur_bp.pt, 0, 0)
+  end
+)
+
+Defun ("just-one-space",
+       {},
+[[
+Delete all spaces and tabs around point, leaving one space.
+]],
+  true,
+  function ()
+    undo_save (UNDO_START_SEQUENCE, cur_bp.pt, 0, 0)
+    execute_function ("delete-horizontal-space")
+    insert_char_in_insert_mode (' ')
+    undo_save (UNDO_END_SEQUENCE, cur_bp.pt, 0, 0)
+  end
+)
+
+Defun ("tab-to-tab-stop",
+       {"number"},
+[[
+Insert a tabulation at the current point position into the current
+buffer.
+]],
+  true,
+  function (n)
+    return execute_with_uniarg (true, n, insert_tab)
+  end
+)
+
+local function newline ()
+  if cur_bp.autofill and get_goalc () > get_variable_number ("fill-column") then
+    fill_break_line ()
+  end
+  return insert_newline ()
+end
+
+Defun ("newline",
+       {"number"},
+[[
+Insert a newline at the current point position into
+the current buffer.
+]],
+  true,
+  function (n)
+    return execute_with_uniarg (true, n, newline)
+  end
+)
+
+Defun ("open-line",
+       {"number"},
+[[
+Insert a newline and leave point before it.
+]],
+  true,
+  function (n)
+    return execute_with_uniarg (true, n, intercalate_newline)
+  end
+)
+
+Defun ("insert",
+       {"string"},
+[[
+Insert the argument at point.
+]],
+  true,
+  function (arg)
+    insert_string (arg)
+  end
+)

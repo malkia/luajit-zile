@@ -25,11 +25,16 @@
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ******************************************************************************/
 
+#include "config.h"
+
 #include <assert.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
+#include <unistd.h>
+#include "xalloc.h"
 
 #define lua_c
 
@@ -37,206 +42,34 @@
 #include <lauxlib.h>
 #include <lualib.h>
 
-#include "main.h"
 #include "extern.h"
 
 
-static void lstop (lua_State *L, lua_Debug *ar) {
-  (void)ar;  /* unused arg. */
-  lua_sethook(L, NULL, 0, 0);
-  luaL_error(L, "interrupted!");
-}
-
-
-static void laction (int i) {
-  signal(i, SIG_DFL); /* if another SIGINT happens before lstop,
-                              terminate process (default action) */
-  lua_sethook(L, lstop, LUA_MASKCALL | LUA_MASKRET | LUA_MASKCOUNT, 1);
-}
-
-
-static void l_message (const char *msg) {
-  fprintf(stderr, "%s\n", msg);
-  fflush(stderr);
-}
-
-
-static int report (lua_State *L, int status) {
-  if (status && !lua_isnil(L, -1)) {
-    const char *msg = lua_tostring(L, -1);
-    if (msg == NULL) msg = "(error object is not a string)";
-    l_message(msg);
-    lua_pop(L, 1);
-  }
-  return status;
-}
-
-
-static int traceback (lua_State *L) {
-  if (!lua_isstring(L, 1))  /* 'message' not a string? */
-    return 1;  /* keep it intact */
-  lua_getfield(L, LUA_GLOBALSINDEX, "debug");
-  if (!lua_istable(L, -1)) {
-    lua_pop(L, 1);
-    return 1;
-  }
-  lua_getfield(L, -1, "traceback");
-  if (!lua_isfunction(L, -1)) {
-    lua_pop(L, 2);
-    return 1;
-  }
-  lua_pushvalue(L, 1);  /* pass error message */
-  lua_pushinteger(L, 2);  /* skip this function and traceback */
-  lua_call(L, 2, 1);  /* call debug.traceback */
-  return 1;
-}
-
-
-static int docall (lua_State *L, int narg, int clear) {
-  int status;
-  int base = lua_gettop(L) - narg;  /* function index */
-  lua_pushcfunction(L, traceback);  /* push traceback function */
-  lua_insert(L, base);  /* put it under chunk and args */
-  signal(SIGINT, laction);
-  status = lua_pcall(L, narg, (clear ? 0 : LUA_MULTRET), base);
-  signal(SIGINT, SIG_DFL);
-  lua_remove(L, base);  /* remove traceback function */
-  /* force a complete garbage collection in case of errors */
-  if (status != 0) lua_gc(L, LUA_GCCOLLECT, 0);
-  return status;
-}
-
-
-static const char *get_prompt (lua_State *L, int firstline) {
-  const char *p;
-  lua_getfield(L, LUA_GLOBALSINDEX, firstline ? "_PROMPT" : "_PROMPT2");
-  p = lua_tostring(L, -1);
-  if (p == NULL) p = (firstline ? LUA_PROMPT : LUA_PROMPT2);
-  lua_pop(L, 1);  /* remove global */
-  return p;
-}
-
-
-static int incomplete (lua_State *L, int status) {
-  if (status == LUA_ERRSYNTAX) {
-    size_t lmsg;
-    const char *msg = lua_tolstring(L, -1, &lmsg);
-    const char *tp = msg + lmsg - (sizeof(LUA_QL("<eof>")) - 1);
-    if (strstr(msg, LUA_QL("<eof>")) == tp) {
-      lua_pop(L, 1);
-      return 1;
+void lua_getargs (lua_State *L, int argc, char **argv) {
+  int i;
+  lua_checkstack(L, 3);
+  lua_createtable(L, argc, 0);
+  for (i = 0; i < argc; i++)
+    {
+      lua_pushstring(L, argv[i]);
+      lua_rawseti(L, -2, i);
     }
-  }
-  return 0;  /* else... */
 }
 
-
-static int pushline (lua_State *L, int firstline) {
-  char buffer[LUA_MAXINPUT];
-  char *b = buffer;
-  size_t l;
-  const char *prmt = get_prompt(L, firstline);
-  if (lua_readline(L, b, prmt) == 0)
-    return 0;  /* no input */
-  l = strlen(b);
-  if (l > 0 && b[l-1] == '\n')  /* line ends with newline? */
-    b[l-1] = '\0';  /* remove it */
-  if (firstline && b[0] == '=')  /* first line starts with `=' ? */
-    lua_pushfstring(L, "return %s", b+1);  /* change it to `return' */
-  else
-    lua_pushstring(L, b);
-  lua_freeline(L, b);
-  return 1;
-}
-
-
-static int loadline (lua_State *L) {
-  int status;
-  lua_settop(L, 0);
-  if (!pushline(L, 1))
-    return -1;  /* no input */
-  for (;;) {  /* repeat until gets a complete line */
-    status = luaL_loadbuffer(L, lua_tostring(L, 1), lua_strlen(L, 1), "=stdin");
-    if (!incomplete(L, status)) break;  /* cannot try to add lines? */
-    if (!pushline(L, 0))  /* no more input? */
-      return -1;
-    lua_pushliteral(L, "\n");  /* add a new line... */
-    lua_insert(L, -2);  /* ...between the two lines */
-    lua_concat(L, 3);  /* join them */
-  }
-  lua_saveline(L, 1);
-  lua_remove(L, 1);  /* remove line */
-  return status;
-}
-
-
-static void dotty (lua_State *L) {
-  int status;
-  while ((status = loadline(L)) != -1) {
-    if (status == 0) status = docall(L, 0, 0);
-    report(L, status);
-    if (status == 0 && lua_gettop(L) > 0) {  /* any result to print? */
-      lua_getglobal(L, "print");
-      lua_insert(L, 1);
-      if (lua_pcall(L, lua_gettop(L)-1, 0, 0) != 0)
-        l_message(lua_pushfstring(L,
-                                  "error calling " LUA_QL("print") " (%s)",
-                                  lua_tostring(L, -1)));
-    }
-  }
-  lua_settop(L, 0);  /* clear stack */
-  fputs("\n", stdout);
-  fflush(stdout);
-}
-
-
-static int pmain (lua_State *L) {
-  assert(lua_stdin_is_tty());
-  dotty(L);
-  return 0;
-}
-
-
-#include "main.h"
-#include "extern.h"
 
 /* FIXME: Put this somewhere else. */
 /* The following is by Reuben Thomas. */
-
-int lua_debug (lua_State *L) {
-  int status;
-  status = lua_cpcall(L, &pmain, NULL);
-  report(L, status);
-  lua_close(L);
-  return status ? EXIT_FAILURE : EXIT_SUCCESS;
-}
-
-
-int lua_refeq (lua_State *L, int r1, int r2) {
-  int ret;
-  lua_rawgeti (L, LUA_REGISTRYINDEX, r1);
-  lua_rawgeti (L, LUA_REGISTRYINDEX, r2);
-  ret = lua_equal (L, -1, -2);
-  lua_pop (L, 2);
-  return ret;
-}
 
 /* FIXME: Package this properly */
 #define bind_ctype(f)                                     \
   static int                                              \
   zlua_ ## f (lua_State *L)                               \
   {                                                       \
-    const char *s = lua_tostring (L, -1);                 \
-    char c;                                               \
-    if (s)                                                \
-      c = *s;                                             \
+    const char *s = luaL_checkstring (L, 1);              \
+    char c = *s;                                          \
     lua_pop (L, 1);                                       \
-    if (s)                                                \
-      {                                                   \
-        lua_pushboolean (L, f ((int) c));                 \
-        return 1;                                         \
-      }                                                   \
-    return 0;                                             \
+    lua_pushboolean (L, f ((int) c));                     \
+    return 1;                                             \
   }
 
 bind_ctype (isdigit)
@@ -244,23 +77,130 @@ bind_ctype (isgraph)
 bind_ctype (isprint)
 bind_ctype (isspace)
 
-#define register_ctype(f) \
+#define register_zlua(f) \
   lua_register (L, #f, zlua_ ## f)
+
+/* FIXME: Add to lposix, use string modes */
+static int
+zlua_euidaccess (lua_State *L)
+{
+  const char *pathname = lua_tostring (L, 1);
+  int mode = luaL_checkint (L, 2);
+  lua_pushinteger (L, euidaccess (pathname, mode));
+  lua_pop (L, 2);
+  return 1;
+}
+
+/* FIXME: Add to lposix */
+static int
+zlua_raise (lua_State *L)
+{
+  int sig = luaL_checkint (L, 1);
+  lua_pop (L, 1);
+  lua_pushinteger (L, raise (sig));
+  return 1;
+}
+
+/* FIXME: Add to lposix */
+static int
+zlua_abort (lua_State *L)
+{
+  (void) L;
+  abort ();
+  return 0;
+}
+
+/* FIXME: Add to lposix */
+/* N.B. We don't use the symbolic constants no_argument,
+   optional_argument and required_argument, since their values are
+   defined as 0, 1 and 2 respectively. */
+static const char *const arg_types[] = {
+  "none", "required", "optional", NULL
+};
+
+/* ret, longindex = getopt_long (arg, shortopts, longopts) */
+static int
+zlua_getopt_long (lua_State *L)
+{
+  int longindex = 0, argc, i, n, ret;
+  const char *shortopts;
+  char **argv;
+  struct option *longopts;
+
+  luaL_checktype (L, 1, LUA_TTABLE);
+  shortopts = luaL_checkstring (L, 2);
+  luaL_checktype (L, 3, LUA_TTABLE);
+
+  argc = (int) lua_objlen (L, 1) + 1;
+  argv = XCALLOC (argc + 1, char *);
+  for (i = 0; i < argc; i++)
+    {
+      lua_pushinteger (L, i);
+      lua_gettable (L, 1);
+      argv[i] = xstrdup (luaL_checkstring (L, -1));
+      lua_pop (L, 1);
+    }
+
+  n = (int) lua_objlen (L, 3);
+  longopts = XCALLOC (n + 1, struct option);
+  for (i = 1; i <= n; i++)
+    {
+      const char *name;
+      int has_arg, val;
+
+      lua_pushinteger (L, i);
+      lua_gettable (L, 3);
+      luaL_checktype (L, -1, LUA_TTABLE);
+
+      lua_pushinteger (L, 1);
+      lua_gettable (L, -2);
+      name = xstrdup (luaL_checkstring (L, -1));
+      lua_pop (L, 1);
+
+      lua_pushinteger (L, 2);
+      lua_gettable (L, -2);
+      has_arg = luaL_checkoption (L, -1, NULL, arg_types); /* Not ideal: misleading argument number */
+      lua_pop (L, 1);
+
+      lua_pushinteger (L, 3);
+      lua_gettable (L, -2);
+      val = luaL_checkinteger (L, -1);
+      lua_pop (L, 1);
+
+      longopts[i - 1].name = name;
+      longopts[i - 1].has_arg = has_arg;
+      longopts[i - 1].val = val;
+      lua_pop (L, 1);
+    }
+
+  opterr = 0; /* Don't display errors for unknown options */
+  ret = getopt_long (argc, argv, shortopts, longopts, &longindex);
+  lua_pop (L, 3);
+  lua_pushinteger (L, ret);
+  lua_pushinteger (L, longindex);
+
+  lua_pushinteger (L, optind);
+  lua_setglobal (L, "optind");
+  lua_pushstring (L, optarg);
+  lua_setglobal (L, "optarg");
+
+  /* FIXME: Free xstrdup'ed argv and longopts strings */
+
+  return 2;
+}
 
 void
 lua_init (lua_State *L)
 {
-  register_ctype (isdigit);
-  register_ctype (isgraph);
-  register_ctype (isprint);
-  register_ctype (isspace);
-}
+  register_zlua (isdigit);
+  register_zlua (isgraph);
+  register_zlua (isprint);
+  register_zlua (isspace);
+  register_zlua (euidaccess);
+  register_zlua (raise);
+  register_zlua (abort);
+  register_zlua (getopt_long);
 
-int lua_docall (lua_State *L, int narg, int clear) {
-  int status = docall (L, narg, clear);
-  if (status) {
-    report(L, status);
-    raise(SIGABRT);
-  }
-  return status;
+  lua_pushinteger (L, 1); /* FIXME: Ideally initialize to nil, but this doesn't work with strict.lua */
+  lua_setglobal (L, "optind");
 }

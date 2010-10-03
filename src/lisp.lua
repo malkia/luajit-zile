@@ -1,6 +1,6 @@
 -- Zile Lisp interpreter
 --
--- Copyright (c) 2009 Free Software Foundation, Inc.
+-- Copyright (c) 2009, 2010 Free Software Foundation, Inc.
 --
 -- This file is part of GNU Zile.
 --
@@ -19,6 +19,62 @@
 -- Free Software Foundation, Fifth Floor, 51 Franklin Street, Boston,
 -- MA 02111-1301, USA.
 
+leT = {data = "t"}
+leNIL = {data = "nil"}
+
+
+-- User commands
+usercmd = {}
+
+function Defun (name, argtypes, doc, interactive, func)
+  usercmd[name] = {
+    doc = doc,
+    interactive = interactive,
+    func = function (arglist)
+             local args = {}
+             local i = #argtypes
+             while arglist and arglist.next do
+               local val = arglist.next
+               local ty = argtypes[i]
+               if ty == "string" then
+                 val = val.data
+               elseif ty == "number" then
+                 val = tonumber (val.data, 10)
+               elseif ty == "boolean" then
+                 val = not (val.data == "nil")
+               end
+               table.insert (args, val)
+               arglist = arglist.next
+               i = i - 1
+             end
+             local ret = func (unpack (args))
+             if not ret then
+               return leNIL
+             elseif ret == true then
+               return leT
+             end
+             return ret
+           end
+  }
+end
+
+-- Return function's interactive field, or nil if not found.
+function get_function_interactive (name)
+  if usercmd[name] then
+    return usercmd[name].interactive
+  end
+end
+
+function get_function_doc (name)
+  if usercmd[name] then
+    return usercmd[name].doc
+  end
+end
+
+-- Turn a boolean into a Lisp boolean
+function bool_to_lisp (b)
+  return b and leT or leNIL
+end
 function read_char (s, pos)
   if pos <= #s then
     return string.sub (s, pos, pos), pos + 1
@@ -137,26 +193,21 @@ end
 
 function execute_function (name, uniarg, is_uniarg, list)
   if is_uniarg then
-    list = { next = { data = tostring (uniarg) }}
+    list = { next = { data = uniarg and tostring (uniarg) or nil }}
   end
   if usercmd[name] and usercmd[name].func then
     if type (usercmd[name].func) == "function" then
       return usercmd[name].func (list)
     else
-      return call_zile_c_command (name, uniarg, is_uniarg, not is_uniarg and list or nil)
+      return call_zile_c_command (name, is_uniarg, list)
     end
   else
-    local mp = get_macro (name)
-    if mp then
-      call_macro (mp)
+    if macros[name] then
+      process_keys (macros[name])
       return leT
     end
     return leNIL
   end
-end
-
-function call_zile_command (func)
-  return execute_function (func, 1, false, nil)
 end
 
 function leEval (list)
@@ -199,19 +250,21 @@ function lisp_loadfile (file)
   return false
 end
 
-Defun {"load",
+Defun ("load",
+       {"string"},
 [[
 Execute a file of Lisp code named FILE.
 ]],
-  function (l)
-    if l and #l >= 2 then
-      return bool_to_lisp (lisp_loadfile (l.next.data))
+  true,
+  function (file)
+    if file then
+      return lisp_loadfile (file)
     end
-    return leNIL
   end
-}
+)
 
-Defun_noninteractive {"setq",
+Defun ("setq",
+       {},
 [[
 (setq [sym val]...)
 
@@ -219,27 +272,23 @@ Set each sym to the value of its val.
 The symbols sym are variables; they are literal (not evaluated).
 The values val are expressions; they are evaluated.
 ]],
-  function (l)
+  false,
+  function (...)
     local ret
-    l = l.next
-    while l and l.next do
-      ret = evaluateNode (l.next)
-      set_variable (l.data, ret.data)
-      if l.next == nil then
-        break
-      end
-      l = l.next.next
+    local l = {...}
+    for i = 1, #l/2 do
+      ret = evaluateNode (l[i + 1])
+      set_variable (l[i].data, ret.data)
     end
     return ret
   end
-}
+)
 
 function function_exists (f)
   return usercmd[f] ~= nil
 end
 
 -- Read a function name from the minibuffer.
--- FIXME: local
 functions_history = nil
 function minibuf_read_function_name (s)
   local cp = completion_new ()
@@ -253,12 +302,12 @@ function minibuf_read_function_name (s)
 
   return minibuf_vread_completion (s, "", cp, functions_history,
                                    "No function name given",
-                                   minibuf_test_in_completions,
                                    "Undefined function name `%s'")
 end
 
 function execute_with_uniarg (undo, uniarg, forward, backward)
   local func = forward
+  uniarg = uniarg or 1
 
   if backward and uniarg < 0 then
     func = backward
@@ -279,4 +328,47 @@ function execute_with_uniarg (undo, uniarg, forward, backward)
   end
 
   return bool_to_lisp (ret)
+end
+
+Defun ("execute-extended-command",
+       {"number"},
+[[
+Read function name, then read its arguments and call it.
+]],
+  true,
+  function (n)
+    local name
+    local msg = ""
+
+    if bit.band (lastflag, FLAG_SET_UNIARG) ~= 0 then
+      if bit.band (lastflag, FLAG_UNIARG_EMPTY) ~= 0 then
+        msg = "C-u "
+      end
+    else
+      msg = string.format ("%d ", get_variable_number ("current-prefix-arg"))
+    end
+    msg = msg .. "M-x "
+
+    name = minibuf_read_function_name (msg)
+    if name then
+      return execute_function (name, n, true)
+    end
+  end
+)
+
+-- Read a function name from the minibuffer.
+local functions_history
+function minibuf_read_function_name (fmt)
+  local cp = completion_new ()
+
+  for name, func in pairs (usercmd) do
+    if func.interactive then
+      table.insert (cp.completions, name)
+    end
+  end
+  add_macros_to_list (cp)
+
+  return minibuf_vread_completion (fmt, "", cp, functions_history,
+                                   "No function name given",
+                                   "Undefined function name `%s'")
 end

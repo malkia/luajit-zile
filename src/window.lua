@@ -69,13 +69,156 @@ function window_pt (wp)
   end
 end
 
+function delete_window (del_wp)
+  local wp
+  if del_wp == head_wp then
+    wp = head_wp.next
+    head_wp = head_wp.next
+  else
+    wp = head_wp
+    while wp do
+      if wp.next == del_wp then
+        wp.next = wp.next.next
+        break
+      end
+      wp = wp.next
+    end
+  end
+
+  if wp then
+    wp.fheight = wp.fheight + del_wp.fheight
+    wp.eheight = wp.eheight + del_wp.eheight + 1
+    set_current_window (wp)
+  end
+
+  if del_wp.saved_pt then
+    unchain_marker (del_wp.saved_pt)
+  end
+end
+
+Defun ("delete-window",
+       {},
+[[
+Remove the current window from the screen.
+]],
+  true,
+  function ()
+    if cur_wp == head_wp and not cur_wp.next then
+      minibuf_error ("Attempt to delete sole ordinary window")
+      return leNIL
+    end
+
+    delete_window (cur_wp)
+  end
+)
+
+Defun ("enlarge-window",
+       {},
+[[
+Make current window one line bigger.
+]],
+  true,
+  function ()
+    if cur_wp == head_wp and not cur_wp.next then
+      return leNIL
+    end
+
+    local wp = cur_wp.next
+    if not wp or wp.fheight < 3 then
+      wp = head_wp
+      while wp do
+        if wp.next == cur_wp then
+          if wp.fheight < 3 then
+            return leNIL
+          end
+          break
+        end
+        wp = wp.next
+      end
+
+      if cur_wp == head_wp and cur_wp.next.fheight < 3 then
+        return leNIL
+      end
+
+      wp.fheight = wp.fheight - 1
+      wp.eheight = wp.eheight - 1
+      if wp.topdelta >= wp.eheight then
+        recenter (wp)
+      end
+      cur_wp.fheight = cur_wp.fheight + 1
+      cur_wp.eheight = cur_wp.eheight + 1
+    end
+  end
+)
+
+Defun ("shrink-window",
+       {},
+[[
+Make current window one line smaller.
+]],
+  true,
+  function ()
+    if (cur_wp == head_wp and not cur_wp.next) or cur_wp.fheight < 3 then
+      return leNIL
+    end
+
+    local wp = cur_wp.next
+    if not wp then
+      wp = head_wp
+      while wp and wp.next ~= cur_wp do
+        wp = wp.next
+      end
+    end
+
+    wp.fheight = wp.fheight + 1
+    wp.eheight = wp.eheight + 1
+    cur_wp.fheight = cur_wp.fheight - 1
+    cur_wp.eheight = cur_wp.eheight - 1
+    if cur_wp.topdelta >= cur_wp.eheight then
+      recenter (wp)
+    end
+  end
+)
+
+Defun ("delete-other-windows",
+       {},
+[[
+Make the selected window fill the screen.
+]],
+  true,
+  function ()
+    local wp = head_wp
+    while wp do
+      local nextwp = wp.next
+      if wp ~= cur_wp then
+        delete_window (wp)
+      end
+      wp = nextwp
+    end
+  end
+)
+
+Defun ("other-window",
+       {},
+[[
+Select the first different window on the screen.
+All windows are arranged in a cyclic order.
+This command selects the window one step away in that order.
+]],
+  true,
+  function ()
+    set_current_window (cur_wp.next or head_wp)
+  end
+)
+
+
 -- Scroll completions up.
 function completion_scroll_up ()
   local old_wp = cur_wp
   local wp = find_window ("*Completions*")
   assert (wp)
   set_current_window (wp)
-  if cur_bp.pt.n >= cur_bp.last_line - cur_wp.eheight or not call_zile_command ("scroll-up") then
+  if cur_bp.pt.n >= cur_bp.last_line - cur_wp.eheight or not execute_function ("scroll-up") then
     gotobob ()
   end
   set_current_window (old_wp)
@@ -90,7 +233,7 @@ function completion_scroll_down ()
   local wp = find_window ("*Completions*")
   assert (wp)
   set_current_window (wp)
-  if cur_bp.pt.n == 0 or not call_zile_command ("scroll-down") then
+  if cur_bp.pt.n == 0 or not execute_function ("scroll-down") then
     gotoeob ()
     resync_redisplay (cur_wp)
   end
@@ -110,7 +253,7 @@ end
 function popup_window ()
   if head_wp.next == nil then
     -- There is only one window on the screen, so split it.
-    call_zile_command ("split-window")
+    execute_function ("split-window")
     return cur_wp.next
   end
 
@@ -123,11 +266,13 @@ function popup_window ()
   return head_wp
 end
 
-Defun {"split-window",
+Defun ("split-window",
+       {},
 [[
 Split current window into two windows, one above the other.
 Both windows display the same buffer now current.
 ]],
+  true,
   function ()
     -- Windows smaller than 4 lines cannot be split.
     if cur_wp.fheight < 4 then
@@ -153,4 +298,22 @@ Both windows display the same buffer now current.
 
     return leT
   end
-}
+)
+
+-- This function creates the scratch buffer and window when there are
+-- no other windows (and possibly no other buffers).
+function create_scratch_window ()
+  local bp = create_scratch_buffer ()
+  local w, h = term_width (), term_height ()
+  local wp = window_new ()
+  cur_wp = wp
+  head_wp = wp
+  wp.fwidth = w
+  wp.ewidth = w
+  -- Save space for minibuffer.
+  wp.fheight = h - 1
+  -- Save space for status line.
+  wp.eheight = wp.fheight - 1
+  cur_bp = bp
+  wp.bp = cur_bp
+end

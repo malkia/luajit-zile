@@ -1,3 +1,35 @@
+local mark_ring = {} -- Mark ring.
+
+-- Push the current mark to the mark-ring.
+function push_mark ()
+  -- Save the mark.
+  if cur_bp.mark then
+    table.insert (mark_ring, copy_marker (cur_bp.mark))
+  else
+    -- Save an invalid mark.
+    local m = marker_new ()
+    move_marker (m, cur_bp, point_min ())
+    m.pt.p = nil
+    table.insert (mark_ring, m)
+  end
+end
+
+-- Pop a mark from the mark-ring and make it the current mark.
+function pop_mark ()
+  local m = mark_ring[#mark_ring]
+
+  -- Replace the mark.
+  if m.bp.mark then
+    unchain_marker (m.bp.mark)
+  end
+
+  m.bp.mark = copy_marker (m)
+
+  table.remove (mark_ring, #mark_ring)
+  unchain_marker (m)
+end
+
+
 -- Signal an error, and abort any ongoing macro definition.
 function ding ()
   if bit.band (thisflag, FLAG_DEFINING_MACRO) ~= 0 then
@@ -10,10 +42,18 @@ function ding ()
 end
 
 
+function is_empty_line ()
+  return #cur_bp.pt.p.text == 0
+end
+
+function is_blank_line ()
+  return string.match (cur_bp.pt.p.text, "^%s*$") ~= nil
+end
+
 -- Returns the character following point in the current buffer.
 function following_char ()
   if eobp () then
-    return 0
+    return nil
   elseif eolp () then
     return '\n'
   else
@@ -24,7 +64,7 @@ end
 -- Return the character preceding point in the current buffer.
 function preceding_char ()
   if bobp () then
-    return 0
+    return nil
   elseif bolp () then
     return '\n'
   else

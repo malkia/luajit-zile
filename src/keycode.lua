@@ -62,7 +62,7 @@ function chordtostr (key)
 
   if codetoname[key] then
     s = s .. codetoname[key]
-  elseif key <= 0xff and isgraph (key) then
+  elseif key <= 0xff and isgraph (string.char (key)) then
     s = s .. string.char (key)
   else
     s = s .. string.format ("<%x>", key)

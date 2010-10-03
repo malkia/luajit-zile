@@ -231,16 +231,15 @@ local point_screen_column = 0
 -- This function calculates the best start column to draw if the line
 -- at point has to be truncated.
 local function calculate_start_column (wp)
-  local col = 0
   local t = tab_width (wp.bp)
   local pt = window_pt (wp)
-  local rp = pt.o
-  local rpfact = math.floor (rp / math.floor (wp.ewidth / 3))
-  local lastcol = 0
+  local rpfact = math.floor (pt.o / math.floor (wp.ewidth / 3))
 
-  for lp = rp, 0, -1 do
+  local col = 0
+  local lastcol = 0
+  for lp = pt.o, 0, -1 do
     col = 0
-    for p = lp, rp - 1 do
+    for p = lp, pt.o - 1 do
       local c = string.sub (pt.p.text, p + 1, p + 1)
       if c == '\t' then
         col = bit.bor (col, t - 1) + 1
@@ -301,18 +300,18 @@ local function draw_status_line (line, wp)
 
   local bs = string.format ("(%d,%d)", pt.n + 1, get_goalc_bp (wp.bp, pt))
   local as = string.format ("--%s%2s  %-15s   %s %-9s (Fundamental",
-                            eol_type, make_modeline_flags (wp), bp.name, make_screen_pos (wp), bs)
+                            eol_type, make_modeline_flags (wp), wp.bp.name, make_screen_pos (wp), bs)
 
-  if bp.autofill then
+  if wp.bp.autofill then
     as = as .. " Fill"
   end
-  if bp.overwrite then
+  if wp.bp.overwrite then
     as = as .. " Ovwrt"
   end
   if bit.band (thisflag, FLAG_DEFINING_MACRO) ~= 0 then
     as = as .. " Def"
   end
-  if bp.isearch then
+  if wp.bp.isearch then
     as = as .. " Isearch"
   end
   as = as .. ")"

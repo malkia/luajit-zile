@@ -29,7 +29,7 @@ function do_minibuf_read (prompt, value, pos, cp, hp)
     local c = getkey ()
     if c == KBD_NOKEY then
     elseif c == bit.bor (KBD_CTRL, string.byte ('z')) then
-      FUNCALL (suspend_emacs)
+      CLUE_DO (L, "execute_function ('suspend_emacs')")
     elseif c == KBD_RET then
       term_move (term_height () - 1, 0)
       term_clrtoeol ()
@@ -189,4 +189,26 @@ function draw_minibuf_read (prompt, value, match, pointo)
   term_move (h - 1, #prompt + margin - 1 + pointo % (w - #prompt - margin))
 
   term_refresh ()
+end
+
+function term_minibuf_read (prompt, value, pos, cp, hp)
+  if hp then
+    history_prepare (hp)
+  end
+
+  local s = do_minibuf_read (prompt, value, pos, cp, hp)
+
+  local old_wp = cur_wp
+  local wp = find_window ("*Completions*")
+  if cp and cp.popped_up and wp then
+    set_current_window (wp)
+    if cp.close then
+      execute_function ("delete-window")
+    elseif cp.old_bp then
+      switch_to_buffer (cp.old_bp)
+    end
+    set_current_window (old_wp)
+  end
+
+  return s
 end

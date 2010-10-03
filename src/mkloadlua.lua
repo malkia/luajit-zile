@@ -1,4 +1,4 @@
--- Generate loadlua.h
+-- Generate loadlua.lua
 --
 -- Copyright (c) 2010 Free Software Foundation, Inc.
 --
@@ -19,27 +19,13 @@
 -- Free Software Foundation, Fifth Floor, 51 Franklin Street, Boston,
 -- MA 02111-1301, USA.
 
-prog = {
-  name = "mkloadlua"
-}
-
--- FIXME: Generate a Lua file, not a C file
-require "lib"
-
-h = io.open ("loadlua.h", "w")
+h = io.open ("loadlua.lua", "w")
 assert (h)
 
-h:write ("/*\n" ..
-         " * Automatically generated file: DO NOT EDIT!\n" ..
-         " * Load Lua modules into " .. PACKAGE_NAME .. "\n" ..
-         " */\n" ..
+h:write ("-- Automatically generated file: DO NOT EDIT!\n" ..
+         "-- Load Lua modules into " .. PACKAGE_NAME .. "\n" ..
          "\n")
 
 for i in ipairs (arg) do
-  if arg[i] then
-    local f = string.gsub (arg[i], "%.lua$", "")
-    h:write ("X (\"" .. f .. "\")\n")
-  end
+  h:write ("require \"" .. (string.gsub (arg[i], "%.lua$", "")) .. "\"\n")
 end
-
-h:close ()
