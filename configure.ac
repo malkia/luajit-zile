@@ -37,12 +37,6 @@ AM_PROG_CC_C_O
 dnl help2man
 AX_WITH_PROG(HELP2MAN, help2man)
 
-dnl Valgrind
-AX_WITH_PROG(VALGRIND, valgrind)
-if test -n "$VALGRIND"; then
-  VALGRIND="$VALGRIND --error-exitcode=1 --leak-check=full"
-fi
-
 dnl Checks for functions and headers
 gl_INIT
 AC_HEADER_STDC
