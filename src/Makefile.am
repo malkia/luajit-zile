@@ -112,8 +112,7 @@ DISTCLEANFILES = 					\
 	zile.1
 
 MAINTAINERCLEANFILES =					\
-	loadlua.lua					\
-	tbl_vars.lua
+	loadlua.lua
 
 CLOC = cloc --force-lang="C",h
 
