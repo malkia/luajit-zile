@@ -20,7 +20,7 @@
 # MA 02111-1301, USA.
 
 AM_CPPFLAGS = $(LUA_INCLUDE) -I$(top_builddir)/lib -I$(top_srcdir)/lib -DPATH_DATA="\"$(pkgdatadir)\""
-LDADD = $(top_builddir)/lib/libgnu.a $(LIB_EACCESS) $(LIBINTL) $(CURSES_LIB) $(LUA_LIB)
+LDADD = $(top_builddir)/lib/libgnu.a $(LIB_EACCESS) $(LIBINTL) $(LUA_LIB)
 
 bin_PROGRAMS = zile
 
@@ -34,10 +34,7 @@ zile_BASE_SOURCES =					\
 # FIXME: Move lcurses.c to lib/
 zile_SOURCES =						\
 	$(zile_BASE_SOURCES)				\
-	lcurses.c					\
-	tbl_opts.h.in
-
-LUA_STD = std.lua
+	lcurses.c
 
 zile_LUA =						\
 	lisp.lua					\
@@ -71,7 +68,7 @@ zile_LUA =						\
 	term_redisplay.lua
 
 LUA_RUNTIME =						\
-	$(LUA_STD)					\
+	std.lua						\
 	$(zile_LUA)
 
 LUA_BUILDTIME =						\
@@ -344,7 +341,7 @@ LISP_TESTS_OUTPUTS =					\
 
 EXTRA_DIST =						\
 	$(zile_LUA)					\
-	$(LUA_STD)					\
+	std.lua						\
 	$(LUA_BUILDTIME)				\
 	$(LUA_BUILDSCRIPTS)				\
 	$(LISP_TESTS)					\
@@ -353,7 +350,6 @@ EXTRA_DIST =						\
 	lisp-tests/test.input				\
 	$(TESTSCRIPTS)					\
 	quit.el						\
-	tbl_opts.h.in					\
 	man-extras					\
 	zile.1.in					\
 	zile-help2man-wrapper

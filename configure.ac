@@ -92,5 +92,5 @@ AC_DEFINE_UNQUOTED(CONFIGURE_HOST, ["${ac_hostname}"],
 
 dnl Generate output
 AC_CONFIG_HEADER(config.h)
-AC_CONFIG_FILES(Makefile lib/Makefile src/Makefile src/tbl_opts.h)
+AC_CONFIG_FILES(Makefile lib/Makefile src/Makefile)
 AC_OUTPUT
