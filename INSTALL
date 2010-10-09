@@ -1,7 +1,7 @@
              GNU Zile build and installation instructions
              --------------------------------------------
 
-     Copyright (c) 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+     Copyright (c) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 
      Copying and distribution of this file, with or without
      modification, are permitted in any medium without royalty
@@ -11,10 +11,10 @@
 Building from a release tarball
 -------------------------------
 
-Prerequisites: (n)curses. If you wish to use a non-standard library
-name, this can be specified using CURSES_LIB, and CPPFLAGS can be used
-for non-standard include paths. For example, to use the X version of
-PDcurses:
+Prerequisites: Lua 5.1, lrexlib >= 2.5.0, (n)curses. If you wish to
+use a non-standard library name, this can be specified using
+CURSES_LIB, and CPPFLAGS can be used for non-standard include paths.
+For example, to use the X version of PDcurses:
 
 CPPFLAGS=/usr/local/include/xcurses CURSES_LIB=-lXCurses ./configure
 
@@ -39,8 +39,8 @@ CPPFLAGS=/usr/local/include/xcurses CURSES_LIB=-lXCurses ./configure
 Building from the repository
 ----------------------------
 
-Prerequisites: automake >= 1.9, autoconf >= 2.59, up-to-date gnulib,
-help2man, Lua >= 5.1.
+Extra prerequisites: automake >= 1.9, autoconf >= 2.59, up-to-date
+gnulib, help2man.
 
 Check out Zile and bootstrap the build system:
 

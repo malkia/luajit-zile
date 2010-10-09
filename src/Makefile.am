@@ -31,10 +31,9 @@ zile_BASE_SOURCES =					\
 	extern.h					\
 	main.c
 
-# FIXME: Move lcurses.c to lib/
 zile_SOURCES =						\
 	$(zile_BASE_SOURCES)				\
-	lcurses.c
+	tbl_opts.h.in
 
 zile_LUA =						\
 	lisp.lua					\
@@ -88,7 +87,7 @@ PRODUCTIONSOURCES =					\
 
 main.c:	loadlua.lua
 
-LUA_CLIBS = posix bit rex_gnu
+LUA_CLIBS = posix curses bit rex_gnu
 
 loadlua.lua: $(LUA_RUNTIME) mkloadlua.lua
 	LUA_INIT= LUA_PATH="$(srcdir)/?.lua" $(LUA) -e 'PACKAGE_NAME="$(PACKAGE_NAME)"' $(srcdir)/mkloadlua.lua $(LUA_CLIBS) $(LUA_RUNTIME)

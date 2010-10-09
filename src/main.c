@@ -85,7 +85,6 @@ main (int argc, char **argv)
   /* Set up Lua environment. */
   assert (L = luaL_newstate ());
   luaL_openlibs (L);
-  luaopen_curses (L);
   lua_init (L);
   lua_getargs (L, argc, argv);
   lua_setglobal (L, "arg");
