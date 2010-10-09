@@ -46,7 +46,6 @@ fi
 dnl Checks for functions and headers
 gl_INIT
 AC_HEADER_STDC
-AC_CHECK_FUNCS_ONCE(fchmod)
 
 dnl Emacs
 AX_WITH_PROG(EMACS, emacs)
