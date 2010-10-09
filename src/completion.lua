@@ -1,6 +1,6 @@
 -- Completion facility functions
 --
--- Copyright (c) 2007, 2009 Free Software Foundation, Inc.
+-- Copyright (c) 2007, 2009, 2010 Free Software Foundation, Inc.
 --
 -- This file is part of GNU Zile.
 --
@@ -194,4 +194,26 @@ function popup_completion (cp)
   end
 
   term_redisplay ()
+end
+
+function minibuf_read_variable_name (fmt)
+  local cp = completion_new ()
+  for v in pairs (main_vars) do
+    table.insert (cp.completions, v)
+  end
+
+  return minibuf_vread_completion (fmt, "", cp, nil,
+                                   "No variable name given",
+                                   "Undefined variable name `%s'");
+end
+
+function make_buffer_completion ()
+  local cp = completion_new ()
+  local bp = head_bp
+  while bp do
+    table.insert (cp.completions, bp.buffer_name)
+    bp = bp.next
+  end
+
+  return cp
 end

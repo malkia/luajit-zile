@@ -21,6 +21,20 @@
 
 _DEBUG = true
 
+-- FIXME: The following should come from config.h
+PACKAGE = "zile"
+PACKAGE_NAME = "Zile"
+PACKAGE_BUGREPORT = "bug-zile@gnu.org"
+VERSION = "2.4.0"
+CONFIGURE_DATE = "Wed May 19 2010"
+CONFIGURE_HOST = "canta"
+
+ZILE_VERSION_STRING = "GNU " .. PACKAGE_NAME .. " " .. VERSION
+
+
+prog_name = arg[0] or PACKAGE -- FIXME: Combine with C prog_name
+
+
 -- Main editor structures.
 
 -- Undo delta types.
@@ -85,32 +99,6 @@ FONT_REVERSE = 1
 -- Default waitkey pause in ds
 WAITKEY_DEFAULT = 20
 
-
--- Zile command to Lua bindings
-
-leT = {data = "t"}
-leNIL = {data = "nil"}
-
-usercmd = {} -- table of user commands
-
--- User command constructors
-function defun (l, interactive)
-  usercmd[l[1]] = {doc = l[2], interactive = interactive, func = l[3]}
-end
-
-function Defun (l)
-  defun (l, true)
-end
-
-function Defun_noninteractive (l)
-  defun (l, false)
-end
-
--- Turn a boolean into a Lisp boolean
-function bool_to_lisp (b)
-  return b and leT or leNIL
-end
-
 -- The current window
 cur_wp = nil
 -- The first window in list
@@ -125,5 +113,273 @@ head_bp = nil
 thisflag = 0
 lastflag = 0
 
--- The universal argument repeat count.
-last_uniarg = 1
+
+-- FIXME: put this somewhere better
+-- Recase str according to newcase.
+function recase (s, newcase)
+  local bs = ""
+  local i, len
+
+  if newcase == "capitalized" or newcase == "upper" then
+    bs = bs .. string.upper (s[1])
+  else
+    bs = bs .. string.lower (s[1])
+  end
+
+  for i = 2, #s do
+    bs = bs .. (newcase == "upper" and string.upper or string.lower) (s[i])
+  end
+
+  return bs
+end
+
+ZILE_COPYRIGHT_STRING = "Copyright (C) 2010 Free Software Foundation, Inc."
+
+local about_minibuf_str = "Welcome to " .. PACKAGE_NAME .. "!"
+
+local about_splash_str = ZILE_VERSION_STRING .. [[
+
+]] .. ZILE_COPYRIGHT_STRING .. [[
+
+Type `C-x C-c' to exit ]] .. PACKAGE_NAME .. [[
+Type `C-x u' to undo changes.
+Type `C-g' at any time to quit the current operation.
+
+`C-x' means hold the CTRL key while typing the character `x'.
+`M-x' means hold the META or ALT key down while typing `x'.
+If there is no META or ALT key, instead press and release
+the ESC key and then type `x'.
+Combinations like `C-x u' mean first press `C-x', then `u'.
+]]
+
+-- FIXME: local
+function about_screen ()
+  minibuf_write (about_minibuf_str)
+  if not get_variable_bool ("inhibit-splash-screen") then
+    show_splash_screen (about_splash_str)
+    term_refresh ()
+    waitkey (20 * 10)
+  end
+end
+
+-- FIXME: local
+function setup_main_screen ()
+  local last_bp
+  local c = 0
+
+  local bp = head_bp
+  while bp do
+    -- Last buffer that isn't *scratch*.
+    if bp.next and bp.next.next == nil then
+      last_bp = bp
+    end
+    c = c + 1
+    bp = bp.next
+  end
+
+  -- *scratch* and two files.
+  if c == 3 then
+    execute_function ("split-window")
+    switch_to_buffer (last_bp)
+    execute_function ("other-window")
+  elseif c > 3 then
+    -- More than two files.
+    execute_function ("list-buffers")
+  end
+end
+
+-- Documented options table
+--
+-- Documentation line: "doc", "DOCSTRING"
+-- Option: "opt", long name, short name ('\0' for none), argument, argument docstring, docstring)
+-- Action: "act", ARGUMENT, DOCSTRING
+--
+-- Options which take no argument have an optional_argument, so that,
+-- as in Emacs, no argument is signalled as extraneous.
+
+local options = {
+  {"doc", "Initialization options:"},
+  {"doc", ""},
+  {"opt", "no-init-file", 'q', "optional", "", "do not load ~/." .. PACKAGE},
+  {"opt", "funcall", 'f', "required", "FUNC", "call " .. PACKAGE_NAME .. " Lisp function FUNC with no arguments"},
+  {"opt", "load", 'l', "required", "FILE", "load " .. PACKAGE_NAME .. " Lisp FILE using the load function"},
+  {"opt", "help", '\0', "optional", "", "display this help message and exit"},
+  {"opt", "version", '\0', "optional", "", "display version information and exit"},
+  {"doc", ""},
+  {"doc", "Action options:"},
+  {"doc", ""},
+  {"act", "FILE", "visit FILE using find-file"},
+  {"act", "+LINE FILE", "visit FILE using find-file, then go to line LINE"},
+}
+
+-- Options table
+local longopts = {}
+for _, v in ipairs (options) do
+  if v[1] == "opt" then
+    table.insert (longopts, {v[2], v[4], string.byte (v[3])})
+  end
+end
+
+
+local zarg = {}
+local qflag = false
+local help_width = 24
+
+function process_args ()
+  while true do
+    local this_optind = optind or 1
+    local buf, shortopt
+    local line = 1
+
+    -- Leading `-' means process all arguments in order, treating
+    -- non-options as arguments to an option with code 1
+    -- Leading `:' so as to return ':' for a missing arg, not '?'
+    local c, longindex = getopt_long (arg, "-:f:l:q", longopts)
+
+    if c == -1 then
+      break
+    elseif c == 1 then -- Non-option (assume file name)
+      longindex = 5
+    elseif c == string.byte ('?') then -- Unknown option
+      minibuf_error (string.format ("Unknown option `%s'", arg[this_optind]))
+    elseif c == string.byte (':') then -- Missing argument
+      io.stderr:write (string.format ("%s: Option `%s' requires an argument\n",
+                                      prog_name, arg[this_optind]))
+      os.exit (1)
+    elseif c == string.byte ('q') then
+      longindex = 0
+    elseif c == string.byte ('f') then
+      longindex = 1
+    elseif c == string.byte ('l') then
+      longindex = 2
+    end
+
+    if longindex == 0 then
+      qflag = true
+    elseif longindex == 1 then
+      table.insert (zarg, {'function', optarg})
+    elseif longindex == 2 then
+      table.insert (zarg, {'loadfile', optarg})
+    elseif longindex == 3 then
+      io.write ("Usage: " .. arg[0] .. " [OPTION-OR-FILENAME]...\n" ..
+                "\n" ..
+                "Run " .. PACKAGE_NAME .. ", the lightweight Emacs clone.\n" ..
+                "\n")
+
+      for _, v in ipairs (options) do
+        if v[1] == "doc" then
+          io.write (v[2] .. "\n")
+        elseif v[1] == "opt" then
+          local shortopt = string.format (", -%s", v[3] or "")
+          local buf = string.format ("--%s%s %s", v[2], v[3] and shortopt or "", v[5])
+          io.write (string.sub (buf .. string.rep (" ", help_width), 1, help_width) .. v[6] .. "\n")
+        elseif v[1] == "act" then
+          io.write (string.sub (v[2] .. string.rep (" ", help_width), 1, help_width) .. v[3] .. "\n")
+        end
+      end
+
+      io.write ("\n" ..
+                "Report bugs to " .. PACKAGE_BUGREPORT .. ".\n")
+      os.exit (0)
+    elseif longindex == 4 then
+      io.write (ZILE_VERSION_STRING .. "\n" ..
+                ZILE_COPYRIGHT_STRING .. "\n" ..
+                "GNU " .. PACKAGE_NAME .. " comes with ABSOLUTELY NO WARRANTY.\n" ..
+                "You may redistribute copies of " .. PACKAGE_NAME .. "\n" ..
+                "under the terms of the GNU General Public License.\n" ..
+                "For more information about these matters, see the file named COPYING.\n")
+      os.exit (0)
+    elseif longindex == 5 then
+      if optarg[1] == '+' then
+        line = tonumber (optarg + 1, 10)
+      else
+        table.insert (zarg, {'file', optarg, line})
+        line = 1
+      end
+    end
+  end
+end
+
+function main ()
+  local scratch_bp
+
+  process_args ()
+
+  os.setlocale ("")
+
+  term_init ()
+
+  init_default_bindings ()
+
+  -- Create the `*scratch*' buffer, so that initialisation commands
+  -- that act on a buffer have something to act on.
+  create_scratch_window ()
+  scratch_bp = cur_bp
+  insert_string (";; This buffer is for notes you don't want to save.\n;; If you want to create a file, visit that file with C-x C-f,\n;; then enter the text in that file's own buffer.\n\n")
+  cur_bp.modified = false
+
+  if not qflag then
+    local s = os.getenv ("HOME")
+    if s then
+      lisp_loadfile (s .. "/." .. PACKAGE)
+    end
+  end
+
+  -- Show the splash screen only if no files, function or load file is
+  -- specified on the command line, and there has been no error.
+  if not zarg and not minibuf_contents then
+    about_screen ()
+  end
+  setup_main_screen ()
+
+  -- Load files and load files and run functions given on the command line.
+  local ok = true
+  for i = 1, #zarg do
+    local type, arg, line = zarg[i][1], zarg[i][2], zarg[i][3]
+
+    if type == "function" then
+      ok = function_exists (arg)
+      if ok then
+        ok = execute_function (arg, true) ~= leNIL
+      else
+        minibuf_error (string.format ("Function `%s' not defined", arg))
+      end
+    elseif type == "loadfile" then
+      ok = lisp_loadfile (arg)
+      if not ok then
+        minibuf_error (string.format ("Cannot open load file: %s\n", arg))
+      end
+    elseif type == "file" then
+      ok = find_file (arg)
+      if ok then
+        execute_function ("goto-line", line)
+        lastflag = bit.bor (lastflag, FLAG_NEED_RESYNC)
+      end
+    end
+    if bit.band (thisflag, FLAG_QUIT) ~= 0 then
+      break
+    end
+  end
+
+  lastflag = bit.bor (lastflag, FLAG_NEED_RESYNC)
+
+  -- Reinitialise the scratch buffer to catch settings
+  init_buffer (scratch_bp)
+
+  -- Refresh minibuffer in case there was an error that couldn't be
+  -- written during startup
+  minibuf_refresh ()
+
+  -- Run the main loop.
+  while bit.band (thisflag, FLAG_QUIT) == 0 do
+    if bit.band (lastflag, FLAG_NEED_RESYNC) ~= 0 then
+      resync_redisplay (cur_wp)
+    end
+    term_redisplay ()
+    term_refresh ()
+    process_command ()
+  end
+
+  -- Tidy and close the terminal.
+  term_finish ()
+end

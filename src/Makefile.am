@@ -20,72 +20,29 @@
 # MA 02111-1301, USA.
 
 AM_CPPFLAGS = $(LUA_INCLUDE) -I$(top_builddir)/lib -I$(top_srcdir)/lib -DPATH_DATA="\"$(pkgdatadir)\""
-AM_CFLAGS = $(LUA_LIBS_CFLAGS)
-LDADD = $(top_builddir)/lib/libgnu.a $(LIB_EACCESS) $(LIBINTL) $(CURSES_LIB) $(LUA_LIB) $(LUA_LIBS_LIBS)
+LDADD = $(top_builddir)/lib/libgnu.a $(LIB_EACCESS) $(LIBINTL) $(CURSES_LIB) $(LUA_LIB)
 
 bin_PROGRAMS = zile
 
 zile_LDADD = $(LDADD) $(LIBOBJS)
 
-zile_FUNCTION_SOURCES =					\
-	basic.c						\
-	bind.c						\
-	buffer.c					\
-	file.c						\
-	funcs.c						\
-	help.c						\
-	killring.c					\
-	line.c						\
-	lisp.c						\
-	lua.c						\
-	macro.c						\
-	registers.c					\
-	search.c					\
-	undo.c						\
-	variables.c					\
-	window.c
-
 zile_BASE_SOURCES =					\
-	$(zile_FUNCTION_SOURCES)			\
-	astr.c						\
-	astr.h						\
-	xalloc_extra.c					\
-	xalloc_extra.h					\
+	lua.c						\
 	extern.h					\
-	main.h						\
-	list_fields.h					\
-	lists.c						\
-	lists.h						\
-	buffer.h					\
-	region.h					\
-	completion.h					\
-	completion.c					\
-	editfns.c					\
-	getkey.c					\
-	line.h						\
-	main.c						\
-	marker.h					\
-	marker.c					\
-	minibuf.c					\
-	point.c						\
-	window.h					\
-	term_minibuf.c
-
-clue_SOURCES =						\
-	clue.h
+	main.c
 
 # FIXME: Move lcurses.c to lib/
 zile_SOURCES =						\
 	$(zile_BASE_SOURCES)				\
-	$(clue_SOURCES)					\
 	lcurses.c					\
-	loadlua.h					\
-	tbl_funcs.h					\
 	tbl_opts.h.in
 
 LUA_STD = std.lua
 
 zile_LUA =						\
+	lisp.lua					\
+	tbl_vars.lua					\
+	variables.lua					\
 	main.lua					\
 	basic.lua					\
 	bind.lua					\
@@ -94,37 +51,35 @@ zile_LUA =						\
 	editfns.lua					\
 	funcs.lua					\
 	getkey.lua					\
+	help.lua					\
 	history.lua					\
 	file.lua					\
 	keycode.lua					\
+	killring.lua					\
 	line.lua					\
-	lisp.lua					\
 	macro.lua					\
 	marker.lua					\
 	minibuf.lua					\
 	point.lua					\
 	redisplay.lua					\
+	registers.lua					\
+	search.lua					\
 	undo.lua					\
-	variables.lua					\
 	window.lua					\
 	term_curses.lua					\
 	term_minibuf.lua				\
-	term_redisplay.lua				\
-	tbl_vars.lua
+	term_redisplay.lua
 
 LUA_RUNTIME =						\
 	$(LUA_STD)					\
-	$(zile_LUA)					\
-	tbl_funcs.lua
+	$(zile_LUA)
 
 LUA_BUILDTIME =						\
 	lib.lua						\
 	texinfo.lua
 
 LUA_BUILDSCRIPTS = 					\
-	mkfuncs.lua					\
-	mkloadlua.lua					\
-	mkvars.lua
+	mkloadlua.lua
 
 PRODUCTIONSOURCES =					\
 	$(zile_BASE_SOURCES)				\
@@ -134,20 +89,12 @@ PRODUCTIONSOURCES =					\
 	Makefile.am ../Makefile.am ../configure.ac	\
 	*.el
 
-$(zile_OBJECTS): tbl_funcs.h
+main.c:	loadlua.lua
 
-# FIXME: Something wrong with this causing rebuilding on every make in a loop of two steps.
-extern.h tbl_funcs.h tbl_funcs.lua: $(zile_FUNCTION_SOURCES) mkfuncs.lua $(zile_LUA)
-	LUA_INIT= LUA_PATH="$(srcdir)/?.lua" $(LUA) -e 'PACKAGE_NAME="$(PACKAGE_NAME)"' $(srcdir)/mkfuncs.lua $(srcdir) $(zile_FUNCTION_SOURCES)
+LUA_CLIBS = posix bit rex_gnu
 
-main.c:	loadlua.h
-
-loadlua.h: $(LUA_RUNTIME) mkloadlua.lua
-	LUA_INIT= LUA_PATH="$(srcdir)/?.lua" $(LUA) -e 'PACKAGE_NAME="$(PACKAGE_NAME)"' $(srcdir)/mkloadlua.lua $(LUA_RUNTIME)
-
-dotzile.sample: mkvars.lua dotzile-extra.el $(zile_LUA)
-	LUA_INIT= LUA_PATH="$(srcdir)/?.lua" $(LUA) -e 'PACKAGE="$(PACKAGE)"' $(srcdir)/mkvars.lua $(srcdir)/tbl_vars.lua
-	cat $(srcdir)/dotzile-extra.el >> $@
+loadlua.lua: $(LUA_RUNTIME) mkloadlua.lua
+	LUA_INIT= LUA_PATH="$(srcdir)/?.lua" $(LUA) -e 'PACKAGE_NAME="$(PACKAGE_NAME)"' $(srcdir)/mkloadlua.lua $(LUA_CLIBS) $(LUA_RUNTIME)
 
 edit = sed \
 	-e 's|@pkgdatadir[@]|$(pkgdatadir)|g'
@@ -160,20 +107,18 @@ zile.1: zile.1.in Makefile
 zile.1.in: main.c man-extras zile-help2man-wrapper
 	builddir=$(builddir) $(HELP2MAN) --output=$@ --no-info --name="Zile Is Lossy Emacs" --include $(srcdir)/man-extras $(srcdir)/zile-help2man-wrapper
 
-dist_pkgdata_DATA = dotzile.sample
+dist_pkgdata_DATA = dotzile-extra.el
 
 dist_man_MANS = zile.1
 
 DISTCLEANFILES = 					\
-	dotzile.sample					\
 	zile.1
 
 MAINTAINERCLEANFILES =					\
-	loadlua.h					\
-	tbl_vars.lua					\
-	tbl_funcs.h
+	loadlua.lua					\
+	tbl_vars.lua
 
-CLOC = cloc --force-lang="C",h --no3
+CLOC = cloc --force-lang="C",h
 
 TESTSOURCES = $(LISP_TESTS) $(LISP_TESTS_ZILE_ONLY) $(TESTSCRIPTS)
 
@@ -195,7 +140,7 @@ TESTS = $(check_PROGRAMS)
 
 check-local:
 	echo $(LISP_TESTS) | $(TESTS_VARS) EMACS="$(EMACS)" VALGRIND="$(VALGRIND)" xargs $(srcdir)/run-lisp-tests
-	echo $(LISP_TESTS_ZILE_ONLY) | $(TESTS_VARS) VALGRIND="$(VALGRIND)" xargs $(srcdir)/run-lisp-tests
+	echo $(LISP_TESTS_ZILE_ONLY) | $(TESTS_VARS) EMACS= VALGRIND="$(VALGRIND)" xargs $(srcdir)/run-lisp-tests
 
 TESTSCRIPTS =						\
 	run-lisp-tests					\
@@ -408,7 +353,6 @@ EXTRA_DIST =						\
 	lisp-tests/test.input				\
 	$(TESTSCRIPTS)					\
 	quit.el						\
-	dotzile-extra.el				\
 	tbl_opts.h.in					\
 	man-extras					\
 	zile.1.in					\

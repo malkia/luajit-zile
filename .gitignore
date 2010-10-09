@@ -3,14 +3,8 @@ configure.lineno
 autom4te.cache
 aclocal.m4
 config.log
-config.guess
-config.sub
 config.status
 config.status.lineno
-compile
-depcomp
-install-sh
-missing
 ChangeLog
 config.h
 config.h.in
@@ -20,9 +14,6 @@ stamp-h1
 zile*.tar.gz
 zile*.tar.gz.sig
 zile*.tar.gz.directive*
-arg-nonnull.h
-warn-on-use.h
-gendocs.sh
 Makefile
 Makefile.in
 *.[oa]
@@ -31,6 +22,7 @@ Makefile.in
 release-notes
 /GNUmakefile
 /maint.mk
-/useless-if-before-free
-/vc-list-files
-/c++defs.h
+build-aux
+arg-nonnull.h
+warn-on-use.h
+.sc-start*

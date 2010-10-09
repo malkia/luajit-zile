@@ -3,8 +3,7 @@
 undo_nosave = false
 
 -- This variable is set to true when an undo is in execution.
--- FIXME: local
-doing_undo = false
+local doing_undo = false
 
 -- Save a reverse delta for doing undo.
 function undo_save (ty, pt, osize, size)
@@ -34,7 +33,6 @@ function undo_save (ty, pt, osize, size)
     end
 
     pt.p = lp
-    up.osize = osize
     up.size = size
     up.text = copy_text_block (table.clone (pt), osize)
   end
@@ -54,3 +52,74 @@ function undo_set_unchanged (up)
     up = up.next
   end
 end
+
+-- Revert an action.  Return the next undo entry.
+local function revert_action (up)
+  local pt = point_new ()
+
+  pt.n = up.n
+  pt.o = up.o
+
+  doing_undo = true
+
+  if up.type == UNDO_END_SEQUENCE then
+    undo_save (UNDO_START_SEQUENCE, pt, 0, 0)
+    up = up.next
+    while up.type ~= UNDO_START_SEQUENCE do
+      up = revert_action (up)
+    end
+    pt.n = up.n
+    pt.o = up.o
+    undo_save (UNDO_END_SEQUENCE, pt, 0, 0)
+    goto_point (pt)
+    return up.next
+  end
+
+  goto_point (pt)
+
+  if up.type == UNDO_REPLACE_BLOCK then
+    undo_save (UNDO_REPLACE_BLOCK, pt, up.size, #up.text)
+    undo_nosave = true
+    for i = 1, up.size do
+      delete_char ()
+    end
+    insert_string (up.text)
+    undo_nosave = false
+  end
+
+  doing_undo = false
+
+  if up.unchanged then
+    cur_bp.modified = false
+  end
+
+  return up.next
+end
+
+Defun ("undo",
+       {},
+[[
+Undo some previous changes.
+Repeat this command to undo more changes.
+]],
+  true,
+  function ()
+    if cur_bp.noundo then
+      minibuf_error ("Undo disabled in this buffer")
+      return leNIL
+    end
+
+    if warn_if_readonly_buffer () then
+      return leNIL
+    end
+
+    if not cur_bp.next_undop then
+      minibuf_error ("No further undo information")
+      cur_bp.next_undop = cur_bp.last_undop
+      return leNIL
+    end
+
+    cur_bp.next_undop = revert_action (cur_bp.next_undop)
+    minibuf_write ("Undo!")
+  end
+)

@@ -29,17 +29,19 @@ function recenter (wp)
   end
 end
 
-Defun {"recenter",
+Defun ("recenter",
+       {},
 [[
 Center point in window and redisplay screen.
 The desired position of point is always relative to the current window.
 ]],
+  true,
   function ()
     recenter (cur_wp)
     term_full_redisplay ()
     return leT
   end
-}
+)
 
 function resize_windows ()
   local wp
@@ -98,7 +100,7 @@ function resize_windows ()
     until decreased == false
   end
 
-  call_zile_command ("recenter")
+  execute_function ("recenter")
 end
 
 function resync_redisplay (wp)

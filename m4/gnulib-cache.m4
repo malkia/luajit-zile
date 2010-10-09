@@ -10,12 +10,12 @@
 #
 # This file represents the specification of how gnulib-tool is used.
 # It acts as a cache: It is written and read by gnulib-tool.
-# In projects using CVS, this file is meant to be stored in CVS,
-# like the configure.ac and various Makefile.am files.
+# In projects that use version control, this file is meant to be put under
+# version control, like the configure.ac and various Makefile.am files.
 
 
 # Specification in the form of a command-line invocation:
-#   gnulib-tool --import --dir=. --lib=libgnu --source-base=lib --m4-base=m4 --doc-base=src --tests-base=tests --aux-dir=. --no-libtool --macro-prefix=gl alloca-opt array-list chown dirname euidaccess fcntl gendocs getcwd getopt-gnu hash linked-list maintainer-makefile minmax regex size_max stdarg stdbool sys_stat vasprintf version-etc-fsf xalloc xlist
+#   gnulib-tool --import --dir=. --lib=libgnu --source-base=lib --m4-base=m4 --doc-base=src --tests-base=tests --aux-dir=build-aux --no-libtool --macro-prefix=gl alloca-opt array-list chown dirname euidaccess fcntl gendocs getcwd getopt-gnu hash linked-list maintainer-makefile regex size_max stdarg stdbool sys_stat vasprintf version-etc-fsf xalloc xalloc-die xlist xvasprintf-posix
 
 # Specification in the form of a few gnulib-tool.m4 macro invocations:
 gl_LOCAL_DIR([])
@@ -32,7 +32,6 @@ gl_MODULES([
   hash
   linked-list
   maintainer-makefile
-  minmax
   regex
   size_max
   stdarg
@@ -41,7 +40,9 @@ gl_MODULES([
   vasprintf
   version-etc-fsf
   xalloc
+  xalloc-die
   xlist
+  xvasprintf-posix
 ])
 gl_AVOID([])
 gl_SOURCE_BASE([lib])

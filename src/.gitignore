@@ -2,7 +2,7 @@ TAGS
 .deps
 astr
 zile
-loadlua.h
+loadlua.lua
 tbl_funcs.h
 tbl_funcs.lua
 tbl_opts.h

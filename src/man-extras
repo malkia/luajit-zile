@@ -10,12 +10,12 @@ of memory.
 [files]
 ~/.zile \(em user's Zile init file
 .PP
-@pkgdatadir@/dotzile.sample \(em sample init file which also
-documents the default settings and contains some useful tips.
+@pkgdatadir@/dotzile-extra.el \(em which contains some useful
+code for the init file.
 
 [author]
-Zile was written by Sandro Sigala, David A. Capello and Reuben Thomas.
-The Lisp interpreter is based on code by Scott Lawrence.
+Zile was written by Reuben Thomas, based on the C version by Sandro
+Sigala, Reuben Thomas, David A. Capello and Scott Lawrence.
 
 [see also]
 .BR emacs (1)
