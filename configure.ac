@@ -48,13 +48,6 @@ gl_INIT
 AC_HEADER_STDC
 AC_CHECK_FUNCS_ONCE(fchmod)
 
-dnl Curses
-AX_WITH_CURSES
-if test "$ax_cv_curses" != "yes"; then
-  AC_MSG_ERROR([cannot find curses])
-fi
-AC_ARG_VAR(CURSES_LIB, [linker flags for curses library])
-
 dnl Emacs
 AX_WITH_PROG(EMACS, emacs)
 if test -n "$EMACS"; then
