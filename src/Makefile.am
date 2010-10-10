@@ -21,6 +21,7 @@
 
 AM_CPPFLAGS = $(LUA_INCLUDE) -I$(top_builddir)/lib -I$(top_srcdir)/lib -DPATH_DATA="\"$(pkgdatadir)\""
 LDADD = $(top_builddir)/lib/libgnu.a $(LIB_EACCESS) $(LIBINTL) $(LUA_LIB)
+LUA_ENV = LUA_INIT= LUA_PATH="$(srcdir)/?.lua"
 
 bin_PROGRAMS = zile
 
@@ -90,7 +91,7 @@ main.c:	loadlua.lua
 LUA_CLIBS = posix curses bit rex_gnu
 
 loadlua.lua: $(LUA_RUNTIME) mkloadlua.lua
-	LUA_INIT= LUA_PATH="$(srcdir)/?.lua" $(LUA) -e 'PACKAGE_NAME="$(PACKAGE_NAME)"' $(srcdir)/mkloadlua.lua $(LUA_CLIBS) $(LUA_RUNTIME)
+	$(LUA_ENV) $(LUA) -e 'PACKAGE_NAME="$(PACKAGE_NAME)"' $(srcdir)/mkloadlua.lua $(LUA_CLIBS) $(LUA_RUNTIME)
 
 edit = sed \
 	-e 's|@pkgdatadir[@]|$(pkgdatadir)|g'
@@ -134,11 +135,11 @@ TESTS_ENVIRONMENT = $(TESTS_VARS)
 TESTS = $(check_PROGRAMS)
 
 check-local:
-	echo $(LISP_TESTS) | $(TESTS_VARS) EMACS="$(EMACS)" xargs $(srcdir)/run-lisp-tests
-	echo $(LISP_TESTS_ZILE_ONLY) | $(TESTS_VARS) EMACS= xargs $(srcdir)/run-lisp-tests
+	echo $(LISP_TESTS) | $(TESTS_VARS) EMACS="$(EMACS)" xargs $(LUA) "$(srcdir)/run-lisp-tests.lua"
+	echo $(LISP_TESTS_ZILE_ONLY) | $(TESTS_VARS) EMACS= xargs $(LUA) "$(srcdir)/run-lisp-tests.lua"
 
 TESTSCRIPTS =						\
-	run-lisp-tests					\
+	run-lisp-tests.lua				\
 	test-bad-argument
 
 # FIXME: Find a way of making these work
