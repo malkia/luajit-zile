@@ -30,6 +30,7 @@ dist_pkgdata_DATA = FAQ
 ChangeLog:
 	git2cl > ChangeLog
 
+# FIXME: Use maint.mk for gnu release (and remove this target from woger)
 release: distcheck
 	agrep -d '^Release' $(VERSION) NEWS | tail -n +3 | head -n -1 > release-notes && \
 	git diff --exit-code && \
