@@ -375,48 +375,17 @@ Just C-u as argument means to use the current column.
   end
 )
 
-local function quoted_insert_octal (c1)
-  minibuf_write (string.format ("C-q %d-", c1 - string.byte ('0')))
-  local c2 = getkey ()
-
-  if not isdigit (string.char (c2)) or c2 - string.byte ('0') >= 8 then
-    insert_char_in_insert_mode (c1 - string.byte ('0'))
-    insert_char_in_insert_mode (c2)
-    return true
-  end
-
-  minibuf_write ("C-q %c %c-", c1, c2)
-  c3 = getkey ()
-
-  if not isdigit (string.char (c3)) or c3 - string.byte ('0') >= 8 then
-    insert_char_in_insert_mode ((c1 - string.byte ('0')) * 8 + (c2 - string.byte ('0')))
-    insert_char_in_insert_mode (c3)
-    return true
-  end
-
-  insert_char_in_insert_mode ((c1 - string.byte ('0')) * 64 + (c2 - string.byte ('0')) * 8 + (c3 - string.byte ('0')))
-
-  return true
-end
-
 Defun ("quoted-insert",
        {},
 [[
 Read next input character and insert it.
 This is useful for inserting control characters.
-You may also type up to 3 octal digits, to insert a character with that code.
 ]],
   true,
   function ()
     minibuf_write ("C-q-")
     local c = xgetkey (GETKEY_UNFILTERED, 0)
-
-    if isdigit (string.char (c)) and c - string.byte ('0') < 8 then
-      quoted_insert_octal (c)
-    else
-      insert_char_in_insert_mode (string.char (c))
-    end
-
+    insert_char_in_insert_mode (string.char (c))
     minibuf_clear ()
   end
 )
