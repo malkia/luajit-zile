@@ -634,7 +634,7 @@ On nonblank line, delete any immediately following blank lines.
       if forward then
         execute_function ("forward-line")
       end
-      if cur_bp.pt.pt ~= m.pt.p then
+      if cur_bp.pt.p ~= m.pt.p then
         if not seq_started then
           seq_started = true
           undo_save (UNDO_START_SEQUENCE, m.pt, 0, 0)
