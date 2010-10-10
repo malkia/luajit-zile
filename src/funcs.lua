@@ -414,15 +414,14 @@ Fill paragraph at or after point.
       start = start + 1
     end
 
-    for i = start, finish do
+    for i = start, finish - 1 do
       execute_function ("end-of-line")
       delete_char ()
       execute_function ("just-one-space")
     end
 
     execute_function ("end-of-line")
-    while get_goalc () > get_variable_number ("fill-column") + 1 and fill_break_line () do
-    end
+    while get_goalc () > get_variable_number ("fill-column") + 1 and fill_break_line () do end
 
     cur_bp.pt = table.clone (m.pt)
     unchain_marker (m)
