@@ -1314,13 +1314,10 @@ module ("string", package.seeall)
 --   @param n: index
 -- @returns
 --   @param s_: string.sub (s, n, n)
-local oldmeta = getmetatable ("").__index
 getmetatable ("").__index =
   function (s, n)
     if type (n) == "number" then
       return sub (s, n, n)
-    elseif type (n) == "string" then
-      return oldmeta[n]
     end
   end
 
@@ -1667,15 +1664,22 @@ function splitdir (path)
   return string.split ("/", path)
 end
 
+-- @func catfile: concatenate directories into a path
+-- The same as Perl's File::Spec::catfile
+--   @param: path1, ..., pathn: path components
+-- @returns
+--   @param path: path
+function catfile (...)
+  local path = table.concat ({...}, "/")
+end
+
 -- @func catdir: concatenate directories into a path
 -- The same as Perl's File::Spec::catdir
 --   @param: path1, ..., pathn: path components
 -- @returns
 --   @param path: path
 function catdir (...)
-  local path = table.concat ({...}, "/")
-  -- Suppress trailing / on non-root path
-  return (string.gsub (path, "(.)/$", "%1"))
+  return (string.gsub (catfile (...), "^$", "/"))
 end
 
 -- @func shell: Perform a shell command and return its output
