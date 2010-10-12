@@ -1,6 +1,6 @@
 -- Lua stdlib
 --
--- Copyright (c) 2000-2010 stdlib authors.
+-- Copyright (c) 2000-2010 stdlib authors
 --
 -- See http://luaforge.net/projects/stdlib/ for more information.
 --
@@ -1314,10 +1314,16 @@ module ("string", package.seeall)
 --   @param n: index
 -- @returns
 --   @param s_: string.sub (s, n, n)
+local oldmeta = getmetatable ("").__index
 getmetatable ("").__index =
   function (s, n)
     if type (n) == "number" then
       return sub (s, n, n)
+    -- Fall back to old metamethods
+    elseif type (oldmeta) == "function" then
+      return oldmeta (s, n)
+    else
+      return oldmeta[n]
     end
   end
 
@@ -1670,7 +1676,7 @@ end
 -- @returns
 --   @param path: path
 function catfile (...)
-  local path = table.concat ({...}, "/")
+  return table.concat ({...}, "/")
 end
 
 -- @func catdir: concatenate directories into a path
@@ -1715,6 +1721,27 @@ function processFiles (f)
     end
     prog.file = v
     f (v, i)
+  end
+end
+
+-- POSIX
+
+module ("posix", package.seeall)
+
+
+-- @func system
+--   @param file: filename of program to run
+--   @param ...: arguments to the program
+-- @returns
+--   @param status: exit code, or nil if fork or wait fails
+--   [@param reason]: error message, or exit type if wait succeeds
+function system (file, ...)
+  local pid = posix.fork ()
+  if pid == 0 then
+    return posix.execp (file, ...)
+  else
+    local pid, reason, status = posix.wait (pid)
+    return status, reason -- If wait failed, status is nil & reason is error
   end
 end
 
