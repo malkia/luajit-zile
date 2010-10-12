@@ -30,7 +30,8 @@ local function copy_or_kill_the_region (kill)
   local rp = region_new ()
 
   if calculate_the_region (rp) then
-    return copy_or_kill_region (kill, rp)
+    copy_or_kill_region (kill, rp)
+    return true
   end
 
   return false
@@ -158,10 +159,8 @@ local function kill_to_bol ()
     cur_bp.pt.o = 0
     rp.start = cur_bp.pt
 
-    return copy_or_kill_region (true, rp)
+    copy_or_kill_region (true, rp)
   end
-
-  return true
 end
 
 local function kill_line (whole_line)
@@ -191,7 +190,7 @@ local function kill_line (whole_line)
     rp.start = cur_bp.pt
     rp.size = #cur_bp.pt.p.text - cur_bp.pt.o
 
-    ok = copy_or_kill_region (true, rp)
+    copy_or_kill_region (true, rp)
   end
 
   if ok and (whole_line or only_blanks_to_end_of_line) and not eobp () then
@@ -239,7 +238,7 @@ with no argument.
     else
       undo_save (UNDO_START_SEQUENCE, cur_bp.pt, 0, 0)
       if arg <= 0 then
-        ok = bool_to_lisp (kill_to_bol ())
+        kill_to_bol ()
       end
       if arg ~= 0 and ok == leT then
         ok = execute_with_uniarg (true, arg, kill_whole_line, kill_line_backward)
