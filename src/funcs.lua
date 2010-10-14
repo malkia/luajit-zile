@@ -508,9 +508,9 @@ says to insert the output in the current buffer.
     end
 
     if cmd then
-      ok = bool_to_lisp (pipe_command (cmd, "/dev/null", insert, false))
+      return pipe_command (cmd, "/dev/null", insert, false)
     end
-    return ok
+    return true
   end
 )
 
