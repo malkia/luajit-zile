@@ -36,12 +36,12 @@ function Defun (name, argtypes, doc, interactive, func)
              while arglist and arglist.next do
                local val = arglist.next
                local ty = argtypes[i]
-               if ty == "string" then
-                 val = val.data
-               elseif ty == "number" then
+               if ty == "number" then
                  val = tonumber (val.data, 10)
                elseif ty == "boolean" then
                  val = not (val.data == "nil")
+               else
+                 val = tostring (val.data)
                end
                table.insert (args, val)
                arglist = arglist.next
@@ -82,13 +82,6 @@ function read_char (s, pos)
   return -1, pos
 end
 
-T_EOF = 0
-T_CLOSEPAREN = 1
-T_OPENPAREN = 2
-T_NEWLINE = 3
-T_QUOTE = 4
-T_WORD = 5
-
 function read_token (s, pos)
   local c
   local doublequotes = false
@@ -107,16 +100,8 @@ function read_token (s, pos)
   until c ~= " " and c ~= "\t"
 
   -- Snag token
-  if c == "(" then
-    return tok, T_OPENPAREN, pos
-  elseif c == ")" then
-    return tok, T_CLOSEPAREN, pos
-  elseif c == "\'" then
-    return tok, T_QUOTE, pos
-  elseif c == "\n" then
-    return tok, T_NEWLINE, pos
-  elseif c == -1 then
-    return tok, T_EOF, pos
+  if c == "(" or c == ")" or c == "'" or c == "\n" or c == -1 then
+    return tok, c, pos
   end
 
   -- It looks like a string. Snag to the next whitespace.
@@ -132,7 +117,7 @@ function read_token (s, pos)
         or c == "\r" or c == -1 then
         pos = pos - 1
         tok = string.sub (tok, 1, -2)
-        return tok, T_WORD, pos
+        return tok, "word", pos
       end
     else
       if c == "\n" or c == "\r" or c == -1 then
@@ -140,7 +125,7 @@ function read_token (s, pos)
       end
       if c == "\"" then
         tok = string.sub (tok, 1, -2)
-        return tok, T_WORD, pos
+        return tok, "word", pos
       end
     end
     c, pos = read_char (s, pos)
@@ -167,17 +152,17 @@ function lisp_read (s)
     repeat
       local tok, tokenid
       tok, tokenid, pos = read_token (s, pos)
-      if tokenid == T_QUOTE then
+      if tokenid == "'" then
         quoted = true
       else
-        if tokenid == T_OPENPAREN then
+        if tokenid == "(" then
           l = append (l, {branch = read (), quoted = quoted})
-        elseif tokenid == T_WORD then
+        elseif tokenid == "word" then
           l = append (l, {data = tok, quoted = quoted})
         end
         quoted = false
       end
-    until tokenid == T_CLOSEPAREN or tokenid == T_EOF
+    until tokenid == ")" or tokenid == -1
     return l
   end
 
