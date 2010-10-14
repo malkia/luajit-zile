@@ -42,7 +42,7 @@
 lua_State *L;
 
 /* The executable name. */
-static char *prog_name = PACKAGE;
+char *program_name = PACKAGE;
 
 static void
 segv_sig_handler (int signo __attribute__ ((unused)))
@@ -51,7 +51,7 @@ segv_sig_handler (int signo __attribute__ ((unused)))
            "%s: " PACKAGE_NAME
            " crashed.  Please send a bug report to <"
            PACKAGE_BUGREPORT ">.\r\n",
-           prog_name);
+           program_name);
   assert (luaL_loadstring(L, "zile_exit (true)") == 0);
   lua_call (L, 0, 1);
 }
@@ -60,7 +60,7 @@ static void
 other_sig_handler (int signo __attribute__ ((unused)))
 {
   fprintf (stderr, "%s: terminated with signal %d.\r\n",
-           prog_name, signo);
+           program_name, signo);
   assert (luaL_loadstring(L, "zile_exit (false)") == 0);
   lua_call (L, 0, 1);
 }
@@ -86,7 +86,7 @@ static int report (lua_State *L, int status) {
   if (status && !lua_isnil(L, -1)) {
     const char *msg = lua_tostring(L, -1);
     if (msg == NULL) msg = "(error object is not a string)";
-    l_message(prog_name, msg);
+    l_message(program_name, msg);
     lua_pop(L, 1);
   }
   return status;
@@ -153,9 +153,9 @@ static int dostring (lua_State *L, const char *s, const char *name) {
 int
 main (int argc, char **argv)
 {
-  /* Set prog_name to executable name, if available */
+  /* Set program_name to executable name, if available */
   if (argv[0])
-    prog_name = base_name (argv[0]);
+    program_name = base_name (argv[0]);
 
   /* Set up Lua environment. */
   assert (L = luaL_newstate ());
