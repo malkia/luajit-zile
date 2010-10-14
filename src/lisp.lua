@@ -39,8 +39,8 @@ function Defun (name, argtypes, doc, interactive, func)
                if ty == "number" then
                  val = tonumber (val.data, 10)
                elseif ty == "boolean" then
-                 val = not (val.data == "nil")
-               else
+                 val = val.data ~= "nil"
+               elseif ty == "string" then
                  val = tostring (val.data)
                end
                table.insert (args, val)
