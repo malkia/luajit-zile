@@ -32,7 +32,7 @@ function Defun (name, argtypes, doc, interactive, func)
     interactive = interactive,
     func = function (arglist)
              local args = {}
-             local i = #argtypes
+             local i = 1
              while arglist and arglist.next do
                local val = arglist.next
                local ty = argtypes[i]
@@ -45,7 +45,7 @@ function Defun (name, argtypes, doc, interactive, func)
                end
                table.insert (args, val)
                arglist = arglist.next
-               i = i - 1
+               i = i + 1
              end
              local ret = func (unpack (args))
              if not ret then
