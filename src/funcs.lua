@@ -266,7 +266,7 @@ local function print_buf (old_bp, bp)
     return
   end
 
-  insert_string (string.format ("%c%c%c %-19s %6u  %-17s",
+  insert_string (string.format ("%s%s%s %-19s %6u  %-17s",
                                 old_bp == bp and '.' or ' ',
                                 bp.readonly and '%' or ' ',
                                 bp.modified and '*' or ' ',
@@ -283,7 +283,7 @@ local function write_buffers_list (old_wp)
   insert_string ("--- ------                ----  ----             ----\n")
 
   -- Print buffers.
-  local bp = get_window_bp (old_wp)
+  local bp = old_wp.bp
   repeat
     -- Print all buffers except this one (the *Buffer List*).
     if cur_bp ~= bp then
