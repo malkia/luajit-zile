@@ -95,10 +95,9 @@ Such a \"function\" cannot be called from Lisp, but it is a valid editor command
 ]],
   true,
   function ()
-    local  mp
-    local ms = minibuf_read ("Name for last kbd macro: ", "")
+    local name = minibuf_read ("Name for last kbd macro: ", "")
 
-    if not ms then
+    if not name then
       minibuf_error ("No command name given")
       return leNIL
     end
@@ -111,7 +110,7 @@ Such a \"function\" cannot be called from Lisp, but it is a valid editor command
     macros[name] = {}
 
     -- Copy the keystrokes from cur_mp.
-    append_key_list (macros[name], cur_mp)
+    table.append (cur_mp, macros[name])
   end
 )
 
