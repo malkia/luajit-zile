@@ -107,10 +107,8 @@ Such a \"function\" cannot be called from Lisp, but it is a valid editor command
       return leNIL
     end
 
-    macros[name] = {}
-
     -- Copy the keystrokes from cur_mp.
-    table.append (cur_mp, macros[name])
+    macros[name] = table.clone (cur_mp)
   end
 )
 
