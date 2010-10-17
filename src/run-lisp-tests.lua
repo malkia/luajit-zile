@@ -39,15 +39,17 @@ if not TERM or TERM == "unknown" then
   os.setenv ("TERM", "vt100")
 end
 
+local EMACS = os.getenv ("EMACS") or ""
+
 for _, name in ipairs (arg) do
   local test = string.gsub (posix.basename (name), "%.el$", "")
   local edit_file = io.catfile (builddir, test .. ".input")
   local args = {"--no-init-file", edit_file, "--load", io.catfile (srcdir, "lisp-tests", test .. ".el")}
 
-  if os.getenv ("EMACS") then
+  if EMACS ~= "" then
     posix.system ("cp", io.catfile (srcdir, "lisp-tests", "test.input"), edit_file)
     posix.system ("chmod", "+w", edit_file)
-    local status = posix.system (os.getenv ("EMACS"), "--quick", "--batch", unpack (args))
+    local status = posix.system (EMACS, "--quick", "--batch", unpack (args))
     if status == 0 then
       if posix.system ("diff", io.catfile (srcdir, "lisp-tests", test .. ".output"), edit_file) == 0 then
         emacs_pass = emacs_pass + 1
