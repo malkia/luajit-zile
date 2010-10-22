@@ -192,8 +192,7 @@ end
 
 -- Insert a newline at the current position without moving the cursor.
 -- Update markers after point in the split line.
--- FIXME: local
-function intercalate_newline ()
+local function intercalate_newline ()
   if warn_if_readonly_buffer () then
     return false
   end
@@ -229,8 +228,7 @@ local function insert_expanded_tab (inschr)
   undo_save (UNDO_END_SEQUENCE, cur_bp.pt, 0, 0)
 end
 
--- FIXME: local
-function insert_tab ()
+local function insert_tab ()
   if warn_if_readonly_buffer () then
     return false
   end
@@ -284,8 +282,7 @@ function delete_char ()
   return true
 end
 
--- FIXME: local
-function backward_delete_char ()
+local function backward_delete_char ()
   deactivate_mark ()
 
   if not backward_char () then

@@ -24,7 +24,6 @@ function marker_new ()
 end
 
 -- FIXME: Use a list of markers, not a chain
--- FIXME: local
 function unchain_marker (marker)
   if not marker.bp then
     return

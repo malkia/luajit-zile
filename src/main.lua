@@ -152,8 +152,7 @@ the ESC key and then type `x'.
 Combinations like `C-x u' mean first press `C-x', then `u'.
 ]]
 
--- FIXME: local
-function about_screen ()
+local function about_screen ()
   minibuf_write (about_minibuf_str)
   if not get_variable_bool ("inhibit-splash-screen") then
     show_splash_screen (about_splash_str)
@@ -162,8 +161,7 @@ function about_screen ()
   end
 end
 
--- FIXME: local
-function setup_main_screen ()
+local function setup_main_screen ()
   local last_bp
   local c = 0
 

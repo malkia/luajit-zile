@@ -105,8 +105,7 @@ function get_goalc ()
 end
 
 -- Go to the column `goalc'.  Take care of expanding tabulations.
--- FIXME: local
-function goto_goalc ()
+local function goto_goalc ()
   local col = 0
 
   local i = 1

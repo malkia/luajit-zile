@@ -1,6 +1,5 @@
 files_history = history_new ()
 
--- FIXME: local
 minibuf_contents = nil
 
 

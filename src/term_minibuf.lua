@@ -1,6 +1,5 @@
--- FIXME: local
 local overwrite_mode = false
-function do_minibuf_read (prompt, value, pos, cp, hp)
+local function do_minibuf_read (prompt, value, pos, cp, hp)
   local thistab
   local lasttab = -1
   local as = value
@@ -164,8 +163,7 @@ function term_minibuf_write (s)
   end
 end
 
--- FIXME: local
-function draw_minibuf_read (prompt, value, match, pointo)
+local function draw_minibuf_read (prompt, value, match, pointo)
   term_minibuf_write (prompt)
 
   local w, h = term_width (), term_height ()

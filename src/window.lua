@@ -11,8 +11,7 @@
 --   ewidth, eheight: The effective width and height of the window.
 -- }
 
--- FIXME: local
-function window_new ()
+local function window_new ()
   return {topdelta = 0, start_column = 0, lastpointn = 0}
 end
 
