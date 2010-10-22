@@ -32,7 +32,7 @@ CONFIGURE_HOST = "canta"
 ZILE_VERSION_STRING = "GNU " .. PACKAGE_NAME .. " " .. VERSION
 
 
-prog_name = arg[0] or PACKAGE -- FIXME: Combine with C prog_name
+prog_name = arg[0] or PACKAGE -- FIXME: Combine with C program_name
 
 
 -- Main editor structures.
