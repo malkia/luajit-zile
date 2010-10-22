@@ -360,8 +360,7 @@ local function copy_file (source, dest)
 
   -- Recover file modification time.
   if st then
-    -- FIXME: Correct this (download lposix sources! Suggest they be included in docs for Debian package)
-    posix.utime (dest, st.atime, st.mtime)
+    posix.utime (dest, st.mtime, st.atime)
   end
 
   return st ~= nil
@@ -689,14 +688,13 @@ Puts mark after the inserted text.
 -- Maximum number of EOLs to check before deciding type.
 local max_eol_check_count = 3
 -- FIXME: The following should come from lposix
-ENOENT = 2
 BUFSIZ = 4096
 -- Read the file contents into current buffer.
 -- Return quietly if the file doesn't exist, or other error.
 local function read_file (filename)
   local h, err = io.open (filename, "r")
   if h == nil then
-    if posix.errno () ~= ENOENT then
+    if posix.errno () ~= posix.ENOENT then
       minibuf_write (string.format ("%s: %s", filename, err))
       cur_bp.readonly = true
     end
