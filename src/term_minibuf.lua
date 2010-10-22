@@ -1,3 +1,50 @@
+-- Minibuffer handling
+--
+-- Copyright (c) 2010 Free Software Foundation, Inc.
+--
+-- This file is part of GNU Zile.
+--
+-- GNU Zile is free software; you can redistribute it and/or modify it
+-- under the terms of the GNU General Public License as published by
+-- the Free Software Foundation; either version 3, or (at your option)
+-- any later version.
+--
+-- GNU Zile is distributed in the hope that it will be useful, but
+-- WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-- General Public License for more details.
+--
+-- You should have received a copy of the GNU General Public License
+-- along with GNU Zile; see the file COPYING.  If not, write to the
+-- Free Software Foundation, Fifth Floor, 51 Franklin Street, Boston,
+-- MA 02111-1301, USA.
+
+local function draw_minibuf_read (prompt, value, match, pointo)
+  term_minibuf_write (prompt)
+
+  local w, h = term_width (), term_height ()
+  local margin = 1
+  local n = 0
+
+  if #prompt + pointo + 1 >= w then
+    margin = margin + 1
+    term_addch (string.byte ("$"))
+    n = pointo - pointo % (w - #prompt - 2)
+  end
+
+  term_addstr (string.sub (value, n + 1, math.min (w - #prompt - margin, #value - n)))
+  term_addstr (match)
+
+  if #value - n >= w - #prompt - margin then
+    term_move (h - 1, w - 1)
+    term_addch (string.byte ("$"))
+  end
+
+  term_move (h - 1, #prompt + margin - 1 + pointo % (w - #prompt - margin))
+
+  term_refresh ()
+end
+
 local overwrite_mode = false
 local function do_minibuf_read (prompt, value, pos, cp, hp)
   local thistab
@@ -161,32 +208,6 @@ function term_minibuf_write (s)
   for i = 1, math.min (#s, term_width ()) do
     term_addch (string.byte (s, i))
   end
-end
-
-local function draw_minibuf_read (prompt, value, match, pointo)
-  term_minibuf_write (prompt)
-
-  local w, h = term_width (), term_height ()
-  local margin = 1
-  local n = 0
-
-  if #prompt + pointo + 1 >= w then
-    margin = margin + 1
-    term_addch (string.byte ("$"))
-    n = pointo - pointo % (w - #prompt - 2)
-  end
-
-  term_addstr (string.sub (value, n + 1, math.min (w - #prompt - margin, #value - n)))
-  term_addstr (match)
-
-  if #value - n >= w - #prompt - margin then
-    term_move (h - 1, w - 1)
-    term_addch (string.byte ("$"))
-  end
-
-  term_move (h - 1, #prompt + margin - 1 + pointo % (w - #prompt - margin))
-
-  term_refresh ()
 end
 
 function term_minibuf_read (prompt, value, pos, cp, hp)
