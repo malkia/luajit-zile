@@ -39,7 +39,7 @@ Stop Zile and return to superior process.
 ]],
   true,
   function ()
-    raise (20) -- FIXME: SIGTSTP
+    posix.raise (20) -- FIXME: SIGTSTP
   end
 )
 

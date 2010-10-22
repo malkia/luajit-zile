@@ -812,7 +812,7 @@ function zile_exit (doabort)
   end
 
   if doabort then
-    abort ()
+    posix.abort ()
   else
     os.exit (2)
   end

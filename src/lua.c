@@ -27,11 +27,7 @@
 
 #include "config.h"
 
-#include <assert.h>
-#include <signal.h>
-#include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <ctype.h>
 #include <unistd.h>
 #include <getopt.h>
@@ -90,25 +86,6 @@ zlua_euidaccess (lua_State *L)
   lua_pushinteger (L, euidaccess (pathname, mode));
   lua_pop (L, 2);
   return 1;
-}
-
-/* FIXME: Add to lposix */
-static int
-zlua_raise (lua_State *L)
-{
-  int sig = luaL_checkint (L, 1);
-  lua_pop (L, 1);
-  lua_pushinteger (L, raise (sig));
-  return 1;
-}
-
-/* FIXME: Add to lposix */
-static int
-zlua_abort (lua_State *L)
-{
-  (void) L;
-  abort ();
-  return 0;
 }
 
 /* FIXME: Add to lposix */
@@ -198,8 +175,6 @@ lua_init (lua_State *L)
   register_zlua (isprint);
   register_zlua (isspace);
   register_zlua (euidaccess);
-  register_zlua (raise);
-  register_zlua (abort);
   register_zlua (getopt_long);
 
   lua_pushinteger (L, 1); /* FIXME: Ideally initialize to nil, but this doesn't work with strict.lua */
