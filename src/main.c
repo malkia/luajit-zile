@@ -150,6 +150,17 @@ static int dostring (lua_State *L, const char *s, const char *name) {
   return report(L, status);
 }
 
+static void getargs (lua_State *L, int argc, char **argv) {
+  int i;
+  lua_checkstack(L, 3);
+  lua_createtable(L, argc, 0);
+  for (i = 0; i < argc; i++)
+    {
+      lua_pushstring(L, argv[i]);
+      lua_rawseti(L, -2, i);
+    }
+}
+
 int
 main (int argc, char **argv)
 {
@@ -161,7 +172,7 @@ main (int argc, char **argv)
   assert (L = luaL_newstate ());
   luaL_openlibs (L);
   lua_init (L);
-  lua_getargs (L, argc, argv);
+  getargs (L, argc, argv);
   lua_setglobal (L, "arg");
   signal_init ();
 

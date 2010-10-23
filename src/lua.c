@@ -42,17 +42,6 @@
 #include "extern.h"
 
 
-void lua_getargs (lua_State *L, int argc, char **argv) {
-  int i;
-  lua_checkstack(L, 3);
-  lua_createtable(L, argc, 0);
-  for (i = 0; i < argc; i++)
-    {
-      lua_pushstring(L, argv[i]);
-      lua_rawseti(L, -2, i);
-    }
-}
-
 
 /* FIXME: Put this somewhere else. */
 /* The following is by Reuben Thomas. */
