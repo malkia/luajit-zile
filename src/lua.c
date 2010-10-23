@@ -61,7 +61,7 @@ void lua_getargs (lua_State *L, int argc, char **argv) {
   lua_register (L, #f, zlua_ ## f)
 
 /* FIXME: Add to lposix */
-/* N.B. We don't use the symbolic constants no_argument,
+/* N.B. We don't need the symbolic constants no_argument,
    optional_argument and required_argument, since their values are
    defined as 0, 1 and 2 respectively. */
 static const char *const arg_types[] = {
