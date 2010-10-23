@@ -213,7 +213,7 @@ by 4 each time.
         ok = execute_function ("keyboard-quit")
         break
       -- Digit pressed.
-      elseif isdigit (string.char (bit.band (key, 0xff))) then
+      elseif string.match (string.char (bit.band (key, 0xff)), "%d") then
         local digit = bit.band (key, 0xff) - string.byte ('0')
         thisflag = bit.band (thisflag, bit.bnot (FLAG_UNIARG_EMPTY))
 

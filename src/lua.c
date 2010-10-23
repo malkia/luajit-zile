@@ -69,7 +69,6 @@ void lua_getargs (lua_State *L, int argc, char **argv) {
     return 1;                                             \
   }
 
-bind_ctype (isdigit)
 bind_ctype (isgraph)
 bind_ctype (isprint)
 bind_ctype (isspace)
@@ -170,7 +169,6 @@ zlua_getopt_long (lua_State *L)
 void
 lua_init (lua_State *L)
 {
-  register_zlua (isdigit);
   register_zlua (isgraph);
   register_zlua (isprint);
   register_zlua (isspace);
