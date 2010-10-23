@@ -60,17 +60,6 @@ void lua_getargs (lua_State *L, int argc, char **argv) {
 #define register_zlua(f) \
   lua_register (L, #f, zlua_ ## f)
 
-/* FIXME: Add to lposix, use string modes */
-static int
-zlua_euidaccess (lua_State *L)
-{
-  const char *pathname = lua_tostring (L, 1);
-  int mode = luaL_checkint (L, 2);
-  lua_pushinteger (L, euidaccess (pathname, mode));
-  lua_pop (L, 2);
-  return 1;
-}
-
 /* FIXME: Add to lposix */
 /* N.B. We don't use the symbolic constants no_argument,
    optional_argument and required_argument, since their values are
@@ -153,7 +142,6 @@ zlua_getopt_long (lua_State *L)
 void
 lua_init (lua_State *L)
 {
-  register_zlua (euidaccess);
   register_zlua (getopt_long);
 
   lua_pushinteger (L, 1); /* FIXME: Ideally initialize to nil, but this doesn't work with strict.lua */
