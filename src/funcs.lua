@@ -1076,7 +1076,7 @@ Move point to the first non-whitespace character on this line.
   true,
   function ()
     cur_bp.pt = line_beginning_position (1)
-    while not eolp () and isspace (following_char ()) do
+    while not eolp () and string.match (following_char (), "%s") do
       forward_char ()
     end
   end

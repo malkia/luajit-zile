@@ -157,7 +157,7 @@ function fill_break_line ()
 
     -- Find break point moving left from fill-column.
     for i = cur_bp.pt.o, 1, -1 do
-      if isspace (cur_bp.pt.p.text[i]) then
+      if string.match (cur_bp.pt.p.text[i], "%s") then
         break_col = i
         break
       end
@@ -167,7 +167,7 @@ function fill_break_line ()
     -- possible moving right.
     if break_col == 0 then
       for i = cur_bp.pt.o + 1, #cur_bp.pt.p.text do
-        if isspace (cur_bp.pt.p.text[i]) then
+        if string.match (cur_bp.pt.p.text[i], "%s") then
           break_col = i
           break
         end
@@ -339,7 +339,7 @@ local function previous_line_indent ()
   execute_function ("beginning-of-line")
 
   -- Find first non-blank char.
-  while not eolp () and isspace (following_char ()) do
+  while not eolp () and string.match (following_char (), "%s") do
     forward_char ()
   end
 
@@ -406,13 +406,13 @@ does nothing.
 
       -- Now find the next blank char.
       if preceding_char () ~= '\t' or get_goalc () <= cur_goalc then
-        while not eolp () and not isspace (following_char ()) do
+        while not eolp () and not string.match (following_char (), "%s") do
           forward_char ()
         end
       end
 
       -- Find next non-blank char.
-      while not eolp () and isspace (following_char ()) do
+      while not eolp () and string.match (following_char (), "%s") do
         forward_char ()
       end
 
@@ -475,7 +475,7 @@ Indentation is done using the `indent-for-tab-command' function.
       -- Check where last non-blank goalc is.
       previous_nonblank_goalc ()
       pos = get_goalc ()
-      local indent = pos > 0 or (not eolp () and isspace (following_char ()))
+      local indent = pos > 0 or (not eolp () and string.match (following_char (), "%s"))
       cur_bp.pt = table.clone (m.pt)
       unchain_marker (m)
       -- Only indent if we're in column > 0 or we're in column 0 and
@@ -547,11 +547,11 @@ Delete all spaces and tabs around point.
   function ()
     undo_save (UNDO_START_SEQUENCE, cur_bp.pt, 0, 0)
 
-    while not eolp () and isspace (following_char ()) do
+    while not eolp () and string.match (following_char (), "%s") do
       delete_char ()
     end
 
-    while not bolp () and isspace (preceding_char ()) do
+    while not bolp () and string.match (preceding_char (), "%s") do
       backward_delete_char ()
     end
 

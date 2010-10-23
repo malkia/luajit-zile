@@ -71,7 +71,6 @@ void lua_getargs (lua_State *L, int argc, char **argv) {
 
 bind_ctype (isgraph)
 bind_ctype (isprint)
-bind_ctype (isspace)
 
 #define register_zlua(f) \
   lua_register (L, #f, zlua_ ## f)
@@ -171,7 +170,6 @@ lua_init (lua_State *L)
 {
   register_zlua (isgraph);
   register_zlua (isprint);
-  register_zlua (isspace);
   register_zlua (euidaccess);
   register_zlua (getopt_long);
 

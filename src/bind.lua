@@ -28,7 +28,7 @@ function self_insert_command ()
   key = bit.band (key, bit.bnot (KBD_CTRL))
   deactivate_mark ()
   if key <= 0xff then
-    if isspace (string.char (key)) and cur_bp.autofill and get_goalc () > get_variable_number ("fill-column") then
+    if string.match (string.char (key), "%s") and cur_bp.autofill and get_goalc () > get_variable_number ("fill-column") then
       fill_break_line ()
     end
     insert_char (string.char (key))
