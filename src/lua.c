@@ -57,21 +57,6 @@ void lua_getargs (lua_State *L, int argc, char **argv) {
 /* FIXME: Put this somewhere else. */
 /* The following is by Reuben Thomas. */
 
-/* FIXME: Package this properly */
-#define bind_ctype(f)                                     \
-  static int                                              \
-  zlua_ ## f (lua_State *L)                               \
-  {                                                       \
-    const char *s = luaL_checkstring (L, 1);              \
-    char c = *s;                                          \
-    lua_pop (L, 1);                                       \
-    lua_pushboolean (L, f ((int) c));                     \
-    return 1;                                             \
-  }
-
-bind_ctype (isgraph)
-bind_ctype (isprint)
-
 #define register_zlua(f) \
   lua_register (L, #f, zlua_ ## f)
 
@@ -168,8 +153,6 @@ zlua_getopt_long (lua_State *L)
 void
 lua_init (lua_State *L)
 {
-  register_zlua (isgraph);
-  register_zlua (isprint);
   register_zlua (euidaccess);
   register_zlua (getopt_long);
 

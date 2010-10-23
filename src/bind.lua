@@ -94,7 +94,7 @@ root_bindings = tree.new ()
 function init_default_bindings ()
   -- Bind all printing keys to self_insert_command
   for i = 0, 0xff do
-    if isprint (string.char (i)) then
+    if posix.isprint (string.char (i)) then
       root_bindings[{i}] = "self-insert-command"
     end
   end

@@ -105,7 +105,7 @@ local function outch (c, font, x)
         break
       end
     end
-  elseif isprint (string.char (c)) then
+  elseif posix.isprint (string.char (c)) then
     term_addch (c)
     x = x + 1
   else
@@ -243,7 +243,7 @@ local function calculate_start_column (wp)
       local c = string.sub (pt.p.text, p + 1, p + 1)
       if c == '\t' then
         col = bit.bor (col, t - 1) + 1
-      elseif isprint (c) then
+      elseif posix.isprint (c) then
         col = col + 1
       else
         col = col + #make_char_printable (string.byte (c))

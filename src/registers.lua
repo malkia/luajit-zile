@@ -108,7 +108,7 @@ local function write_registers_list (i)
     if r then
       local as = ""
 
-      if isprint (string.char (i)) then
+      if posix.isprint (string.char (i)) then
         as = string.format ("%c", i)
       else
         as = string.format ("\\%o", i)

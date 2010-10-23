@@ -186,7 +186,7 @@ local function do_minibuf_read (prompt, value, pos, cp, hp)
         end
       end
     else
-      if c > 255 or not isprint (string.char (c)) then
+      if c > 255 or not posix.isprint (string.char (c)) then
         ding ()
       else
         as = string.sub (as, 1, pos) .. string.char (c) .. string.sub (as, pos + 1)
