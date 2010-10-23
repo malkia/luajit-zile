@@ -687,8 +687,6 @@ Puts mark after the inserted text.
 
 -- Maximum number of EOLs to check before deciding type.
 local max_eol_check_count = 3
--- FIXME: The following should come from lposix
-BUFSIZ = 4096
 -- Read the file contents into current buffer.
 -- Return quietly if the file doesn't exist, or other error.
 local function read_file (filename)
@@ -712,7 +710,7 @@ local function read_file (filename)
   local first_eol = true
   local this_eol_type
   local eol_len, total_eols = 0, 0
-  local buf = h:read (BUFSIZ)
+  local buf = h:read (posix.BUFSIZ)
   if #buf > 0 then
     local i = 1
     while i <= #buf and total_eols < max_eol_check_count do
@@ -752,7 +750,7 @@ local function read_file (filename)
           i = i + #cur_bp.eol
         end
       end
-      buf = h:read (BUFSIZ)
+      buf = h:read (posix.BUFSIZ)
     until not buf
   end
 
