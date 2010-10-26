@@ -223,19 +223,14 @@ local zarg = {}
 local qflag = false
 
 function process_args ()
-  while true do
-    local this_optind = optind or 1
-    local buf, shortopt
+  -- Leading `-' means process all arguments in order, treating
+  -- non-options as arguments to an option with code 1
+  -- Leading `:' so as to return ':' for a missing arg, not '?'
+  for c, longindex, optind, optarg in getopt_long (arg, "-:f:l:q", longopts) do
+    local this_optind = optind > 0 and optind or 1
     local line = 1
 
-    -- Leading `-' means process all arguments in order, treating
-    -- non-options as arguments to an option with code 1
-    -- Leading `:' so as to return ':' for a missing arg, not '?'
-    local c, longindex = getopt_long (arg, "-:f:l:q", longopts)
-
-    if c == -1 then
-      break
-    elseif c == 1 then -- Non-option (assume file name)
+    if c == 1 then -- Non-option (assume file name)
       longindex = 5
     elseif c == string.byte ('?') then -- Unknown option
       minibuf_error (string.format ("Unknown option `%s'", arg[this_optind]))
