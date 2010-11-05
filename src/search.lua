@@ -439,7 +439,7 @@ what to do with it.
     end
 
     if ok then
-      minibuf_write ("Replaced %d occurrences", count)
+      minibuf_write (string.format ("Replaced %d occurrence%s", count, count ~= 1 and "s" or ""))
     end
   end
 )
