@@ -195,6 +195,7 @@ end
 -- Options which take no argument have an optional_argument, so that,
 -- as in Emacs, no argument is signalled as extraneous.
 
+-- FIXME: Add -q
 local options = {
   {"doc", "Initialization options:"},
   {"doc", ""},
