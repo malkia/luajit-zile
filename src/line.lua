@@ -500,13 +500,13 @@ local function check_case (s)
   end
 end
 
--- Replace text in the line "lp" with "newtext". If "replace_case" is
+-- Replace text in the line `lp' with `newtext'. If `replace_case' is
 -- true then the new characters will be the same case as the old.
 function line_replace_text (lp, offset, oldlen, newtext, replace_case)
   if replace_case and get_variable_bool ("case-replace") then
-    local case_type = check_case (string.sub (lp.text, offset, offset + oldlen))
+    local case_type = check_case (string.sub (lp.text, offset + 1, offset + oldlen))
     if case_type then
-      astr_recase (newtext, case_type)
+      newtext = recase (newtext, case_type)
     end
   end
 
