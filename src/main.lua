@@ -32,9 +32,6 @@ CONFIGURE_HOST = "canta"
 ZILE_VERSION_STRING = "GNU " .. PACKAGE_NAME .. " " .. VERSION
 
 
-prog_name = arg[0] or PACKAGE -- FIXME: Combine with C program_name
-
-
 -- Main editor structures.
 
 -- Undo delta types.
@@ -237,7 +234,7 @@ function process_args ()
       minibuf_error (string.format ("Unknown option `%s'", arg[this_optind]))
     elseif c == string.byte (':') then -- Missing argument
       io.stderr:write (string.format ("%s: Option `%s' requires an argument\n",
-                                      prog_name, arg[this_optind]))
+                                      program_name, arg[this_optind]))
       os.exit (1)
     elseif c == string.byte ('q') then
       longindex = 0

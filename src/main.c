@@ -167,6 +167,8 @@ main (int argc, char **argv)
   /* Set program_name to executable name, if available */
   if (argv[0])
     program_name = base_name (argv[0]);
+  else
+    program_name = PACKAGE;
 
   /* Set up Lua environment. */
   assert (L = luaL_newstate ());
@@ -174,6 +176,8 @@ main (int argc, char **argv)
   lua_init (L);
   getargs (L, argc, argv);
   lua_setglobal (L, "arg");
+  lua_pushstring (L, program_name);
+  lua_setglobal (L, "program_name");
   signal_init ();
 
   /* Load Lua files. */
