@@ -197,7 +197,7 @@ function term_xgetkey (mode, timeout)
 
     if c == curses.KEY_RESIZE then
       term_set_size (curses.cols, curses.lines)
-      -- FIXME: resize_windows ()
+      resize_windows ()
     elseif c ~= nil then
       local key
       if bit.band (mode, GETKEY_UNFILTERED) ~= 0 then
