@@ -112,25 +112,6 @@ thisflag = 0
 lastflag = 0
 
 
--- FIXME: put this somewhere better
--- Recase str according to newcase.
-function recase (s, newcase)
-  local bs = ""
-  local i, len
-
-  if newcase == "capitalized" or newcase == "upper" then
-    bs = bs .. string.upper (s[1])
-  else
-    bs = bs .. string.lower (s[1])
-  end
-
-  for i = 2, #s do
-    bs = bs .. (newcase == "upper" and string.upper or string.lower) (s[i])
-  end
-
-  return bs
-end
-
 ZILE_COPYRIGHT_STRING = "Copyright (C) 2010 Free Software Foundation, Inc."
 
 local about_minibuf_str = "Welcome to " .. PACKAGE_NAME .. "!"

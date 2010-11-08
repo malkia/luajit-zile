@@ -27,16 +27,13 @@ bin_PROGRAMS = zile
 
 zile_LDADD = $(LDADD) $(LIBOBJS)
 
-zile_BASE_SOURCES =					\
+zile_SOURCES =						\
 	lua.c						\
 	extern.h					\
 	main.c
 
-zile_SOURCES =						\
-	$(zile_BASE_SOURCES)				\
-	tbl_opts.h.in
-
 zile_LUA =						\
+	lib.lua						\
 	history.lua					\
 	lisp.lua					\
 	tbl_vars.lua					\
@@ -71,13 +68,8 @@ LUA_RUNTIME =						\
 	std.lua						\
 	$(zile_LUA)
 
-LUA_BUILDTIME =						\
-	lib.lua						\
-	texinfo.lua
-
 PRODUCTIONSOURCES =					\
-	$(zile_BASE_SOURCES)				\
-	$(LUA_BUILDTIME)				\
+	$(zile_SOURCES)					\
 	$(zile_LUA)					\
 	Makefile.am ../Makefile.am ../configure.ac	\
 	*.el
@@ -338,7 +330,6 @@ EXTRA_DIST =						\
 	$(zile_LUA)					\
 	main.lua.in					\
 	std.lua						\
-	$(LUA_BUILDTIME)				\
 	$(LISP_TESTS)					\
 	$(LISP_TESTS_ZILE_ONLY)				\
 	$(LISP_TESTS_OUTPUTS)				\

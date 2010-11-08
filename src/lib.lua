@@ -1,6 +1,6 @@
 -- Zile-specific library functions
 --
--- Copyright (c) 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+-- Copyright (c) 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 --
 -- This file is part of GNU Zile.
 --
@@ -20,10 +20,30 @@
 -- MA 02111-1301, USA.
 
 
--- Parse re-usable C headers
-function X (...)
-  xarg = {...}
+-- Recase str according to newcase.
+function recase (s, newcase)
+  local bs = ""
+  local i, len
+
+  if newcase == "capitalized" or newcase == "upper" then
+    bs = bs .. string.upper (s[1])
+  else
+    bs = bs .. string.lower (s[1])
+  end
+
+  for i = 2, #s do
+    bs = bs .. (newcase == "upper" and string.upper or string.lower) (s[i])
+  end
+
+  return bs
 end
-D = X
-O = X
-A = X
+
+-- Turn texinfo markup into plain text
+function texi (s)
+  s = string.gsub (s, "@i{([^}]+)}", function (s) return string.upper (s) end)
+  s = string.gsub (s, "@kbd{([^}]+)}", "%1")
+  s = string.gsub (s, "@samp{([^}]+)}", "%1")
+  s = string.gsub (s, "@itemize%s[^\n]*\n", "")
+  s = string.gsub (s, "@end%s[^\n]*\n", "")
+  return s
+end
