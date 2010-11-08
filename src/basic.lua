@@ -311,7 +311,7 @@ Move point to the end of the buffer; leave mark at previous position.
 
 local function scroll_down ()
   if not window_top_visible (cur_wp) then
-    return move_line (-get_window_eheight (cur_wp))
+    return move_line (-cur_wp.eheight)
   end
 
   minibuf_error ("Beginning of buffer")
@@ -320,7 +320,7 @@ end
 
 local function scroll_up ()
   if not window_bottom_visible (cur_wp) then
-    return move_line (get_window_eheight (cur_wp))
+    return move_line (cur_wp.eheight)
   end
 
   minibuf_error ("End of buffer")
