@@ -124,22 +124,21 @@ local function strtokey (s)
       end
     end
     if p then
-      return keynametocode_map [p], string.sub (s, #p + 1)
+      return string.sub (s, #p + 1), keynametocode_map [p]
     end
-    return KBD_NOKEY, ""
+    return "", KBD_NOKEY
   end
 
-  return string.byte (s), string.sub (s, 2)
+  return string.sub (s, 2), string.byte (s)
 end
 
 -- Convert a key chord string to its key code.
--- FIXME: Make return values' order consistent with strtokey
-function strtochord (s)
+local function strtochord (s)
   local key = 0
 
   local k
   repeat
-    k, s = strtokey (s)
+    s, k = strtokey (s)
     if k == KBD_NOKEY then
       return "", KBD_NOKEY
     end
