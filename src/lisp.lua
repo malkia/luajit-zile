@@ -274,7 +274,7 @@ function function_exists (f)
 end
 
 -- Read a function name from the minibuffer.
-functions_history = nil
+local functions_history = history_new ()
 function minibuf_read_function_name (s)
   local cp = completion_new ()
 
@@ -342,7 +342,6 @@ Read function name, then read its arguments and call it.
 )
 
 -- Read a function name from the minibuffer.
-local functions_history
 function minibuf_read_function_name (fmt)
   local cp = completion_new ()
 

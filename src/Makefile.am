@@ -37,6 +37,7 @@ zile_SOURCES =						\
 	tbl_opts.h.in
 
 zile_LUA =						\
+	history.lua					\
 	lisp.lua					\
 	tbl_vars.lua					\
 	variables.lua					\
@@ -49,7 +50,6 @@ zile_LUA =						\
 	funcs.lua					\
 	getkey.lua					\
 	help.lua					\
-	history.lua					\
 	file.lua					\
 	keycode.lua					\
 	killring.lua					\
@@ -86,7 +86,7 @@ main.c:	loadlua.lua
 
 LUA_CLIBS = posix curses bit rex_gnu
 
-loadlua.lua: $(LUA_RUNTIME)
+loadlua.lua: $(LUA_RUNTIME) Makefile.am
 	for i in $(LUA_CLIBS) $(LUA_RUNTIME); do echo 'require "'`echo $$i | sed -e 's/\\.lua$$//g'`'"' >> $@; done
 
 edit = sed \
