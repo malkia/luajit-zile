@@ -21,13 +21,7 @@
 
 #include <lua.h>
 
-/* lcurses.c -------------------------------------------------------------- */
-int luaopen_curses (lua_State *L);
-
 /* lua.c ------------------------------------------------------------------ */
-void lua_getargs (lua_State *L, int argc, char **argv);
-int lua_docall (lua_State *L, int narg, int clear);
-int lua_debug (lua_State *L);
 void lua_init (lua_State *L);
 
 /* main.c ----------------------------------------------------------------- */
