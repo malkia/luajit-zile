@@ -28,7 +28,7 @@ usercmd = {}
 
 function Defun (name, argtypes, doc, interactive, func)
   usercmd[name] = {
-    doc = doc,
+    doc = texi (doc),
     interactive = interactive,
     func = function (arglist)
              local args = {}

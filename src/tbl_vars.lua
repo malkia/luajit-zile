@@ -22,7 +22,7 @@
 main_vars = {}
 
 local function X (name, default_value, local_when_set, docstring)
-  main_vars[name] = {val = default_value, islocal = local_when_set, doc = docstring}
+  main_vars[name] = {val = default_value, islocal = local_when_set, doc = texi (docstring)}
 end
 
 X ("inhibit-splash-screen", "nil", false, "Non-nil inhibits the startup screen.\nIt also inhibits display of the initial message in the `*scratch*' buffer.")
