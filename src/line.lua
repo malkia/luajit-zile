@@ -59,8 +59,7 @@ local function adjust_markers (newlp, oldlp, pointo, dir, delta)
 
   assert (dir == -1 or dir == 0 or dir == 1)
 
-  local m = cur_bp.markers
-  while m do
+  for m in pairs (cur_bp.markers) do
     if m.pt.p == oldlp and (dir == -1 or m.pt.o > pointo) then
       m.pt.p = newlp
       m.pt.o = m.pt.o + delta - (pointo * dir)
@@ -68,7 +67,6 @@ local function adjust_markers (newlp, oldlp, pointo, dir, delta)
     elseif m.pt.n > cur_bp.pt.n then
       m.pt.n = m.pt.n + dir
     end
-    m = m.next
   end
 
   -- This marker has been updated to new position.

@@ -41,6 +41,9 @@ function buffer_new ()
   bp.pt.p.next = bp.lines
   bp.last_line = 0
 
+  -- Allocate markers list.
+  bp.markers = {}
+
   -- Set default EOL string.
   bp.eol = coding_eol_lf
 
@@ -51,13 +54,6 @@ function buffer_new ()
   init_buffer (bp)
 
   return bp
-end
-
--- Free the buffer's allocated memory.
-function free_buffer (bp)
-  while bp.markers do
-    unchain_marker (bp.markers)
-  end
 end
 
 -- Initialise a buffer
@@ -315,8 +311,6 @@ function kill_buffer (kill_bp)
     end
     bp = bp.next
   end
-
-  free_buffer (kill_bp)
 
   -- If no buffers left, recreate scratch buffer and point windows at
   -- it.

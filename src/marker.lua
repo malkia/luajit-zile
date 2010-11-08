@@ -23,41 +23,19 @@ function marker_new ()
   return {}
 end
 
--- FIXME: Use a list of markers, not a chain
 function unchain_marker (marker)
   if not marker.bp then
     return
   end
 
-  local prev
-  local m = marker.bp.markers
-  while m do
-    if m == marker then
-      if prev then
-        prev.next = m.next
-      else
-        m.bp.markers = m.next
-      end
-      m.bp = nil
-      break
-    end
-    prev = m
-    m = m.next
-  end
+  marker.bp.markers[marker] = nil
 end
 
 function move_marker (marker, bp, pt)
-  if bp ~= marker.bp then
-    -- Unchain from previous buffer.
-    unchain_marker (marker)
-
-    -- Change buffer.
-    marker.bp = bp
-
-    -- Add to new buffer's chain.
-    marker.next = bp.markers
-    bp.markers = marker
-  end
+  -- Switch marker's buffer.
+  unchain_marker (marker)
+  marker.bp = bp
+  bp.markers[marker] = true
 
   -- Change the point.
   marker.pt = table.clone (pt)
