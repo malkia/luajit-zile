@@ -74,6 +74,7 @@ Change whether this buffer is visiting its file read-only.
 )
 
 Defun ("auto-fill-mode",
+       {},
 [[
 Toggle Auto Fill mode.
 In Auto Fill mode, inserting a space at a column beyond `fill-column'
