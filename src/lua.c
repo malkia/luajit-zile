@@ -112,8 +112,6 @@ static int Pgetopt_long(lua_State *L)
       lua_pop(L, 1);
     }
 
-  lua_pop(L, 3);
-
   /* Push upvalues and closure. */
   lua_pushinteger(L, argc);
   lua_pushlightuserdata(L, argv);
