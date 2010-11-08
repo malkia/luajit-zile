@@ -75,14 +75,10 @@ LUA_BUILDTIME =						\
 	lib.lua						\
 	texinfo.lua
 
-LUA_BUILDSCRIPTS = 					\
-	mkloadlua.lua
-
 PRODUCTIONSOURCES =					\
 	$(zile_BASE_SOURCES)				\
 	$(LUA_BUILDTIME)				\
 	$(zile_LUA)					\
-	$(LUA_BUILDSCRIPTS)				\
 	Makefile.am ../Makefile.am ../configure.ac	\
 	*.el
 
@@ -90,8 +86,8 @@ main.c:	loadlua.lua
 
 LUA_CLIBS = posix curses bit rex_gnu
 
-loadlua.lua: $(LUA_RUNTIME) mkloadlua.lua
-	$(LUA_ENV) $(LUA) -e 'PACKAGE_NAME="$(PACKAGE_NAME)"' $(srcdir)/mkloadlua.lua $(LUA_CLIBS) $(LUA_RUNTIME)
+loadlua.lua: $(LUA_RUNTIME)
+	for i in $(LUA_CLIBS) $(LUA_RUNTIME); do echo 'require "'`echo $$i | sed -e 's/\\.lua$$//g'`'"' >> $@; done
 
 edit = sed \
 	-e 's|@pkgdatadir[@]|$(pkgdatadir)|g'
@@ -343,7 +339,6 @@ EXTRA_DIST =						\
 	main.lua.in					\
 	std.lua						\
 	$(LUA_BUILDTIME)				\
-	$(LUA_BUILDSCRIPTS)				\
 	$(LISP_TESTS)					\
 	$(LISP_TESTS_ZILE_ONLY)				\
 	$(LISP_TESTS_OUTPUTS)				\
