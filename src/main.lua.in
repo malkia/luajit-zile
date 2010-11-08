@@ -21,14 +21,15 @@
 
 _DEBUG = true
 
--- FIXME: The following should come from config.h
-PACKAGE = "zile"
-PACKAGE_NAME = "Zile"
-PACKAGE_BUGREPORT = "bug-zile@gnu.org"
-VERSION = "2.4.0"
-CONFIGURE_DATE = "Wed May 19 2010"
-CONFIGURE_HOST = "canta"
+-- Constants set by configure
+PACKAGE = "@PACKAGE@"
+PACKAGE_NAME = "@PACKAGE_NAME@"
+PACKAGE_BUGREPORT = "@PACKAGE_BUGREPORT@"
+VERSION = "@VERSION@"
+CONFIGURE_DATE = "@CONFIGURE_DATE@"
+CONFIGURE_HOST = "@CONFIGURE_HOST@"
 
+-- Derived constants
 ZILE_VERSION_STRING = "GNU " .. PACKAGE_NAME .. " " .. VERSION
 
 

@@ -340,6 +340,7 @@ LISP_TESTS_OUTPUTS =					\
 
 EXTRA_DIST =						\
 	$(zile_LUA)					\
+	main.lua.in					\
 	std.lua						\
 	$(LUA_BUILDTIME)				\
 	$(LUA_BUILDSCRIPTS)				\

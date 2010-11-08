@@ -72,12 +72,10 @@ AC_SUBST(LUA_LIB)
 AX_LUA_READLINE
 
 dnl Extra definitions for config.h
-AC_DEFINE_UNQUOTED(CONFIGURE_DATE, ["`date '+%a %b %d %Y'`"],
-                   [The date of compilation.])
-AC_DEFINE_UNQUOTED(CONFIGURE_HOST, ["${ac_hostname}"],
-                   [The compilation host.])
+AC_SUBST(CONFIGURE_DATE, ["`date '+%a %b %d %Y'`"])
+AC_SUBST(CONFIGURE_HOST, ["${ac_hostname}"])
 
 dnl Generate output
 AC_CONFIG_HEADER(config.h)
-AC_CONFIG_FILES(Makefile lib/Makefile src/Makefile)
+AC_CONFIG_FILES(Makefile lib/Makefile src/Makefile src/main.lua)
 AC_OUTPUT
