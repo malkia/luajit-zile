@@ -18,7 +18,6 @@ static const char *const arg_types[] = {
   "none", "required", "optional", NULL
 };
 
-/* for ret, longindex, optind, optarg in getopt_long (arg, shortopts, longopts) do ... end */
 static int iter_getopt_long(lua_State *L)
 {
   int longindex = 0, ret;
@@ -27,13 +26,15 @@ static int iter_getopt_long(lua_State *L)
 
   opterr = 0; /* Don't display errors for unknown options; FIXME: make this optional? */
 
+  if (argv == NULL) /* If we have already completed, return now. */
+    return 0;
+
   /* Fetch upvalues to pass to getopt_long. */
   ret = getopt_long(lua_tointeger(L, lua_upvalueindex(1)), argv,
                     lua_tostring(L, lua_upvalueindex(3)),
                     longopts,
                     &longindex);
   if (ret == -1) { /* Free everything allocated. */
-    /* FIXME: Ensure that the freed values can't be accessed. */
     int i;
 
     for (i = 0; argv[i]; i++)
@@ -42,6 +43,10 @@ static int iter_getopt_long(lua_State *L)
     for (i = 0; longopts[i].name != NULL; i++)
       free((char *)longopts[i].name);
     free(longopts);
+
+    /* Ensure that future calls don't try to access the freed data. */
+    lua_pushnil(L);
+    lua_replace(L, lua_upvalueindex(2));
 
     return 0;
   } else {
@@ -53,6 +58,7 @@ static int iter_getopt_long(lua_State *L)
   }
 }
 
+/* for ret, longindex, optind, optarg in getopt_long (arg, shortopts, longopts) do ... end */
 static int Pgetopt_long(lua_State *L)
 {
   int argc, i, n;
