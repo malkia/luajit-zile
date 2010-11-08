@@ -23,7 +23,7 @@ static int iter_getopt_long(lua_State *L)
 {
   int longindex = 0, ret;
   char **argv = (char **)lua_touserdata(L, lua_upvalueindex(2));
-  struct option *longopts = (struct option *)lua_touserdata(L, lua_upvalueindex( 4));
+  struct option *longopts = (struct option *)lua_touserdata(L, lua_upvalueindex(4));
 
   opterr = 0; /* Don't display errors for unknown options; FIXME: make this optional? */
 
