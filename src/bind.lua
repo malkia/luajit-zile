@@ -89,6 +89,18 @@ function process_command ()
   lastflag = thisflag
 end
 
+function process_keys (keys)
+  local cur = term_buf_len ()
+
+  for i = 1, #keys do
+    term_ungetkey (keys[#keys - i + 1])
+  end
+
+  while term_buf_len () > cur do
+    process_command ()
+  end
+end
+
 root_bindings = tree.new ()
 
 function init_default_bindings ()

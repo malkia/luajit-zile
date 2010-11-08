@@ -42,19 +42,6 @@ function cancel_kbd_macro ()
   thisflag = bit.band (thisflag, bit.bnot (FLAG_DEFINING_MACRO))
 end
 
--- FIXME: move this to a more appropriate module
-function process_keys (keys)
-  local cur = term_buf_len ()
-
-  for i = 1, #keys do
-    term_ungetkey (keys[#keys - i + 1])
-  end
-
-  while term_buf_len () > cur do
-    process_command ()
-  end
-end
-
 -- Add macro names to a list.
 function add_macros_to_list (cp)
   for name in pairs (macros) do
