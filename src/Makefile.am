@@ -79,6 +79,7 @@ main.c:	loadlua.lua
 LUA_CLIBS = posix curses bit rex_gnu
 
 loadlua.lua: $(LUA_RUNTIME) Makefile.am
+	echo "-- Generated file - do not edit!" > $@
 	for i in $(LUA_CLIBS) $(LUA_RUNTIME); do echo 'require "'`echo $$i | sed -e 's/\\.lua$$//g'`'"' >> $@; done
 
 edit = sed \
