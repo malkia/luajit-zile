@@ -24,8 +24,6 @@ static int iter_getopt_long(lua_State *L)
   char **argv = (char **)lua_touserdata(L, lua_upvalueindex(2));
   struct option *longopts = (struct option *)lua_touserdata(L, lua_upvalueindex(4));
 
-  opterr = 0; /* Don't display errors for unknown options; FIXME: make this optional? */
-
   if (argv == NULL) /* If we have already completed, return now. */
     return 0;
 
@@ -58,7 +56,7 @@ static int iter_getopt_long(lua_State *L)
   }
 }
 
-/* for ret, longindex, optind, optarg in getopt_long (arg, shortopts, longopts) do ... end */
+/* for ret, longindex, optind, optarg in getopt_long (arg, shortopts, longopts, opterr, optind) do ... end */
 static int Pgetopt_long(lua_State *L)
 {
   int argc, i, n;
@@ -69,6 +67,8 @@ static int Pgetopt_long(lua_State *L)
   luaL_checktype(L, 1, LUA_TTABLE);
   shortopts = luaL_checkstring(L, 2);
   luaL_checktype(L, 3, LUA_TTABLE);
+  opterr = luaL_optinteger (L, 4, 0);
+  optind = luaL_optinteger (L, 5, 1);
 
   argc = (int)lua_objlen(L, 1) + 1;
   argv = XCALLOC(argc + 1, char *);
@@ -121,10 +121,7 @@ static int Pgetopt_long(lua_State *L)
   lua_pushlightuserdata(L, longopts);
   lua_pushcclosure(L, iter_getopt_long, 4);
 
-  /* FIXME: Allow optind to be set to other values e.g. to use GNU extensions. */
-  lua_pushinteger(L, 1); /* Initial value of optind. */
-
-  return 2;
+  return 1;
 }
 
 void lua_init (lua_State *L)
