@@ -1,8 +1,5 @@
-#include "config.h"
-
-#include <stdlib.h>
+#include <string.h>
 #include <getopt.h>
-#include "xalloc.h"
 
 #include <lua.h>
 #include <lauxlib.h>
@@ -20,34 +17,21 @@ static const char *const arg_types[] = {
 
 static int iter_getopt_long(lua_State *L)
 {
-  int longindex = 0, ret;
-  char **argv = (char **)lua_touserdata(L, lua_upvalueindex(2));
-  struct option *longopts = (struct option *)lua_touserdata(L, lua_upvalueindex(4));
+  int longindex = 0, ret, argc = lua_tointeger(L, lua_upvalueindex(1));
+  char **argv = (char **)lua_touserdata(L, lua_upvalueindex(3));
+  struct option *longopts = (struct option *)lua_touserdata(L, lua_upvalueindex(3 + argc + 1));
 
   if (argv == NULL) /* If we have already completed, return now. */
     return 0;
 
   /* Fetch upvalues to pass to getopt_long. */
-  ret = getopt_long(lua_tointeger(L, lua_upvalueindex(1)), argv,
-                    lua_tostring(L, lua_upvalueindex(3)),
+  ret = getopt_long(argc, argv,
+                    lua_tostring(L, lua_upvalueindex(2)),
                     longopts,
                     &longindex);
-  if (ret == -1) { /* Free everything allocated. */
-    int i;
-
-    for (i = 0; argv[i]; i++)
-      free(argv[i]);
-    free(argv);
-    for (i = 0; longopts[i].name != NULL; i++)
-      free((char *)longopts[i].name);
-    free(longopts);
-
-    /* Ensure that future calls don't try to access the freed data. */
-    lua_pushnil(L);
-    lua_replace(L, lua_upvalueindex(2));
-
+  if (ret == -1)
     return 0;
-  } else {
+  else {
     lua_pushinteger(L, ret);
     lua_pushinteger(L, longindex);
     lua_pushinteger(L, optind);
@@ -71,17 +55,22 @@ static int Pgetopt_long(lua_State *L)
   optind = luaL_optinteger (L, 5, 1);
 
   argc = (int)lua_objlen(L, 1) + 1;
-  argv = XCALLOC(argc + 1, char *);
+  lua_pushinteger(L, argc);
+
+  lua_pushstring(L, shortopts);
+
+  argv = lua_newuserdata(L, (argc + 1) * sizeof(char *));
+  memset (argv, 0, (argc + 1) * sizeof(char *));
   for (i = 0; i < argc; i++)
     {
       lua_pushinteger(L, i);
       lua_gettable(L, 1);
-      argv[i] = xstrdup(luaL_checkstring(L, -1));
-      lua_pop(L, 1);
+      argv[i] = (char *)luaL_checkstring(L, -1);
     }
 
   n = (int)lua_objlen(L, 3);
-  longopts = XCALLOC(n + 1, struct option);
+  longopts = lua_newuserdata(L, (n + 1) * sizeof(struct option));
+  memset (longopts, 0, (n + 1) * sizeof(struct option));
   for (i = 1; i <= n; i++)
     {
       const char *name;
@@ -93,16 +82,15 @@ static int Pgetopt_long(lua_State *L)
 
       lua_pushinteger(L, 1);
       lua_gettable(L, -2);
-      name = xstrdup(luaL_checkstring(L, -1));
-      lua_pop(L, 1);
+      name = luaL_checkstring(L, -1);
 
       lua_pushinteger(L, 2);
-      lua_gettable(L, -2);
+      lua_gettable(L, -3);
       has_arg = luaL_checkoption(L, -1, NULL, arg_types);
       lua_pop(L, 1);
 
       lua_pushinteger(L, 3);
-      lua_gettable(L, -2);
+      lua_gettable(L, -3);
       val = luaL_checkinteger(L, -1);
       lua_pop(L, 1);
 
@@ -112,12 +100,8 @@ static int Pgetopt_long(lua_State *L)
       lua_pop(L, 1);
     }
 
-  /* Push upvalues and closure. */
-  lua_pushinteger(L, argc);
-  lua_pushlightuserdata(L, argv);
-  lua_pushstring(L, shortopts);
-  lua_pushlightuserdata(L, longopts);
-  lua_pushcclosure(L, iter_getopt_long, 4);
+  /* Push remaining upvalues, and make and push closure. */
+  lua_pushcclosure(L, iter_getopt_long, 4 + argc + n);
 
   return 1;
 }
