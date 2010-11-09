@@ -28,8 +28,6 @@ bin_PROGRAMS = zile
 zile_LDADD = $(LDADD) $(LIBOBJS)
 
 zile_SOURCES =						\
-	lua.c						\
-	extern.h					\
 	main.c
 
 zile_LUA =						\

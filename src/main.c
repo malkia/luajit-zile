@@ -23,7 +23,6 @@
 
 #include <assert.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <signal.h>
 #include "dirname.h"
@@ -32,14 +31,7 @@
 #include <lauxlib.h>
 #include <lualib.h>
 
-#define ZILE_VERSION_STRING	"GNU " PACKAGE_NAME " " VERSION
-
-#include "extern.h"
-
-#define ZILE_COPYRIGHT_STRING \
-  "Copyright (C) 2010 Free Software Foundation, Inc."
-
-lua_State *L;
+static lua_State *L;
 
 /* The executable name. */
 char *program_name = PACKAGE;
@@ -167,13 +159,10 @@ main (int argc, char **argv)
   /* Set program_name to executable name, if available */
   if (argv[0])
     program_name = base_name (argv[0]);
-  else
-    program_name = PACKAGE;
 
   /* Set up Lua environment. */
   assert (L = luaL_newstate ());
   luaL_openlibs (L);
-  lua_init (L);
   getargs (L, argc, argv);
   lua_setglobal (L, "arg");
   lua_pushstring (L, program_name);
