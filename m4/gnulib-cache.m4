@@ -15,19 +15,13 @@
 
 
 # Specification in the form of a command-line invocation:
-#   gnulib-tool --import --dir=. --lib=libgnu --source-base=lib --m4-base=m4 --doc-base=src --tests-base=tests --aux-dir=build-aux --no-libtool --macro-prefix=gl dirname euidaccess gendocs getopt-gnu maintainer-makefile version-etc-fsf xalloc xalloc-die
+#   gnulib-tool --import --dir=. --lib=libgnu --source-base=lib --m4-base=m4 --doc-base=src --tests-base=tests --aux-dir=build-aux --no-libtool --macro-prefix=gl dirname maintainer-makefile
 
 # Specification in the form of a few gnulib-tool.m4 macro invocations:
 gl_LOCAL_DIR([])
 gl_MODULES([
   dirname
-  euidaccess
-  gendocs
-  getopt-gnu
   maintainer-makefile
-  version-etc-fsf
-  xalloc
-  xalloc-die
 ])
 gl_AVOID([])
 gl_SOURCE_BASE([lib])
