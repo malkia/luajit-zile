@@ -9,7 +9,7 @@
 
 
 /* N.B. We don't need the symbolic constants no_argument,
-   optional_argument and required_argument, since their values are
+   required_argument and optional_argument, since their values are
    defined as 0, 1 and 2 respectively. */
 static const char *const arg_types[] = {
   "none", "required", "optional", NULL
