@@ -1,4 +1,3 @@
-#include <string.h>
 #include <getopt.h>
 
 #include <lua.h>
@@ -60,7 +59,7 @@ static int Pgetopt_long(lua_State *L)
   lua_pushstring(L, shortopts);
 
   argv = lua_newuserdata(L, (argc + 1) * sizeof(char *));
-  memset (argv, 0, (argc + 1) * sizeof(char *));
+  argv[argc] = NULL;
   for (i = 0; i < argc; i++)
     {
       lua_pushinteger(L, i);
@@ -70,7 +69,10 @@ static int Pgetopt_long(lua_State *L)
 
   n = (int)lua_objlen(L, 3);
   longopts = lua_newuserdata(L, (n + 1) * sizeof(struct option));
-  memset (longopts, 0, (n + 1) * sizeof(struct option));
+  longopts[n].name = NULL;
+  longopts[n].has_arg = 0;
+  longopts[n].flag = NULL;
+  longopts[n].val = 0;
   for (i = 1; i <= n; i++)
     {
       const char *name;
@@ -96,6 +98,7 @@ static int Pgetopt_long(lua_State *L)
 
       longopts[i - 1].name = name;
       longopts[i - 1].has_arg = has_arg;
+      longopts[i - 1].flag = NULL;
       longopts[i - 1].val = val;
       lua_pop(L, 1);
     }
