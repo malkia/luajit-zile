@@ -23,6 +23,7 @@
 -- is only evaluated once the script has finished running.
 
 require "posix"
+require "std"
 
 -- srcdir and builddir are defined in the environment for a build
 local srcdir = os.getenv ("srcdir") or "."
