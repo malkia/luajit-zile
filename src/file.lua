@@ -183,7 +183,7 @@ If the current buffer now contains an empty file that you just visited
     if not buf then
       buf = get_buffer_dir ()
     else
-      base = base_name (buf)
+      base = posix.basename (buf)
       ms = minibuf_read_filename ("Find alternate: ", buf, base)
     end
 
