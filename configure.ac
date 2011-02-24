@@ -1,6 +1,6 @@
 dnl configure.ac
 dnl
-dnl Copyright (c) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+dnl Copyright (c) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
 dnl
 dnl This file is part of GNU Zile.
 dnl
@@ -77,5 +77,5 @@ AC_SUBST(CONFIGURE_HOST, ["${ac_hostname}"])
 
 dnl Generate output
 AC_CONFIG_HEADER(config.h)
-AC_CONFIG_FILES(Makefile lib/Makefile src/Makefile src/main.lua)
+AC_CONFIG_FILES(Makefile lib/Makefile src/Makefile src/zile.lua)
 AC_OUTPUT

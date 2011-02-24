@@ -1,6 +1,6 @@
 -- Program invocation, startup and shutdown
 --
--- Copyright (c) 2010 Free Software Foundation, Inc.
+-- Copyright (c) 2010, 2011 Free Software Foundation, Inc.
 --
 -- This file is part of GNU Zile.
 --
@@ -19,18 +19,12 @@
 -- Free Software Foundation, Fifth Floor, 51 Franklin Street, Boston,
 -- MA 02111-1301, USA.
 
-_DEBUG = true
-
--- Constants set by configure
-PACKAGE = "@PACKAGE@"
-PACKAGE_NAME = "@PACKAGE_NAME@"
-PACKAGE_BUGREPORT = "@PACKAGE_BUGREPORT@"
-VERSION = "@VERSION@"
-CONFIGURE_DATE = "@CONFIGURE_DATE@"
-CONFIGURE_HOST = "@CONFIGURE_HOST@"
-
 -- Derived constants
 ZILE_VERSION_STRING = "GNU " .. PACKAGE_NAME .. " " .. VERSION
+
+-- Runtime constants
+-- The executable name
+program_name = posix.basename (arg[0] or PACKAGE)
 
 
 -- Main editor structures.
@@ -272,8 +266,31 @@ function process_args ()
   end
 end
 
+local function segv_sig_handler (signo)
+  io.stderr:write (program_name .. ": " .. PACKAGE_NAME ..
+                   " crashed.  Please send a bug report to <" ..
+                   PACKAGE_BUGREPORT .. ">.\r\n")
+  zile_exit (true)
+end
+
+local function other_sig_handler (signo)
+  io.stderr:write (program_name .. ": terminated with signal " .. tostring (signo) .. ".\r\n")
+  zile_exit (false)
+end
+
+local function signal_init ()
+  -- Set up signal handling
+  posix.signal[posix.SIGSEGV] = segv_sig_handler
+  posix.signal[posix.SIGBUS] = segv_sig_handler
+  posix.signal[posix.SIGHUP] = other_sig_handler
+  posix.signal[posix.SIGINT] = other_sig_handler
+  posix.signal[posix.SIGTERM] = other_sig_handler
+end
+
 function main ()
   local scratch_bp
+
+  signal_init ()
 
   process_args ()
 

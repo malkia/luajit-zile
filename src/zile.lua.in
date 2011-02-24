@@ -1,0 +1,37 @@
+#!/usr/bin/env lua
+-- Program initialisation
+--
+-- Copyright (c) 2010 Free Software Foundation, Inc.
+--
+-- This file is part of GNU Zile.
+--
+-- GNU Zile is free software; you can redistribute it and/or modify it
+-- under the terms of the GNU General Public License as published by
+-- the Free Software Foundation; either version 3, or (at your option)
+-- any later version.
+--
+-- GNU Zile is distributed in the hope that it will be useful, but
+-- WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-- General Public License for more details.
+--
+-- You should have received a copy of the GNU General Public License
+-- along with GNU Zile; see the file COPYING.  If not, write to the
+-- Free Software Foundation, Fifth Floor, 51 Franklin Street, Boston,
+-- MA 02111-1301, USA.
+
+_DEBUG = true
+
+-- Constants set by configure
+PACKAGE = "@PACKAGE@"
+PACKAGE_NAME = "@PACKAGE_NAME@"
+PACKAGE_BUGREPORT = "@PACKAGE_BUGREPORT@"
+VERSION = "@VERSION@"
+CONFIGURE_DATE = "@CONFIGURE_DATE@"
+CONFIGURE_HOST = "@CONFIGURE_HOST@"
+PATH_DATA = "@pkgdatadir@"
+
+-- FIXME: Use a single absolute path for either the build or install directory.
+package.path = PATH_DATA .. "/?.lua;?.lua"
+require ("loadlua")
+main ()

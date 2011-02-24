@@ -1,6 +1,6 @@
 # Source Makefile.am
 #
-# Copyright (c) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+# Copyright (c) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
 #
 # This file is part of GNU Zile.
 #
@@ -19,16 +19,9 @@
 # Free Software Foundation, Fifth Floor, 51 Franklin Street, Boston,
 # MA 02111-1301, USA.
 
-AM_CPPFLAGS = $(LUA_INCLUDE) -I$(top_builddir)/lib -I$(top_srcdir)/lib -DPATH_DATA="\"$(pkgdatadir)\""
-LDADD = $(top_builddir)/lib/libgnu.a $(LIB_EACCESS) $(LIBINTL) $(LUA_LIB)
 LUA_ENV = LUA_INIT= LUA_PATH="$(srcdir)/?.lua"
 
-bin_PROGRAMS = zile
-
-zile_LDADD = $(LDADD) $(LIBOBJS)
-
-zile_SOURCES =						\
-	main.c
+bin_SCRIPTS = zile
 
 zile_LUA =						\
 	lib.lua						\
@@ -72,8 +65,6 @@ PRODUCTIONSOURCES =					\
 	Makefile.am ../Makefile.am ../configure.ac	\
 	*.el
 
-main.c:	loadlua.lua
-
 LUA_CLIBS = posix curses bit rex_gnu
 
 loadlua.lua: $(LUA_RUNTIME) Makefile.am
@@ -83,17 +74,25 @@ loadlua.lua: $(LUA_RUNTIME) Makefile.am
 edit = sed \
 	-e 's|@pkgdatadir[@]|$(pkgdatadir)|g'
 
+zile: zile.lua Makefile
+	rm -f $@ $@.tmp
+	$(edit) '$(srcdir)/$@.lua' >$@.tmp
+	mv $@.tmp $@
+	chmod +x $@
+
 zile.1: zile.1.in Makefile
 	rm -f $@ $@.tmp
 	$(edit) '$(srcdir)/$@.in' >$@.tmp
 	mv $@.tmp $@
 
-zile.1.in: main.c man-extras zile-help2man-wrapper
+zile.1.in: zile man-extras zile-help2man-wrapper
 	builddir=$(builddir) $(HELP2MAN) --output=$@ --no-info --name="Zile Is Lossy Emacs" --include $(srcdir)/man-extras $(srcdir)/zile-help2man-wrapper
 
 dist_pkgdata_DATA = dotzile-extra.el
 
 dist_man_MANS = zile.1
+
+CLEANFILES = $(bin_SCRIPTS)
 
 DISTCLEANFILES = 					\
 	zile.1
@@ -327,7 +326,7 @@ LISP_TESTS_OUTPUTS =					\
 
 EXTRA_DIST =						\
 	$(zile_LUA)					\
-	main.lua.in					\
+	zile.lua.in					\
 	std.lua						\
 	$(LISP_TESTS)					\
 	$(LISP_TESTS_ZILE_ONLY)				\

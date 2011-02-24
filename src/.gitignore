@@ -2,7 +2,7 @@ TAGS
 .deps
 zile
 loadlua.lua
-main.lua
+zile.lua
 gendocs_template
 zile.1
 zile.1.in
