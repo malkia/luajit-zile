@@ -796,7 +796,7 @@ function zile_exit (doabort)
 
   local bp = head_bp
   while bp do
-    if bp.modified (bp) and not bp.nosave then
+    if bp.modified and not bp.nosave then
       local buf, as = ""
       local i
       local fname = bp.filename or bp.name
