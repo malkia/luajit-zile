@@ -214,3 +214,5 @@ wchar.h
 /xasprintf.c
 /xvasprintf.c
 /xvasprintf.h
+/arg-nonnull.h
+/warn-on-use.h
