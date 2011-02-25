@@ -74,13 +74,13 @@ loadlua.lua: $(LUA_RUNTIME) Makefile.am
 edit = sed \
 	-e 's|@pkgdatadir[@]|$(pkgdatadir)|g'
 
-zile: zile.lua Makefile
+zile: zile.lua loadlua.lua Makefile
 	rm -f $@ $@.tmp
 	$(edit) '$(srcdir)/$@.lua' >$@.tmp
 	mv $@.tmp $@
 	chmod +x $@
 
-zile.1: zile.1.in Makefile
+zile.1: zile zile.1.in Makefile
 	rm -f $@ $@.tmp
 	$(edit) '$(srcdir)/$@.in' >$@.tmp
 	mv $@.tmp $@
