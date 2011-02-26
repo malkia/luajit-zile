@@ -27,21 +27,13 @@ AM_SILENT_RULES([yes])
 
 dnl Set up gnulib
 gl_EARLY
+gl_INIT
+
+dnl Lua 5.1
+AX_PROG_LUA(501)
 
 dnl help2man
 AX_WITH_PROG(HELP2MAN, help2man, false)
-
-dnl Checks for functions and headers
-gl_INIT
-
-dnl Lua
-dnl FIXME: Subsume the following into AX_PROG_LUA(501)
-AX_WITH_LUA
-if test -z "$LUA"; then
-  AC_MSG_FAILURE([Lua not found])
-fi
-AX_LUA_VERSION(501, 502)
-AC_SUBST(LUA)
 
 dnl Emacs
 AX_WITH_PROG(EMACS, emacs)
