@@ -54,7 +54,7 @@ fi
 AX_LUA_VERSION(501, 502)
 AC_SUBST(LUA)
 
-dnl Extra definitions for config.h
+dnl Extra definitions
 AC_SUBST(CONFIGURE_DATE, ["`date '+%a %b %d %Y'`"])
 AC_SUBST(CONFIGURE_HOST, ["${ac_hostname}"])
 
