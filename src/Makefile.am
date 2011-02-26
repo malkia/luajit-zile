@@ -118,8 +118,6 @@ loc-all:
 TESTS_VARS = srcdir=$(srcdir) builddir=$(builddir)
 TESTS_ENVIRONMENT = $(TESTS_VARS)
 
-TESTS = $(check_PROGRAMS)
-
 check-local:
 	echo $(LISP_TESTS) | $(TESTS_VARS) EMACS="$(EMACS)" xargs $(LUA) "$(srcdir)/run-lisp-tests.lua"
 	echo $(LISP_TESTS_ZILE_ONLY) | $(TESTS_VARS) EMACS= xargs $(LUA) "$(srcdir)/run-lisp-tests.lua"
