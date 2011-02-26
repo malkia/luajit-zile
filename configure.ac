@@ -25,22 +25,14 @@ AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([-Wall -Werror std-options check-news])
 AM_SILENT_RULES([yes])
 
-dnl Set up C compiler
-AC_GNU_SOURCE
-AC_PROG_CC
-AX_CFLAGS_WARN_ALL
-if test "$GCC" = "yes"; then
-  CFLAGS="$CFLAGS -W -Wmissing-prototypes -Wstrict-prototypes -D_FORTIFY_SOURCE=2"
-fi
+dnl Set up gnulib
 gl_EARLY
-AM_PROG_CC_C_O
 
 dnl help2man
 AX_WITH_PROG(HELP2MAN, help2man)
 
 dnl Checks for functions and headers
 gl_INIT
-AC_HEADER_STDC
 
 dnl Emacs
 AX_WITH_PROG(EMACS, emacs)
@@ -60,16 +52,7 @@ if test -z "$LUA"; then
   AC_MSG_FAILURE([Lua not found])
 fi
 AX_LUA_VERSION(501, 502)
-AX_LUA_HEADERS
-AX_LUA_HEADERS_VERSION(501, 502)
-AX_LUA_LIBS
-if test -z "$LUA_LIB"; then
-  AC_MSG_FAILURE([liblua not found])
-fi
 AC_SUBST(LUA)
-AC_SUBST(LUA_INCLUDE)
-AC_SUBST(LUA_LIB)
-AX_LUA_READLINE
 
 dnl Extra definitions for config.h
 AC_SUBST(CONFIGURE_DATE, ["`date '+%a %b %d %Y'`"])
@@ -77,5 +60,5 @@ AC_SUBST(CONFIGURE_HOST, ["${ac_hostname}"])
 
 dnl Generate output
 AC_CONFIG_HEADER(config.h)
-AC_CONFIG_FILES(Makefile lib/Makefile src/Makefile src/zile.lua)
+AC_CONFIG_FILES(Makefile src/Makefile src/zile.lua)
 AC_OUTPUT

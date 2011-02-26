@@ -19,7 +19,7 @@
 # Free Software Foundation, Fifth Floor, 51 Franklin Street, Boston,
 # MA 02111-1301, USA.
 
-SUBDIRS = lib src
+SUBDIRS = src
 
 ACLOCAL_AMFLAGS = -I m4
 
