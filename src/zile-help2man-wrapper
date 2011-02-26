@@ -1,6 +1,12 @@
 #! /bin/sh
 # Wrap Zile for help2man
 # Add two spaces before options so they will be processed properly.
+#
+# Copyright (c) 2009 Free Software Foundation, Inc.
+#
+# Copying and distribution of this file, with or without
+# modification, are permitted in any medium without royalty
+# provided the copyright notice and this notice are preserved.
 
 if test "$1" = "--help"; then
   $builddir/zile $1 | sed 's/^\([-+F]\)/  \1/'
