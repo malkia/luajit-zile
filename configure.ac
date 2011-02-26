@@ -35,7 +35,7 @@ AX_PROG_LUA(501)
 dnl help2man
 AX_WITH_PROG(HELP2MAN, help2man, false)
 
-dnl Emacs
+dnl Emacs >= 23.1 (optional)
 AX_WITH_PROG(EMACS, emacs)
 if test -n "$EMACS"; then
   emacs_min_version=23.1
