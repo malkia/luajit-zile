@@ -89,22 +89,16 @@ zile.1.in: zile man-extras zile-help2man-wrapper
 	builddir=$(builddir) $(HELP2MAN) --output=$@ --no-info --name="Zile Is Lossy Emacs" --include $(srcdir)/man-extras $(srcdir)/zile-help2man-wrapper
 
 dist_pkgdata_DATA = dotzile-extra.el
-
 dist_man_MANS = zile.1
 
 CLEANFILES = zile
-
-DISTCLEANFILES = 					\
-	zile.1
-
-MAINTAINERCLEANFILES =					\
-	loadlua.lua
-
-CLOC = cloc --force-lang="C",h
+DISTCLEANFILES = zile.1
+MAINTAINERCLEANFILES = loadlua.lua
 
 TESTSOURCES = $(LISP_TESTS) $(LISP_TESTS_ZILE_ONLY) $(TESTSCRIPTS)
-
 ALLSOURCES = $(TESTSOURCES) $(PRODUCTIONSOURCES)
+
+CLOC = cloc --force-lang="C",h
 
 loc:
 	$(CLOC) $(PRODUCTIONSOURCES)
@@ -119,8 +113,8 @@ TESTS_VARS = srcdir=$(srcdir) builddir=$(builddir)
 TESTS_ENVIRONMENT = $(TESTS_VARS)
 
 check-local:
-	echo $(LISP_TESTS) | $(TESTS_VARS) EMACS="$(EMACS)" xargs $(LUA) "$(srcdir)/run-lisp-tests.lua"
-	echo $(LISP_TESTS_ZILE_ONLY) | $(TESTS_VARS) EMACS= xargs $(LUA) "$(srcdir)/run-lisp-tests.lua"
+	echo $(LISP_TESTS) | $(LUA_ENV) $(TESTS_VARS) EMACS="$(EMACS)" xargs $(LUA) "$(srcdir)/run-lisp-tests.lua"
+	echo $(LISP_TESTS_ZILE_ONLY) | $(LUA_ENV) $(TESTS_VARS) EMACS= xargs $(LUA) "$(srcdir)/run-lisp-tests.lua"
 
 TESTSCRIPTS =						\
 	run-lisp-tests.lua				\
