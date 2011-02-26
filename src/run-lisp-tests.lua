@@ -43,41 +43,43 @@ end
 local EMACS = os.getenv ("EMACS") or ""
 
 for _, name in ipairs (arg) do
-  local test = string.gsub (posix.basename (name), "%.el$", "")
-  local edit_file = io.catfile (builddir, test .. ".input")
-  local args = {"--no-init-file", edit_file, "--load", io.catfile (srcdir, "lisp-tests", test .. ".el")}
+  local test = string.gsub (name, "%.el$", "")
+  name = posix.basename (test)
+  local edit_file = io.catfile (builddir, name .. ".input")
+  local args = {"--no-init-file", edit_file, "--load", test .. ".el"}
+  local input = io.catfile (srcdir, "lisp-tests", "test.input")
 
   if EMACS ~= "" then
-    posix.system ("cp", io.catfile (srcdir, "lisp-tests", "test.input"), edit_file)
+    posix.system ("cp", input, edit_file)
     posix.system ("chmod", "+w", edit_file)
     local status = posix.system (EMACS, "--quick", "--batch", unpack (args))
     if status == 0 then
-      if posix.system ("diff", io.catfile (srcdir, "lisp-tests", test .. ".output"), edit_file) == 0 then
+      if posix.system ("diff", test .. ".output", edit_file) == 0 then
         emacs_pass = emacs_pass + 1
         posix.system ("rm", "-f", edit_file, edit_file .. "~")
       else
-        print ("Emacs " .. test .. " failed to produce correct output")
+        print ("Emacs " .. name .. " failed to produce correct output")
         emacs_fail = emacs_fail + 1
       end
     else
-      print ("Emacs " .. test .. " failed to run with error code " .. tostring (status))
+      print ("Emacs " .. name .. " failed to run with error code " .. tostring (status))
       emacs_fail = emacs_fail + 1
     end
   end
 
-  posix.system ("cp", io.catfile (srcdir, "lisp-tests", "test.input"), edit_file)
+  posix.system ("cp", input, edit_file)
   posix.system ("chmod", "+w", edit_file)
   local status = posix.system (io.catfile (builddir, "zile"), unpack (args))
   if status == 0 then
-    if posix.system ("diff", io.catfile (srcdir, "lisp-tests", test .. ".output"), edit_file) == 0 then
+    if posix.system ("diff", test .. ".output", edit_file) == 0 then
       zile_pass = zile_pass + 1
       posix.system ("rm", "-f", edit_file, edit_file .. "~")
     else
-      print ("Zile " .. test .. " failed to produce correct output")
+      print ("Zile " .. name .. " failed to produce correct output")
       zile_fail = zile_fail + 1
     end
   else
-    print ("Zile " .. test .. " failed to run with error code " .. tostring (status))
+    print ("Zile " .. name .. " failed to run with error code " .. tostring (status))
     zile_fail = zile_fail + 1
   end
 end
