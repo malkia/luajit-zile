@@ -34,25 +34,26 @@ AX_WITH_PROG(HELP2MAN, help2man, false)
 dnl Checks for functions and headers
 gl_INIT
 
-dnl Emacs
-AX_WITH_PROG(EMACS, emacs)
-if test -n "$EMACS"; then
-  emacs_min_version=23.1
-  emacs_version=$($EMACS --version 2>&1 | head -n 1 | cut -d' ' -f3)
-  AC_MSG_CHECKING([Emacs version $emacs_version >= $emacs_min_version])
-  AX_COMPARE_VERSION("$emacs_version", ge, $emacs_min_version,
-    AC_MSG_RESULT([yes]),
-    [AC_MSG_RESULT([no])
-    unset EMACS])
-fi
-
 dnl Lua
+dnl FIXME: Subsume the following into AX_PROG_LUA(501)
 AX_WITH_LUA
 if test -z "$LUA"; then
   AC_MSG_FAILURE([Lua not found])
 fi
 AX_LUA_VERSION(501, 502)
 AC_SUBST(LUA)
+
+dnl Emacs
+AX_WITH_PROG(EMACS, emacs)
+if test -n "$EMACS"; then
+  emacs_min_version=23.1
+  emacs_version=$($EMACS --version 2>&1 | head -n 1 | cut -d' ' -f3)
+  AC_MSG_CHECKING([Emacs version $emacs_version >= $emacs_min_version])
+  AX_COMPARE_VERSION($emacs_version, ge, $emacs_min_version,
+    AC_MSG_RESULT([yes]),
+    [AC_MSG_RESULT([no])
+    unset EMACS])
+fi
 
 dnl Extra definitions
 AC_SUBST(CONFIGURE_DATE, ["`date '+%a %b %d %Y'`"])
