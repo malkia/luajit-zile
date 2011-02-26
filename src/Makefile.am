@@ -92,7 +92,7 @@ dist_pkgdata_DATA = dotzile-extra.el
 
 dist_man_MANS = zile.1
 
-CLEANFILES = $(bin_SCRIPTS)
+CLEANFILES = zile
 
 DISTCLEANFILES = 					\
 	zile.1
