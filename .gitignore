@@ -1,6 +1,4 @@
-*.[oa]
 *~
-.deps
 Makefile
 Makefile.in
 /aclocal.m4
@@ -12,9 +10,6 @@ Makefile.in
 /configure
 /configure.lineno
 /ChangeLog
-/stamp-h
-/stamp-h.in
-/stamp-h1
 /zile*.tar.gz
 /zile*.tar.gz.sig
 /zile*.tar.gz.directive*
