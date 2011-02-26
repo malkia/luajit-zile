@@ -59,6 +59,5 @@ AC_SUBST(CONFIGURE_DATE, ["`date '+%a %b %d %Y'`"])
 AC_SUBST(CONFIGURE_HOST, ["${ac_hostname}"])
 
 dnl Generate output
-AC_CONFIG_HEADER(config.h)
 AC_CONFIG_FILES(Makefile src/Makefile src/zile.lua)
 AC_OUTPUT
