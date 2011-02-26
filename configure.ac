@@ -29,7 +29,7 @@ dnl Set up gnulib
 gl_EARLY
 
 dnl help2man
-AX_WITH_PROG(HELP2MAN, help2man)
+AX_WITH_PROG(HELP2MAN, help2man, false)
 
 dnl Checks for functions and headers
 gl_INIT
