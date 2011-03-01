@@ -1,6 +1,6 @@
 -- Search and replace functions
 --
--- Copyright (c) 2010 Free Software Foundation, Inc.
+-- Copyright (c) 2010, 2011 Free Software Foundation, Inc.
 --
 -- This file is part of GNU Zile.
 --
@@ -41,7 +41,7 @@ local function find_substr (as, s, from, to, forward, notbol, noteol, regex, ica
   local cf = 0
 
   if not regex then
-    cf = bit.bor (cf, re_flags.PLAIN)
+    s = string.gsub (s, "([ $^.*[%]\\+?])", "\\%1")
   end
   if icase then
     cf = bit.bor (cf, re_flags.ICASE)
