@@ -1,6 +1,6 @@
 -- Key bindings and extended commands
 --
--- Copyright (c) 2010 Free Software Foundation, Inc.
+-- Copyright (c) 2010, 2011 Free Software Foundation, Inc.
 --
 -- This file is part of GNU Zile.
 --
@@ -111,8 +111,7 @@ function init_default_bindings ()
     end
   end
 
-  -- FIXME: Load from path
-  lisp_loadfile ("default-bindings.el")
+  lisp_loadfile (PATH_DATA .. "/default-bindings.el")
 end
 
 function do_binding_completion (as)
