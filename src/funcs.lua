@@ -1,6 +1,6 @@
 -- Miscellaneous Emacs functions
 --
--- Copyright (c) 2010 Free Software Foundation, Inc.
+-- Copyright (c) 2010, 2011 Free Software Foundation, Inc.
 --
 -- This file is part of GNU Zile.
 --
@@ -39,7 +39,7 @@ Stop Zile and return to superior process.
 ]],
   true,
   function ()
-    posix.raise (20) -- FIXME: SIGTSTP
+    posix.raise (posix.SIGTSTP)
   end
 )
 
