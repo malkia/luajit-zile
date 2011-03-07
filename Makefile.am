@@ -30,11 +30,20 @@ dist_pkgdata_DATA = FAQ
 ChangeLog:
 	git2cl > ChangeLog
 
-# FIXME: Use maint.mk for gnu release (and remove `gnu' target from woger)
+# Announcement follows:
+# I am happy to announce the release of $package_name $version,
+# $description.
+#
+# $release_notes
+#
+# $package_name\'s web page is at http://www.gnu.org/software/$package/
+#
+# The signed source can be obtained from ftp.gnu.org and its world-wide
+# mirrors:
+#
+#   http://ftp.gnu.org/gnu/$package/$package-$version.tar.gz
+#   http://ftp.gnu.org/gnu/$package/$package-$version.tar.gz.sig
 release: distcheck
 	agrep -d '^Release' $(VERSION) NEWS | tail -n +3 | head -n -1 > release-notes && \
-	git diff --exit-code && \
-	git tag -a -m "Release tag" rel-`echo $(VERSION) | sed -e 's/\./-/g'` && \
-	git push git.sv.gnu.org:/srv/git/zile.git master && git pull && \
-	woger gnu,freshmeat $(PACKAGE) "$(PACKAGE_NAME)" $(VERSION) "the tiny Emacs clone" release-notes && \
+	woger freshmeat $(PACKAGE) "$(PACKAGE_NAME)" $(VERSION) "the tiny Emacs clone" release-notes && \
 	rm -f release-notes
