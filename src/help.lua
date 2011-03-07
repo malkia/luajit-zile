@@ -127,7 +127,7 @@ Display documentation of the command invoked by a key sequence.
       end
     end
 
-    minibuf_write ("%s runs the command `%s'", binding, name)
+    minibuf_write (string.format ("%s runs the command `%s'", binding, name))
 
     local doc = get_function_doc (name)
     if not doc then
