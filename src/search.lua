@@ -41,7 +41,7 @@ local function find_substr (as, s, from, to, forward, notbol, noteol, regex, ica
   local cf = 0
 
   if not regex then
-    s = string.gsub (s, "([ $^.*[%]\\+?])", "\\%1")
+    s = string.gsub (s, "([$^.*[%]\\+?])", "\\%1")
   end
   if icase then
     cf = bit.bor (cf, re_flags.ICASE)
