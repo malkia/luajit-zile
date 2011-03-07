@@ -59,6 +59,12 @@ LUA_RUNTIME =						\
 	std.lua						\
 	$(zile_LUA)
 
+dist_pkgdata_DATA =					\
+	$(LUA_RUNTIME)					\
+	loadlua.lua					\
+	default-bindings.el				\
+	dotzile-extra.el
+
 PRODUCTIONSOURCES =					\
 	$(zile_SOURCES)					\
 	$(zile_LUA)					\
@@ -71,24 +77,31 @@ loadlua.lua: $(LUA_RUNTIME) Makefile.am
 	echo "-- Generated file - do not edit!" > $@
 	for i in $(LUA_CLIBS) $(LUA_RUNTIME); do echo 'require "'`echo $$i | sed -e 's/\\.lua$$//g'`'"' >> $@; done
 
-edit = sed \
+install_edit = sed \
 	-e 's|@pkgdatadir[@]|$(pkgdatadir)|g'
 
-zile: zile.lua loadlua.lua Makefile
+inplace_edit = sed \
+	-e 's|@pkgdatadir[@]|$(srcdir)|g'
+
+zile: zile.lua Makefile
 	rm -f $@ $@.tmp
-	$(edit) '$(srcdir)/$@.lua' >$@.tmp
+	$(inplace_edit) '$(srcdir)/$@.lua' >$@.tmp
 	mv $@.tmp $@
 	chmod +x $@
 
+install-exec-hook:
+	$(install_edit) '$(srcdir)/zile.lua' >$@.tmp
+	$(INSTALL_SCRIPT) $@.tmp $(bindir)/zile
+	rm -f $@.tmp
+
 zile.1: zile zile.1.in Makefile
 	rm -f $@ $@.tmp
-	$(edit) '$(srcdir)/$@.in' >$@.tmp
+	$(install_edit) '$(srcdir)/$@.in' >$@.tmp
 	mv $@.tmp $@
 
 zile.1.in: zile man-extras zile-help2man-wrapper
 	builddir=$(builddir) $(HELP2MAN) --output=$@ --no-info --name="Zile Is Lossy Emacs" --include $(srcdir)/man-extras $(srcdir)/zile-help2man-wrapper
 
-dist_pkgdata_DATA = dotzile-extra.el
 dist_man_MANS = zile.1
 
 CLEANFILES = zile

@@ -31,7 +31,6 @@ CONFIGURE_DATE = "@CONFIGURE_DATE@"
 CONFIGURE_HOST = "@CONFIGURE_HOST@"
 PATH_DATA = "@pkgdatadir@"
 
--- FIXME: Use a single absolute path for either the build or install directory.
-package.path = PATH_DATA .. "/?.lua;?.lua"
+package.path = PATH_DATA .. "/?.lua"
 require ("loadlua")
 main ()
