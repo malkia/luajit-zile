@@ -1,8 +1,5 @@
 TAGS
 .deps
-zile
-loadlua.lua
-zile.lua
 gendocs_template
 zile.1
 zile.1.in
