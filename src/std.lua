@@ -552,7 +552,7 @@ require "io_ext"
 require "string_ext"
 
 -- Debugging is off by default
-_G._DEBUG = nil
+_DEBUG = nil
 
 -- To activate debugging set _DEBUG either to any true value
 -- (equivalent to {level = 1}), or a table with the following members:

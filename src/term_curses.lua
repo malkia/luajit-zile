@@ -196,7 +196,7 @@ function term_xgetkey (mode, timeout)
     end
 
     if c == curses.KEY_RESIZE then
-      term_set_size (curses.cols, curses.lines)
+      term_set_size (curses.cols(), curses.lines())
       resize_windows ()
     elseif c ~= nil then
       local key
